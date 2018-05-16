@@ -13,4 +13,4 @@ Generate a new Cookiecutter template layout: `cookiecutter gh:reef-technologies/
 
 License
 -------
-This project is licensed under the terms of the [MIT License](/LICENSE)
+This project is licensed under the terms of the [BSD-3 License](/LICENSE)
