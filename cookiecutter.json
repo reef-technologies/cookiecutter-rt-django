@@ -1,0 +1,8 @@
+{
+    "repostory_name": "new-repository",
+    "project_short_description": "A short description of the project",
+    "django_project_name": "newclientproj",
+    "django_default_app_name": "projapp",
+    "secret_key": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*50)|map('random')|join('')}}",
+    "postgres_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}"
+}

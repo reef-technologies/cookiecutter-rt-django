@@ -1,0 +1,76 @@
+version: '2'
+
+services:
+  redis:
+    image: redis:3-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - ./redis/data:/data
+
+  db:
+    image: postgres:9.6-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: {{cookiecutter.django_project_name}}/app
+    restart: always
+    env_file: ./.env
+    volumes:
+      - backend-static:/srv/app/static
+      - ./media:/srv/app/media
+    links:
+      - redis:redis
+    depends_on:
+      - redis
+      - db
+
+  celery-worker:
+    image: {{cookiecutter.django_project_name}}/app
+    env_file: ./.env
+    environment:
+      - DEBUG=off
+    command: su celery -s /bin/sh -c "celery -A {{cookiecutter.django_project_name}} worker -l INFO --concurrency=4"
+    links:
+      - redis:redis
+    depends_on:
+      - redis
+
+  celery-beat:
+    image: {{cookiecutter.django_project_name}}/app
+    restart: always
+    env_file: ./.env
+    environment:
+      - DEBUG=off
+    command: celery -A {{cookiecutter.django_project_name}} beat -l INFO --pidfile /var/run/celerybeat.pid --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
+    volumes:
+      - ./logs:/tmp/logs
+    links:
+      - redis:redis
+    depends_on:
+      - redis
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: always
+    environment:
+      - NGINX_HOST=${NGINX_HOST}
+    volumes:
+      - ./nginx/conf/default.template:/tmp/default.template
+      - backend-static:/srv/static:ro
+      - ./media:/srv/media:ro
+    links:
+      - app:app
+    command: /bin/sh -c "envsubst '$$NGINX_HOST' < /tmp/default.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    ports:
+      - 80:80
+
+volumes:
+  backend-static:
