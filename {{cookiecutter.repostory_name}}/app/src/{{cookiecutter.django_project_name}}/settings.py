@@ -121,7 +121,7 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')
 
 # Task result life time until they will be deleted
-CELERY_TASK_RESULT_EXPIRES = int(dt.timedelta(days=7).total_seconds())
+CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())
 
 # Needed for worker monitoring
 CELERY_SEND_EVENTS = True
