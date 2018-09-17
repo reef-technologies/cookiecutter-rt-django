@@ -3,8 +3,8 @@ FROM python:3.6
 COPY ./bin/s6-overlay-amd64.tar.gz /tmp/s6-overlay-amd64.tar.gz
 
 RUN tar xvfz /tmp/s6-overlay-amd64.tar.gz -C / \
-    && rm -f /tmp/s6-overlay-amd64.tar.gz \
-    && adduser --disabled-password --gecos '' celery
+    && rm -f /tmp/s6-overlay-amd64.tar.gz {% if cookiecutter.use_celery == "y" %}\
+    && adduser --disabled-password --gecos '' celery{% endif %}
 
 COPY ./src/ /srv/app/
 

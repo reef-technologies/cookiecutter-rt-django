@@ -1,3 +1,4 @@
+{% if cookiecutter.use_celery == 'y' %}
 import os
 
 from celery import Celery
@@ -9,3 +10,7 @@ app = Celery('{{cookiecutter.django_project_name}}')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+{% else %}
+# Use this as a starting point for your project with celery.
+# If you are not using celery, you can remove this app
+{% endif %}

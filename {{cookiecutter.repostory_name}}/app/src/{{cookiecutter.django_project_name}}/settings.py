@@ -113,6 +113,7 @@ MEDIA_URL = env('MEDIA_URL', default='/media/')
 
 MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 
+{% if cookiecutter.use_celery == "y" %}
 # --- Celery
 
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
@@ -127,3 +128,4 @@ CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())
 CELERY_SEND_EVENTS = True
 
 CELERY_BEAT_SCHEDULE = {}
+{% endif %}

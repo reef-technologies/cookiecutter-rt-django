@@ -32,6 +32,7 @@ services:
       - redis
       - db
 
+  {% if cookiecutter.use_celery == "y" %}
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
     env_file: ./.env
@@ -56,6 +57,7 @@ services:
       - redis:redis
     depends_on:
       - redis
+  {% endif %}
 
   nginx:
     image: nginx:stable-alpine

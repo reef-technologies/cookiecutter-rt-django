@@ -2,5 +2,7 @@ export POSTGRES_DB={{cookiecutter.django_project_name}}
 export POSTGRES_PASSWORD={{cookiecutter.postgres_password}}
 export SECRET_KEY='{{cookiecutter.secret_key}}'
 export DATABASE_URL=postgres://postgres:{{cookiecutter.postgres_password}}@localhost:8432/{{cookiecutter.django_project_name}}
+{% if cookiecutter.use_celery == "y" %}
 export CELERY_BROKER_URL=redis://localhost:8379/0
+{% endif %}
 export DEBUG=on
