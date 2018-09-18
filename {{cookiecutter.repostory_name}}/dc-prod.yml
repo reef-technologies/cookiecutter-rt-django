@@ -67,7 +67,7 @@ services:
       - DEBUG=off
     command: celery flower --app={{cookiecutter.django_project_name}} --broker="${CELERY_BROKER_URL}" --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
     depends_on:
-    - celery-worker
+      - celery-worker
   {% endif %}
   {% endif %}
 
