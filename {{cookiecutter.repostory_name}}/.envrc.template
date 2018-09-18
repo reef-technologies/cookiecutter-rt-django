@@ -4,5 +4,10 @@ export SECRET_KEY='{{cookiecutter.secret_key}}'
 export DATABASE_URL=postgres://postgres:{{cookiecutter.postgres_password}}@localhost:8432/{{cookiecutter.django_project_name}}
 {% if cookiecutter.use_celery == "y" %}
 export CELERY_BROKER_URL=redis://localhost:8379/0
+{% if cookiecutter.use_flower == "y" %}
+# Flower
+export CELERY_FLOWER_USER={{cookiecutter.celery_flower_user}}
+export CELERY_FLOWER_PASSWORD={{cookiecutter.celery_flower_password}}
+{% endif %}
 {% endif %}
 export DEBUG=on
