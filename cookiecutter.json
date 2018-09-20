@@ -7,6 +7,6 @@
     "postgres_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
     "use_celery": "n",
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
-    "celery_flower_user": "",
-    "celery_flower_password": ""
+    "celery_flower_user": "admin",
+    "celery_flower_password": "admin"
 }
