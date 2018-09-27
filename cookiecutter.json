@@ -4,5 +4,9 @@
     "django_project_name": "newclientproj",
     "django_default_app_name": "projapp",
     "secret_key": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*50)|map('random')|join('')}}",
-    "postgres_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}"
+    "postgres_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
+    "use_celery": "n",
+    "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
+    "celery_flower_user": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
+    "celery_flower_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}"
 }

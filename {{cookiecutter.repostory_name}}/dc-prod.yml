@@ -32,6 +32,7 @@ services:
       - redis
       - db
 
+  {% if cookiecutter.use_celery == "y" %}
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
     env_file: ./.env
@@ -56,6 +57,21 @@ services:
       - redis:redis
     depends_on:
       - redis
+
+  {% if cookiecutter.use_flower == "y" %}
+  celery-flower:
+    image: {{cookiecutter.django_project_name}}/app
+    restart: always
+    env_file: ./.env
+    environment:
+      - DEBUG=off
+    command: celery flower --app={{cookiecutter.django_project_name}} --broker="${CELERY_BROKER_URL}" --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+    depends_on:
+      - celery-worker
+    ports:
+      - 5555:5555
+  {% endif %}
+  {% endif %}
 
   nginx:
     image: nginx:stable-alpine
