@@ -11,3 +11,4 @@ export CELERY_FLOWER_PASSWORD={{cookiecutter.celery_flower_password}}
 {% endif %}
 {% endif %}
 export DEBUG=on
+export SENTRY_DSN={{cookiecutter.sentry_dsn}}
