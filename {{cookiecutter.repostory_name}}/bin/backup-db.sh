@@ -3,7 +3,7 @@ if [ "$(basename "$0")" == 'bin' ]; then
   cd ..
 fi
 
-. env
+. .envrc
 
 target="db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
 if [ -n "$DATABASE_URL" ]; then
