@@ -11,8 +11,8 @@ Requirements
 * direnv (https://direnv.net/ - installation and setup instruction)
 * Python 3.6
 
-Setup virtualenv
-----------------
+Setup virtualenv (for development)
+----------------------------------
 
 ```
 $ mkvirtualenv -p /usr/bin/python3.6 {{ cookiecutter.django_project_name }}
@@ -30,13 +30,13 @@ $ python manage.py runserver
 
 ```
 
-Setup production docker deployment
-----------------------------------
+Setup production (docker deployment)
+------------------------------------
 
 ```
 ./setup-docker-prod.sh
 
-# change SECRET_KEY and POSTGRES_PASSWORD in .env !!!
+# change SECRET_KEY and (POSTGRES_PASSWORD or DATABASE_URL) in `.env`, adjust the rest of `.env` and `.envrc` to your liking
 
 $ docker-compose up
 
@@ -45,6 +45,12 @@ $ docker-compose up
 $ ./deploy.sh
 
 ```
+
+Setting up backups
+------------------
+
+Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-to-email.sh target@email.address` to crontab
+
 
 Handling requirements freeze
 ----------------------------
@@ -80,3 +86,10 @@ Notations like `package-name>=x.x.x` or `package-name` (without version) are con
 custom and **should not be used** - all dependecies should be freezed - either by
 `requirements_freeze.py` script or by github commit/tag reference
 (or any equivalent - **branch reference is not freezing version**)
+
+Restoring system from backup after a catastrophical failure
+-----------------------------------------------------------
+1. Follow the instructions above to set up a new production environment
+2. Restore the database using bin/restore-db.sh
+3. See if everything works
+4. Set up backups on the new machine

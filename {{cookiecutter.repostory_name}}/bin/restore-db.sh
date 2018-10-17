@@ -1,8 +1,8 @@
 #!/bin/bash -eu
 if [ "$(basename "$0")" == 'bin' ]; then
-  . ../.envrc
+  . ../.env
 else
-  . .envrc
+  . .env
 fi
 
 target="$1"
