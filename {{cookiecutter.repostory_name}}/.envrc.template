@@ -15,3 +15,4 @@ export EMAIL_HOST=
 export EMAIL_PORT=
 export EMAIL_HOST_USER=
 export EMAIL_HOST_PASSWORD=
+export SENTRY_DSN={{cookiecutter.sentry_dsn}}

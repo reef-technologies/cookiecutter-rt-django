@@ -4,6 +4,11 @@ Django settings for {{cookiecutter.django_project_name}} project.
 
 import datetime as dt
 import environ
+import sentry_sdk
+import logging
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+
 
 root = environ.Path(__file__) - 2
 env = environ.Env(
@@ -129,3 +134,13 @@ CELERY_SEND_EVENTS = True
 
 CELERY_BEAT_SCHEDULE = {}
 {% endif %}
+
+sentry_logging = LoggingIntegration(
+    level=logging.INFO,  # Capture info and above as breadcrumbs
+    event_level=logging.ERROR     # Send error events from log messages
+)
+
+sentry_sdk.init(
+    dsn=env('SENTRY_DSN', default=''),
+    integrations=[DjangoIntegration(), sentry_logging]
+)
