@@ -3,6 +3,8 @@
 
 {{ cookiecutter.project_short_description }}
 
+Skeleton of this project was generated with `cookiecutter-rt-django`, which sometimes gets upgrades that are easy to retrofit into already older projects.
+
 Requirements
 ------------
 
