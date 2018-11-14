@@ -20,7 +20,7 @@ docker run -it --rm \
 
 crontab -l
 
-{% if cookiecutter.use_https == 'n'%}
+{% if cookiecutter.use_https != 'y' %}
 echo ""
 echo "Project was generated without https configured."
 echo "Please remember to uncomment lines in dc-prod.yml and nginx/conf/default.template"
