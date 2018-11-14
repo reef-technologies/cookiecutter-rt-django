@@ -51,7 +51,7 @@ $ docker-compose up
 $ ./deploy.sh
 
 ```
-{% if cookiecutter.use_https == 'n'%}
+{% if cookiecutter.use_https != 'y' %}
 You've chosen http only project, but you can always add https - just set correct `NGINX_HOSTNAME` in `.env`
 and uncomment lines in dc-prod.yml and nginx/conf/default.template and run
 ```
