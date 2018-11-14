@@ -7,11 +7,10 @@ cd "$ABSPATH"
 
 source ./.env
 
-docker-compose up -d nginx-letsencrypt
-
 docker run -it --rm \
       -v "$ABSPATH/letsencrypt/etc:/etc/letsencrypt" \
       -v "$ABSPATH/letsencrypt/data:/data/letsencrypt" \
+      -p 80:80\
       deliverous/certbot \
       certonly \
       --standalone --preferred-challenges http\

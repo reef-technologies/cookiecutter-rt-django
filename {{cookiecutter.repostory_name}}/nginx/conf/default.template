@@ -24,6 +24,9 @@ server {
     ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
     ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
     ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
+
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
     {% else %}
     # uncomment for letsencrypt https
     # add_header                Strict-Transport-Security "max-age=31536000" always;
@@ -41,6 +44,9 @@ server {
     # ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
     # ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
     # ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
+
+    # resolver 8.8.8.8 8.8.4.4 valid=300s;
+    # resolver_timeout 5s;
     {% endif %}
 
     access_log                /dev/stdout;

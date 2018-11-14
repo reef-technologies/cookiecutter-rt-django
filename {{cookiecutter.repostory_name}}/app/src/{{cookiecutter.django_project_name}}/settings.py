@@ -135,12 +135,13 @@ CELERY_SEND_EVENTS = True
 CELERY_BEAT_SCHEDULE = {}
 {% endif %}
 
-sentry_logging = LoggingIntegration(
-    level=logging.INFO,  # Capture info and above as breadcrumbs
-    event_level=logging.ERROR     # Send error events from log messages
-)
+if env('SENTRY_DSN', default=''):
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,  # Capture info and above as breadcrumbs
+        event_level=logging.ERROR     # Send error events from log messages
+    )
 
-sentry_sdk.init(
-    dsn=env('SENTRY_DSN', default=''),
-    integrations=[DjangoIntegration(), sentry_logging]
-)
+    sentry_sdk.init(
+        dsn=env('SENTRY_DSN', default=''),
+        integrations=[DjangoIntegration(), sentry_logging]
+    )
