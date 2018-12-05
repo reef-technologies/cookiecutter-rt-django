@@ -7,4 +7,8 @@ fi
 
 target="$1"
 
-gunzip < "$target" | docker exec -i {{cookiecutter.django_project_name}}_db_1 psql -U postgres
+if [ -n "$DATABASE_URL" ]; then
+  zcat "$target" | docker run -i --rm postgres:9.6 psql -d "$DATABASE_URL"
+else
+  zcat "$target" | docker exec -i {{cookiecutter.django_project_name}}_db_1 psql -U postgres
+fi
