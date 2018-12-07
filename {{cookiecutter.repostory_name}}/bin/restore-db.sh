@@ -10,5 +10,8 @@ target="$1"
 if [ -n "$DATABASE_URL" ]; then
   zcat "$target" | docker run -i --rm postgres:9.6 psql -d "$DATABASE_URL"
 else
-  zcat "$target" | docker exec -i {{cookiecutter.django_project_name}}_db_1 psql -U postgres
+  zcat "$target" | docker-compose exec -T db psql -U postgres "$POSTGRES_DB"
 fi
+
+echo 'restore finished'
+
