@@ -133,6 +133,11 @@ CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())
 CELERY_SEND_EVENTS = True
 
 CELERY_BEAT_SCHEDULE = {}
+
+# default to json serialization only
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 {% endif %}
 
 sentry_logging = LoggingIntegration(

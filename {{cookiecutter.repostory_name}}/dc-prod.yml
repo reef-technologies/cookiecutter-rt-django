@@ -38,7 +38,7 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
-    command: su celery -s /bin/sh -c "celery -A {{cookiecutter.django_project_name}} worker -l INFO --concurrency=4"
+    command: celery -A {{cookiecutter.django_project_name}} worker -l INFO --concurrency=4
     links:
       - redis:redis
     depends_on:
