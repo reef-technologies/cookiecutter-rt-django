@@ -39,7 +39,11 @@ Setup production (docker deployment)
 ./setup-docker-prod.sh
 
 # change SECRET_KEY and (POSTGRES_PASSWORD or DATABASE_URL) in `.env`, adjust the rest of `.env` and `.envrc` to your liking
+{% if cookiecutter.use_https == 'y'%}
+# set correct NGINX_HOSTNAME if .env for https
 
+$ ./letsencrypt_setup.sh
+{% endif %}
 $ docker-compose up
 
 # wait till db is initialized then Ctrl + C
@@ -47,6 +51,13 @@ $ docker-compose up
 $ ./deploy.sh
 
 ```
+{% if cookiecutter.use_https != 'y' %}
+You've chosen http only project, but you can always add https - just set correct `NGINX_HOSTNAME` in `.env`
+and uncomment lines in dc-prod.yml and nginx/conf/default.template and run
+```
+$ ./letsencrypt_setup.sh
+```
+{% endif %}
 
 Setting up backups
 ------------------
