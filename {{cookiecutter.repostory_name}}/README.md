@@ -116,3 +116,4 @@ Restoring system from backup after a catastrophical failure
 2. Restore the database using bin/restore-db.sh
 3. See if everything works
 4. Set up backups on the new machine
+5. Make sure everything is filled up in .env, error reporting integration, email accounts etc
