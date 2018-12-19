@@ -5,13 +5,21 @@
 
 Skeleton of this project was generated with `cookiecutter-rt-django`, which sometimes gets upgrades that are easy to retrofit into already older projects.
 
-Requirements
+Base requirements
 ------------
 
 * docker
 * docker-compose
 * direnv (https://direnv.net/ - installation and setup instruction)
 * Python 3.6
+
+For a fresh ubuntu you can install the above with:
+```
+groupadd docker
+snap install docker
+apt install direnv
+```
+
 
 Setup virtualenv (for development)
 ----------------------------------
@@ -34,6 +42,8 @@ $ python manage.py runserver
 
 Setup production (docker deployment)
 ------------------------------------
+
+Use `ssh-keygen` to generate a key pair for the server, then add read-only access to repository in "deployment keys" section (`ssh -A` is easy to use, but not safe).
 
 ```
 ./setup-docker-prod.sh
@@ -62,7 +72,7 @@ $ ./letsencrypt_setup.sh
 Setting up backups
 ------------------
 
-Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-to-email.sh target@email.address` to crontab
+Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-to-email.sh target@email.address` to crontab. This assumes you have configured email access in `.env` properly.
 
 
 Handling requirements freeze
