@@ -50,7 +50,7 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
-    command: celery -A {{cookiecutter.django_project_name}} beat -l INFO --pidfile /var/run/celerybeat.pid --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
+    command: celery -A {{cookiecutter.django_project_name}} beat -l INFO --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
     volumes:
       - ./logs:/tmp/logs
     links:
