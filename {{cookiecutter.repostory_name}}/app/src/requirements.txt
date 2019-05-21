@@ -1,4 +1,4 @@
-Django==2.0.10
+Django==2.0.13
 django-environ==0.4.4
 psycopg2==2.7.3.2
 {% if cookiecutter.use_celery == "y" %}
