@@ -118,6 +118,11 @@ MEDIA_URL = env('MEDIA_URL', default='/media/')
 
 MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 
+{% if cookiecutter.use_https == "y" %}
+# To make request.scheme as https when request comes through nginx
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_SCHEME', 'https')
+{% endif %}
+
 {% if cookiecutter.use_celery == "y" %}
 # --- Celery
 
