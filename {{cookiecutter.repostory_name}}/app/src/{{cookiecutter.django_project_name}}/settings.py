@@ -121,6 +121,7 @@ MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 # redirect HTTP to HTTPS
 if env('HTTPS_REDIRECT', default='n') == 'y' and not DEBUG:
     SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = []
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 else:
