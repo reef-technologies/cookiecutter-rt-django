@@ -16,7 +16,5 @@ export EMAIL_PORT=
 export EMAIL_HOST_USER=
 export EMAIL_HOST_PASSWORD=
 export SENTRY_DSN={{cookiecutter.sentry_dsn}}
-{% if cookiecutter.https_redirect == "y" %}
-export HTTPS_REDIRECT=y
-{% endif %}
+export HTTPS_REDIRECT={{cookiecutter.https_redirect}}
 export HTTPS_PROXY_HEADER={{cookiecutter.https_proxy_header}}
