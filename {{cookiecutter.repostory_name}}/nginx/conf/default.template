@@ -79,7 +79,7 @@ server {
         proxy_pass_header Server;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Scheme $scheme;
+        proxy_set_header {{cookiecutter.https_proxy_header}} $scheme;
         proxy_pass http://app:8000/;
     }
 }

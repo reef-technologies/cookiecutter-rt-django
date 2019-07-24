@@ -118,10 +118,25 @@ MEDIA_URL = env('MEDIA_URL', default='/media/')
 
 MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 
-{% if cookiecutter.use_https == "y" %}
-# To make request.scheme as https when request comes through nginx
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_SCHEME', 'https')
-{% endif %}
+# redirect HTTP to HTTPS
+if env('HTTPS_REDIRECT', default='n') == 'y' and not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+else:
+    SECURE_SSL_REDIRECT = False
+
+# trust the given (by default "X-Scheme") header that comes from our proxy (nginx),
+# and any time its value is "https",
+# then the request is guaranteed to be secure (i.e., it originally came in via HTTPS).
+if env('HTTPS_PROXY_HEADER') and not DEBUG:
+    SECURE_PROXY_SSL_HEADER = (
+        'HTTP_' + env('HTTPS_PROXY_HEADER').upper(),
+        'https'
+    )
+else:
+    SECURE_PROXY_SSL_HEADER = None
+
 
 {% if cookiecutter.use_celery == "y" %}
 # --- Celery
