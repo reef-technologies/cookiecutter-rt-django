@@ -50,6 +50,34 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Content Security Policy
+if env('CSP_ENABLED') == 'y':
+    MIDDLEWARE.append('csp.middleware.CSPMiddleware')
+
+    CSP_ENABLED = True
+
+    CSP_REPORT_ONLY = env('CSP_REPORT_ONLY', default='y') == 'y'
+    CSP_REPORT_URL = env('CSP_REPORT_URL', default=None) or None
+
+    env_csp_src = lambda name: tuple(env(name, default='').split(','))
+
+    CSP_DEFAULT_SRC = env_csp_src('CSP_DEFAULT_SRC')
+    CSP_SCRIPT_SRC = env_csp_src('CSP_SCRIPT_SRC')
+    CSP_STYLE_SRC = env_csp_src('CSP_STYLE_SRC')
+    CSP_FONT_SRC = env_csp_src('CSP_FONT_SRC')
+    CSP_IMG_SRC = env_csp_src('CSP_IMG_SRC')
+    CSP_MEDIA_SRC = env_csp_src('CSP_MEDIA_SRC')
+    CSP_OBJECT_SRC = env_csp_src('CSP_OBJECT_SRC')
+    CSP_FRAME_SRC = env_csp_src('CSP_FRAME_SRC')
+    CSP_CONNECT_SRC = env_csp_src('CSP_CONNECT_SRC')
+    CSP_CHILD_SRC = env_csp_src('CSP_CHILD_SRC')
+    CSP_MANIFEST_SRC = env_csp_src('CSP_MANIFEST_SRC')
+    CSP_WORKER_SRC = env_csp_src('CSP_WORKER_SRC')
+
+    CSP_BLOCK_ALL_MIXED_CONTENT = env('CSP_BLOCK_ALL_MIXED_CONTENT', default='n') == 'y'
+    CSP_EXCLUDE_URL_PREFIXES = env('CSP_EXCLUDE_URL_PREFIXES', default=tuple()) or tuple()
+
+
 ROOT_URLCONF = '{{cookiecutter.django_project_name}}.urls'
 
 TEMPLATES = [
