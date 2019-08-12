@@ -50,6 +50,34 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Content Security Policy
+if env('CSP_ENABLED') == 'y':
+    MIDDLEWARE.append('csp.middleware.CSPMiddleware')
+
+    CSP_ENABLED = True
+
+    CSP_REPORT_ONLY = env('CSP_REPORT_ONLY', default='y') == 'y'
+    CSP_REPORT_URL = env('CSP_REPORT_URL', default=None) or None
+
+    env_csp_src = lambda name: tuple(env(name, default='').split(','))
+
+    CSP_DEFAULT_SRC = env_csp_src('CSP_DEFAULT_SRC')
+    CSP_SCRIPT_SRC = env_csp_src('CSP_SCRIPT_SRC')
+    CSP_STYLE_SRC = env_csp_src('CSP_STYLE_SRC')
+    CSP_FONT_SRC = env_csp_src('CSP_FONT_SRC')
+    CSP_IMG_SRC = env_csp_src('CSP_IMG_SRC')
+    CSP_MEDIA_SRC = env_csp_src('CSP_MEDIA_SRC')
+    CSP_OBJECT_SRC = env_csp_src('CSP_OBJECT_SRC')
+    CSP_FRAME_SRC = env_csp_src('CSP_FRAME_SRC')
+    CSP_CONNECT_SRC = env_csp_src('CSP_CONNECT_SRC')
+    CSP_CHILD_SRC = env_csp_src('CSP_CHILD_SRC')
+    CSP_MANIFEST_SRC = env_csp_src('CSP_MANIFEST_SRC')
+    CSP_WORKER_SRC = env_csp_src('CSP_WORKER_SRC')
+
+    CSP_BLOCK_ALL_MIXED_CONTENT = env('CSP_BLOCK_ALL_MIXED_CONTENT', default='n') == 'y'
+    CSP_EXCLUDE_URL_PREFIXES = env('CSP_EXCLUDE_URL_PREFIXES', default=tuple()) or tuple()
+
+
 ROOT_URLCONF = '{{cookiecutter.django_project_name}}.urls'
 
 TEMPLATES = [
@@ -118,10 +146,26 @@ MEDIA_URL = env('MEDIA_URL', default='/media/')
 
 MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 
-{% if cookiecutter.use_https == "y" %}
-# To make request.scheme as https when request comes through nginx
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_SCHEME', 'https')
-{% endif %}
+# redirect HTTP to HTTPS
+if env('HTTPS_REDIRECT', default='n') == 'y' and not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = []
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+else:
+    SECURE_SSL_REDIRECT = False
+
+# trust the given (by default "X-Scheme") header that comes from our proxy (nginx),
+# and any time its value is "https",
+# then the request is guaranteed to be secure (i.e., it originally came in via HTTPS).
+if env('HTTPS_PROXY_HEADER') and not DEBUG:
+    SECURE_PROXY_SSL_HEADER = (
+        'HTTP_' + env('HTTPS_PROXY_HEADER').upper(),
+        'https'
+    )
+else:
+    SECURE_PROXY_SSL_HEADER = None
+
 
 {% if cookiecutter.use_celery == "y" %}
 # --- Celery

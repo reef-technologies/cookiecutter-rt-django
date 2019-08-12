@@ -10,3 +10,6 @@ flower==0.9.2
 redis==2.10.6
 django-extensions==2.0.6
 sentry-sdk==0.4.1
+{% if cookiecutter.csp_enabled == "y" %}
+django_csp==3.5
+{% endif %}
