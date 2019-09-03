@@ -12,7 +12,7 @@
     "celery_flower_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
     "sentry_dsn": "https://<key>@sentry.io/<project>",
     "https_redirect": "n",
-    "https_proxy_header": "X-Scheme",
+    "https_proxy_header": "X_SCHEME",
     "csp_enabled": "y",
     "csp_report_only": "y",
     "csp_report_url": "https://sentry.io/api/-1/security/?sentry_key=<key>",

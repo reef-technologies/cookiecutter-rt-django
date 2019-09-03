@@ -155,7 +155,7 @@ else:
 # trust the given (by default "X-Scheme") header that comes from our proxy (nginx),
 # and any time its value is "https",
 # then the request is guaranteed to be secure (i.e., it originally came in via HTTPS).
-HTTPS_PROXY_HEADER = env('HTTPS_PROXY_HEADER').upper()
+HTTPS_PROXY_HEADER = '{{cookiecutter.https_proxy_header}}'
 if HTTPS_PROXY_HEADER and not DEBUG:
     SECURE_PROXY_SSL_HEADER = (f'HTTP_{HTTPS_PROXY_HEADER}', 'https')
 else:
