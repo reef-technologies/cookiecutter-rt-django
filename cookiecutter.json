@@ -30,5 +30,6 @@
     "csp_worker_src": "'self'",
     "csp_block_all_mixed_content": "y",
     "csp_exclude_url_prefixes": "",
-    "nginx_compression_enabled": "{% if cookiecutter.use_https == 'y' %}n{% else %}y{% endif %}"
+    "nginx_compression_enabled": "{% if cookiecutter.use_https == 'y' %}n{% else %}y{% endif %}",
+    "use_alpine_linux": "y"
 }
