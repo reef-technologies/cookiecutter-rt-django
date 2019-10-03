@@ -1,19 +1,37 @@
-FROM python:3.6
+{% if cookiecutter.use_alpine_linux == "y" -%}
+ARG BASE_IMAGE=python:3.6-alpine
+{% else -%}
+ARG BASE_IMAGE=python:3.6
+{% endif %}
 
-COPY ./bin/s6-overlay-amd64.tar.gz /tmp/s6-overlay-amd64.tar.gz
+FROM $BASE_IMAGE AS base-image
 
-RUN tar xvfz /tmp/s6-overlay-amd64.tar.gz -C / \
-    && rm -f /tmp/s6-overlay-amd64.tar.gz {% if cookiecutter.use_celery == "y" %}\
-    && adduser --disabled-password --gecos '' celery{% endif %}
+WORKDIR /root/src/
+ENV PATH=/root/.local/bin:$PATH
 
-COPY ./src/ /srv/app/
+RUN pip3 install --user --no-cache-dir gunicorn==19.9.0
 
-WORKDIR /srv/app
+COPY ./src/requirements.txt requirements.txt
 
-RUN pip3 install --no-cache-dir -r requirements.txt gunicorn\
-    && python3 -m compileall -b .
+{% if cookiecutter.use_alpine_linux == "y" -%}
+RUN grep psycopg2 requirements.txt && \
+    apk add postgresql-dev gcc python3-dev musl-dev
+{% endif -%}
 
-ENTRYPOINT ["/init"]
+RUN pip3 install --user --no-cache-dir -r requirements.txt
+
+COPY ./src/ /root/src/
+
+RUN python3 -m compileall -b -f -q /root/
+
+
+FROM $BASE_IMAGE AS secondary-image
+
+WORKDIR /root/src/
+ENV PYTHONUNBUFFERED=1
+ENV PATH=/root/.local/bin:$PATH
+
+COPY --from=base-image /root/ /root/
 
 EXPOSE 8000
 
