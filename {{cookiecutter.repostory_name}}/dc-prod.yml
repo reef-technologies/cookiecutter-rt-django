@@ -36,8 +36,8 @@ services:
     restart: always
     env_file: ./.env
     volumes:
-      - backend-static:/srv/app/static
-      - ./media:/srv/app/media
+      - backend-static:/root/src/static
+      - ./media:/root/src/media
     links:
       - redis:redis
     depends_on:
