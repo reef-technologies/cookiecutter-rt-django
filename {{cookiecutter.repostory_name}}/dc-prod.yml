@@ -11,7 +11,7 @@ services:
     logging: &logging
       driver: journald
       options:
-        tag: {{"'{{.Name}}'"}}
+        tag: {% raw %}{{.Name}}{% endraw %}
 
   db:
     image: 'postgres:9.6-alpine'
