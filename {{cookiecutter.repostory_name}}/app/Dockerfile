@@ -16,7 +16,7 @@ COPY ./src/requirements.txt requirements.txt
 {% if cookiecutter.use_alpine_linux == "y" -%}
 RUN grep psycopg2 requirements.txt && \
     apk add postgresql-dev gcc python3-dev musl-dev
-RUN grep git requirements.txt && \
+RUN grep git:\/\/ requirements.txt && \
     apk add git
 {% endif -%}
 
