@@ -7,6 +7,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from urllib.parse import urlsplit
 import argparse
 import os
 import smtplib
@@ -60,7 +61,7 @@ def parse_arguments():
         '-f',
         '--files',
         action='store',
-        nargs="+",
+        nargs="*",
         dest='files',
         help='Files to be send as attachments',
     )
@@ -84,10 +85,17 @@ if __name__ == '__main__':
         sys.stderr.write('no EMAIL_CREDS environment variable!\nexport EMAIL_CREDS=user:password@server:port')
         sys.exit(2)
 
-    smtp_user, smtp_pass, smtp_server, smtp_port = email_creds.split(':')  # EMAIL_CREDS=user:password@server:port
+    try:
+        email_creds = urlsplit('//%s' % email_creds)
+        if not all([email_creds.username, email_creds.password, email_creds.hostname, email_creds.port]):
+            raise ValueError
+    except ValueError:
+        sys.stderr.write('EMAIL_CREDS environment variable has wrong format!\nexport EMAIL_CREDS=user:password@server:port')
+        sys.exit(2)
+
     addr_to = parser_result.to_email
     files = parser_result.files or []
-    addr_from = smtp_user
+    addr_from = email_creds.username
 
     print("Enter/Paste the message for email. Ctrl-%s to save it." % (os.name == 'nt' and 'Z' or 'D'))
     message_lines = []
@@ -101,6 +109,6 @@ if __name__ == '__main__':
     subject = parser_result.subject
     message = '\n'.join(message_lines)
 
-    sender = GmailSender(smtp_server, smtp_port, smtp_user, smtp_pass)
+    sender = GmailSender(email_creds.hostname, email_creds.port, email_creds.username, email_creds.password)
     print("Sending email...")
     sender.send(addr_from, addr_to, subject, message, files=files)
