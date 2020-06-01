@@ -11,7 +11,7 @@ Base requirements
 * docker
 * docker-compose
 * direnv (https://direnv.net/ - installation and setup instruction)
-* Python 3.6
+* Python 3.8
 
 For a fresh ubuntu you can install the above with:
 ```
@@ -25,7 +25,7 @@ Setup virtualenv (for development)
 ----------------------------------
 
 ```
-$ mkvirtualenv -p /usr/bin/python3.6 {{ cookiecutter.django_project_name }}
+$ mkvirtualenv -p /usr/bin/python3.8 {{ cookiecutter.django_project_name }}
 $ ./setup-virtualenv.sh
 
 # on second tab
