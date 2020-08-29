@@ -97,10 +97,10 @@ WSGI_APPLICATION = '{{cookiecutter.django_project_name}}.wsgi.application'
 
 
 # Database
-
-DATABASES = {
-    'default': env.db(),
-}
+if env('DATABASE_URL'):
+    DATABASES = {
+        'default': env.db(),
+    }
 
 # Password validation
 
