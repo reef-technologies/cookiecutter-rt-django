@@ -42,4 +42,4 @@ RUN grep psycopg2 requirements.txt && apk add --no-cache libpq || true
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:8000", "{{ cookiecutter.django_project_name }}.wsgi:application"]
+CMD ["./entrypoint.sh"]

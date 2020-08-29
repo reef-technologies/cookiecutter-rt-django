@@ -4,6 +4,7 @@ django-csp==3.6
 {% endif -%}
 django-environ==0.4.5
 django-extensions==2.0.6
+django-probes==1.5.0
 {% if cookiecutter.use_celery == "y" -%}
 celery==4.4.2
 {% if cookiecutter.use_flower == 'y' -%}

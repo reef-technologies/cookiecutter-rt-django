@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_extensions',
+    'django_probes',
 
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
 
