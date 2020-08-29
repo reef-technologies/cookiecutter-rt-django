@@ -16,9 +16,10 @@ services:
   db:
     image: 'postgres:9.6-alpine'
     healthcheck:
-      test: pg_isready || exit 1
+      test: pg_isready -U ${POSTGRES_USER} || exit 1
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - ./db/data:/var/lib/postgresql/data
