@@ -10,7 +10,7 @@
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
     "celery_flower_user": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
     "celery_flower_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
-    "sentry_dsn": "https://<key>@sentry.io/<project>",
+    "sentry_dsn": "",
     "https_redirect": "n",
     "https_proxy_header": "X_SCHEME",
     "csp_enabled": "y",
