@@ -7,7 +7,7 @@ services:
     healthcheck:
       test: redis-cli ping
     volumes:
-    - ./redis/data:/data
+      - ./redis/data:/data
     ports:
       - 8379:6379
 

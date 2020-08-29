@@ -1,9 +1,10 @@
 *.pyc
 *.sqlite3
-.env
-.envrc
-.idea/
 *~
+.env
+.env-dev
+.env-prod
+.idea/
 docker-compose.yml
 redis/
 db/

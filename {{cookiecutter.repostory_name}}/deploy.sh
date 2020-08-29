@@ -9,13 +9,13 @@ SERVICES=$(docker-compose ps --services 2>&1 > /dev/stderr \
 docker-compose stop $SERVICES
 docker-compose up -d
 
-docker-compose exec app python manage.py migrate
+docker-compose exec -T app python manage.py migrate
 
 # Reloading nginx configuration without the process downtime
 # so it won't terminate connections established between clients and nginx.
 # In case of changes related to nginx in the compose file entire service
 # needs to be restarted manually `docker-compose restart nginx`
-docker-compose exec nginx nginx -s reload
+docker-compose exec -T nginx nginx -s reload
 
 docker images --quiet --filter=dangling=true \
     | grep -v $PRIMARY_IMAGE_HASH \
