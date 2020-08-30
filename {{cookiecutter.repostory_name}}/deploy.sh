@@ -1,7 +1,13 @@
 #!/bin/sh -eux
-PRIMARY_IMAGE_HASH=$(docker-compose build app | tee /dev/tty \
-    | sed '/^$/d' | grep "AS secondary-image" -B1 | head -1 | awk '{print $2}')
-docker-compose build  # build the rest of images
+# Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
+
+PROJECT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`
+
+# Build and tag the first image from multi-stage app Dockerfile
+# to mark it as not dangling
+docker build -t {{cookiecutter.django_project_name}}/app-build --target base-image -f app/Dockerfile  app
+
+docker-compose build
 
 SERVICES=$(docker-compose ps --services 2>&1 > /dev/stderr \
            | grep -v -e 'is not set' -e nginx -e db -e redis)
@@ -17,7 +23,7 @@ docker-compose exec -T app python manage.py migrate
 # needs to be restarted manually `docker-compose restart nginx`
 docker-compose exec -T nginx nginx -s reload
 
+# Clean all dangling images
 docker images --quiet --filter=dangling=true \
-    | grep -v $PRIMARY_IMAGE_HASH \
     | xargs --no-run-if-empty docker rmi \
     || true

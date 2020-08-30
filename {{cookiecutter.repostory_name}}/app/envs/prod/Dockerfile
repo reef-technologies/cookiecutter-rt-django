@@ -21,6 +21,7 @@ RUN grep git:\/\/ requirements.txt && apk add --no-cache git || true
 RUN pip3 install --user --no-cache-dir -r requirements.txt
 
 COPY ./src/ /root/src/
+COPY ./envs/prod/entrypoint.sh /root/src/
 
 RUN python3 -m compileall -b -f -q /root/
 # By tricking these env variables we can run collectstatic during the container build.
