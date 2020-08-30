@@ -30,9 +30,10 @@ $ ./setup-dev.sh
 
 $ docker-compose up
 
-# wait till db is initialized, then on first tab
+# then on first tab
 
 $ cd app/src
+$ python manage.py wait_for_database
 $ python manage.py migrate
 $ python manage.py runserver
 
@@ -52,10 +53,6 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 
 $ ./letsencrypt_setup.sh
 {% endif %}
-$ docker-compose up
-
-# wait till db is initialized then Ctrl + C
-
 $ ./deploy.sh
 
 ```
