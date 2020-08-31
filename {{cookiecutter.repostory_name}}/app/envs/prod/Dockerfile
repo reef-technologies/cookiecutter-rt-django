@@ -5,6 +5,7 @@ ARG BASE_IMAGE=python:3.8
 {% endif %}
 
 FROM $BASE_IMAGE AS base-image
+LABEL builder=true
 
 WORKDIR /root/src/
 ENV PATH=/root/.local/bin:$PATH
@@ -30,6 +31,7 @@ RUN SECRET_KEY=0 CSP_ENABLED= DATABASE_URL= python3 manage.py collectstatic --no
 
 
 FROM $BASE_IMAGE AS secondary-image
+LABEL builder=false
 
 WORKDIR /root/src/
 ENV PYTHONUNBUFFERED=1
