@@ -1,8 +1,6 @@
 #!/bin/sh -eux
 # Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
 
-PROJECT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`
-
 # Build and tag the first image from multi-stage app Dockerfile
 # to mark it as not dangling
 docker build -t {{cookiecutter.django_project_name}}/app-build --target base-image -f app/Dockerfile  app
