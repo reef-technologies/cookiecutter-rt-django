@@ -13,6 +13,7 @@ SERVICES=$(docker-compose ps --services 2>&1 > /dev/stderr \
 docker-compose stop $SERVICES
 docker-compose up -d
 
+docker-compose exec -T app python manage.py wait_for_database
 docker-compose exec -T app python manage.py migrate
 
 # Reloading nginx configuration without the process downtime
