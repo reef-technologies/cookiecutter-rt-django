@@ -11,9 +11,14 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 
 root = environ.Path(__file__) - 2
-env = environ.Env(
-    DEBUG=(bool, False),
-)
+
+env = environ.Env(DEBUG=(bool, False))
+# read from the .env file if hasn't been sourced already
+if env('SECRET_KEY', default=None) is None:
+    env.read_env(root('../../.env'))
+
+
+## Django settings
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -22,9 +27,6 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['*']
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,7 +40,6 @@ INSTALLED_APPS = [
     'django_probes',
 
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
-
 ]
 
 MIDDLEWARE = [
@@ -97,13 +98,10 @@ TEMPLATES = [
 WSGI_APPLICATION = '{{cookiecutter.django_project_name}}.wsgi.application'
 
 
-# Database
 if env('DATABASE_URL'):
     DATABASES = {
         'default': env.db(),
     }
-
-# Password validation
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -120,30 +118,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-
 STATIC_URL = env('STATIC_URL', default='/static/')
-
 STATIC_ROOT = env('STATIC_ROOT', default=root('static'))
-
 MEDIA_URL = env('MEDIA_URL', default='/media/')
-
 MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 
+# Security
 # redirect HTTP to HTTPS
 if env.bool('HTTPS_REDIRECT', default=False) and not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -162,9 +150,8 @@ if HTTPS_PROXY_HEADER and not DEBUG:
 else:
     SECURE_PROXY_SSL_HEADER = None
 
-
 {% if cookiecutter.use_celery == "y" %}
-# --- Celery
+## Celery
 
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 
@@ -185,10 +172,12 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 {% endif %}
 
+## Sentry
+
 if env('SENTRY_DSN', default=''):
     sentry_logging = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.ERROR     # Send error events from log messages
+        event_level=logging.ERROR  # Send error events from log messages
     )
 
     sentry_sdk.init(

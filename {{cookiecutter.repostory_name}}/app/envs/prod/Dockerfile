@@ -27,7 +27,7 @@ COPY ./envs/prod/entrypoint.sh /root/src/
 RUN python3 -m compileall -b -f -q /root/
 # By tricking these env variables we can run collectstatic during the container build.
 # They aren't used by `collectstatic` so be fake.
-RUN SECRET_KEY=0 CSP_ENABLED= DATABASE_URL= python3 manage.py collectstatic --no-input --clear
+RUN ENV=prod SECRET_KEY=0 CSP_ENABLED= DATABASE_URL= python3 manage.py collectstatic --no-input --clear
 
 
 FROM $BASE_IMAGE AS secondary-image

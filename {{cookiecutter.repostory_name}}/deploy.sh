@@ -1,6 +1,11 @@
 #!/bin/sh -eux
 # Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
 
+if [ ! -f ".env" ]; then
+    echo "\e[31mPlease setup the environment first!\e[0m";
+    exit 1;
+fi
+
 docker-compose build
 
 # Tag the first image from multi-stage app Dockerfile to mark it as not dangling
