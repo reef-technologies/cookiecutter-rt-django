@@ -1,4 +1,9 @@
 #!/bin/bash -e
+
+# Update PATH in case docker-compose is installed via PIP
+# and this script was invoked from e.g. cron
+PATH=/usr/local/sbin:/usr/local/bin:$PATH
+
 if [ "$(basename "$0")" == 'bin' ]; then
   cd ..
 fi

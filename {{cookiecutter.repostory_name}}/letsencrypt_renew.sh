@@ -1,5 +1,9 @@
 #!/bin/bash -eux
 
+# Update PATH in case docker-compose is installed via PIP
+# and this script was invoked from e.g. cron
+PATH=/usr/local/sbin:/usr/local/bin:$PATH
+
 echo "[$(date)] refreshing letsencrypt certificate..."
 
 cd "$(dirname "$0")"
