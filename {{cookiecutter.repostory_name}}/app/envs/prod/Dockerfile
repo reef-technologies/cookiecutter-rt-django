@@ -17,7 +17,7 @@ COPY ./src/requirements.txt requirements.txt
 {% if cookiecutter.use_alpine_linux == "y" -%}
 RUN grep psycopg2 requirements.txt && apk add --no-cache postgresql-dev gcc python3-dev musl-dev || true
 RUN grep Pillow requirements.txt && apk add --no-cache jpeg-dev tiff-dev zlib-dev libwebp-dev gcc python3-dev musl-dev || true
-RUN grep git:\/\/ requirements.txt && apk add --no-cache git || true
+RUN grep git+ requirements.txt && apk add --no-cache git || true
 {% endif -%}
 
 RUN pip3 install --user --no-cache-dir -r requirements.txt
