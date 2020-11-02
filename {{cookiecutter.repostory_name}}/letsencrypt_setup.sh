@@ -23,5 +23,5 @@ crontab -l
 {% if cookiecutter.use_https != 'y' %}
 echo ""
 echo "Project was generated without https configured."
-echo "Please remember to uncomment lines in dc-prod.yml and nginx/conf/default.template"
+echo "Please remember to uncomment lines in envs/prod/docker-compose.yml and nginx/templates/default.conf.template"
 {% endif %}

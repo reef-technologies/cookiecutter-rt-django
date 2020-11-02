@@ -10,54 +10,49 @@ Base requirements
 
 * docker
 * docker-compose
-* direnv (https://direnv.net/ - installation and setup instruction)
 * Python 3.8
 
 For a fresh ubuntu you can install the above with:
 ```
 groupadd docker
 snap install docker
-apt install direnv
 ```
 
 
-Setup virtualenv (for development)
+Setup development environment (virtualenv)
 ----------------------------------
 
 ```
 $ mkvirtualenv -p /usr/bin/python3.8 {{ cookiecutter.django_project_name }}
-$ ./setup-virtualenv.sh
+$ ./setup-dev.sh
 
 # on second tab
 
 $ docker-compose up
 
-# wait till db is initialized, then on first tab
+# then on first tab
 
 $ cd app/src
+$ python manage.py wait_for_database
 $ python manage.py migrate
 $ python manage.py runserver
 
 ```
 
-Setup production (docker deployment)
+Setup production environment (docker deployment)
 ------------------------------------
 
 Use `ssh-keygen` to generate a key pair for the server, then add read-only access to repository in "deployment keys" section (`ssh -A` is easy to use, but not safe).
 
 ```
-./setup-docker-prod.sh
+./setup-prod.sh
 
-# change SECRET_KEY and (POSTGRES_PASSWORD or DATABASE_URL) in `.env`, adjust the rest of `.env` and `.envrc` to your liking
+# change SECRET_KEY and (POSTGRES_PASSWORD or DATABASE_URL) in `.env`, adjust the rest of `.env` to your liking
 {% if cookiecutter.use_https == 'y'%}
-# set correct NGINX_HOSTNAME if .env for https
+# set correct NGINX_HOSTNAME in .env for https
 
 $ ./letsencrypt_setup.sh
 {% endif %}
-$ docker-compose up
-
-# wait till db is initialized then Ctrl + C
-
 $ ./deploy.sh
 
 ```
