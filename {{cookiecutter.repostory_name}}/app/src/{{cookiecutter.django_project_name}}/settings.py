@@ -14,11 +14,10 @@ root = environ.Path(__file__) - 2
 
 env = environ.Env(DEBUG=(bool, False))
 # read from the .env file if hasn't been sourced already
-if env('SECRET_KEY', default=None) is None:
+if env('ENV', default=None) is None:
     env.read_env(root('../../.env'))
 
-
-## Django settings
+ENV = env('ENV')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -151,8 +150,7 @@ else:
     SECURE_PROXY_SSL_HEADER = None
 
 {% if cookiecutter.use_celery == "y" %}
-## Celery
-
+# Celery
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 
 # Store task results in Redis
@@ -172,8 +170,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 {% endif %}
 
-## Sentry
-
+# Sentry
 if env('SENTRY_DSN', default=''):
     sentry_logging = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
