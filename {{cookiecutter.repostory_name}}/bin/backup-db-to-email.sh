@@ -1,16 +1,14 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
+
 if [ "$(basename "$0")" == 'bin' ]; then
-  . ../.env
+  cd ..
+  . bin/backup-db.sh
 else
-  . .env
+  . bin/backup-db.sh
 fi
 
 date
 
-backup_file="$(bin/backup-db.sh)"
-
-EMAIL_CREDS="${EMAIL_HOST_USER}:${EMAIL_HOST_PASSWORD}@${EMAIL_HOST}:${EMAIL_PORT}" bin/emailhelper.py --to "$1" --subject "Backup of ${POSTGRES_DB}" -f "$backup_file"
+EMAIL_CREDS="${EMAIL_HOST_USER}:${EMAIL_HOST_PASSWORD}@${EMAIL_HOST}:${EMAIL_PORT}" bin/emailhelper.py --to "$1" --subject "Backup of ${POSTGRES_DB}" -f "$target"
 
 echo "Email sent successfully"
-
-rm "$backup_file"

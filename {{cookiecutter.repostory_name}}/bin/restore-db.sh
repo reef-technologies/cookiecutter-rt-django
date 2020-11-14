@@ -1,17 +1,15 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
+
 if [ "$(basename "$0")" == 'bin' ]; then
-  . ../.env
-else
-  . .env
+  cd ..
 fi
+
+. .env
 
 target="$1"
 
-if [ -n "$DATABASE_URL" ]; then
-  zcat "$target" | docker run -i --rm postgres:9.6 psql -d "$DATABASE_URL"
+if [[ "$DATABASE_URL" =~ "@db:" ]]; then
+  zcat "$target" | docker run -i --rm --network {{cookiecutter.repostory_name}}_default postgres:9.6-alpine psql "$DATABASE_URL"
 else
-  zcat "$target" | docker-compose exec -T db psql -U postgres "$POSTGRES_DB"
+  zcat "$target" | docker run -i --rm --network host postgres:9.6-alpine psql "$DATABASE_URL"
 fi
-
-echo 'restore finished'
-

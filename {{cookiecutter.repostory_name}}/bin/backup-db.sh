@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -eux
 
 # Update PATH in case docker-compose is installed via PIP
 # and this script was invoked from e.g. cron
@@ -11,10 +11,9 @@ fi
 . .env
 
 target="db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
-if [ -n "$DATABASE_URL" ]; then
-  docker run --rm postgres:9.6 pg_dump -d "$DATABASE_URL" | gzip > "$target"
-else
-  docker-compose exec db pg_dumpall -c -U postgres | gzip > "$target"
-fi
 
-echo "$target"
+if [[ "$DATABASE_URL" =~ "@db:" ]]; then
+  docker run --rm --network {{cookiecutter.repostory_name}}_default postgres:9.6-alpine pg_dump "$DATABASE_URL" | gzip > "$target"
+else
+  docker run --rm --network host postgres:9.6-alpine pg_dump "$DATABASE_URL" | gzip > "$target"
+fi

@@ -40,7 +40,8 @@ class GmailSender(namedtuple('SmtpAuthData', 'server port user password')):
         s = smtplib.SMTP(self.server, self.port)
         s.ehlo()
         s.starttls()
-        s.login(self.user, self.password)
+        if self.password:
+            s.login(self.user, self.password)
         s.sendmail(addr_from, addr_to, msg.as_string())
         s.quit()
 
@@ -87,7 +88,7 @@ if __name__ == '__main__':
 
     try:
         email_creds = urlsplit('//%s' % email_creds)
-        if not all([email_creds.username, email_creds.password, email_creds.hostname, email_creds.port]):
+        if not all([email_creds.username, email_creds.hostname, email_creds.port]):
             raise ValueError
     except ValueError:
         sys.stderr.write('EMAIL_CREDS environment variable has wrong format!\nexport EMAIL_CREDS=user:password@server:port')
@@ -95,7 +96,10 @@ if __name__ == '__main__':
 
     addr_to = parser_result.to_email
     files = parser_result.files or []
-    addr_from = email_creds.username
+    if '@' in email_creds.username:
+        addr_from = email_creds.username
+    else:
+        addr_from = '%s@%s' % (email_creds.username, email_creds.hostname)
 
     print("Enter/Paste the message for email. Ctrl-%s to save it." % (os.name == 'nt' and 'Z' or 'D'))
     message_lines = []
