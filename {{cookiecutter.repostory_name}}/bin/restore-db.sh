@@ -1,5 +1,7 @@
 #!/bin/bash -eux
 
+set -o pipefail
+
 if [ "$(basename "$0")" == 'bin' ]; then
   cd ..
 fi
@@ -9,7 +11,11 @@ fi
 target="$1"
 
 if [[ "$DATABASE_URL" =~ "@db:" ]]; then
-  zcat "$target" | docker run -i --rm --network {{cookiecutter.repostory_name}}_default postgres:9.6-alpine psql "$DATABASE_URL"
+  DOCKER_NETWORK={{cookiecutter.repostory_name}}_default
 else
-  zcat "$target" | docker run -i --rm --network host postgres:9.6-alpine psql "$DATABASE_URL"
+  DOCKER_NETWORK=host
 fi
+
+zcat "$target" | docker run -i --rm --network $DOCKER_NETWORK postgres:9.6-alpine psql "$DATABASE_URL"
+
+echo 'restore finished'
