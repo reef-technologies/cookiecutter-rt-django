@@ -6,21 +6,19 @@
 Skeleton of this project was generated with `cookiecutter-rt-django`, which sometimes gets upgrades that are easy to retrofit into already older projects.
 
 Base requirements
-------------
+-----------------
 
 * docker
 * docker-compose
 * Python 3.8
 
-For a fresh ubuntu you can install the above with:
+For a fresh Ubuntu 20.04 you can install the above with:
 ```
-groupadd docker
-snap install docker
+$ sudo ./bin/prepare-os.sh
 ```
-
 
 Setup development environment (virtualenv)
-----------------------------------
+------------------------------------------
 
 ```
 $ mkvirtualenv -p /usr/bin/python3.8 {{ cookiecutter.django_project_name }}
@@ -40,7 +38,7 @@ $ python manage.py runserver
 ```
 
 Setup production environment (docker deployment)
-------------------------------------
+------------------------------------------------
 
 Use `ssh-keygen` to generate a key pair for the server, then add read-only access to repository in "deployment keys" section (`ssh -A` is easy to use, but not safe).
 
