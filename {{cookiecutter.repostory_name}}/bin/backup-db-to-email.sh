@@ -1,9 +1,10 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
+
 if [ "$(basename "$0")" == 'bin' ]; then
-  . ../.env
-else
-  . .env
+  cd ..
 fi
+
+. .env
 
 date
 
