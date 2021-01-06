@@ -62,10 +62,21 @@ $ ./letsencrypt_setup.sh
 ```
 {% endif %}
 
-Setting up backups
+Setting up periodic backups
 ------------------
 
-Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-to-email.sh target@email.address` to crontab. This assumes you have configured email access in `.env` properly.
+Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-db.sh` to crontab. 
+
+### Configuring targets for backups:
+
+#### Backblaze
+
+Set BACKUP_B2_BUCKET_NAME, BACKUP_B2_KEY_ID, BACKUP_B2_KEY_SECRET in .env file
+
+#### Email
+
+Set EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_TARGET in .env file
+
 
 
 Handling requirements freeze

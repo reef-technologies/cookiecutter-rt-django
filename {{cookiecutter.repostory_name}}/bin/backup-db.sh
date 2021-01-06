@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 
 set -o pipefail
 
@@ -11,15 +11,32 @@ if [ "$(basename "$0")" == 'bin' ]; then
 fi
 
 . .env
-
-target="db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
+mkdir -p .backups
+TARGET=".backups/db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
 
 if [[ "$DATABASE_URL" =~ "@db:" ]]; then
-  DOCKER_NETWORK={{cookiecutter.repostory_name}}_default
+  DOCKER_NETWORK=test-backups_default
 else
   DOCKER_NETWORK=host
 fi
 
-docker run --rm --network $DOCKER_NETWORK postgres:9.6-alpine pg_dump -c "$DATABASE_URL" | gzip > "$target"
+docker run --rm --network $DOCKER_NETWORK postgres:9.6-alpine pg_dump -c "$DATABASE_URL" | gzip > "$TARGET"
+echo "$TARGET"
 
-echo "$target"
+if [ -n "$EMAIL_HOST" ]; then
+  bin/backup-db-to-email.sh "$TARGET" || true
+fi
+
+if [ -n "$BACKUP_B2_BUCKET" ]; then
+  bin/backup-db-to-b2.sh "$TARGET" || true
+fi
+
+if [ -n "$BACKUP_ROTATE_KEEP_LAST" ]; then
+  echo "Rotating backup files - keeping $BACKUP_ROTATE_KEEP_LAST last ones"
+  lines=$(($BACKUP_ROTATE_KEEP_LAST+1))
+  cd .backups
+  ls -t1 | tail -n "+$lines" | xargs rm
+  cd ..
+fi
+
+
