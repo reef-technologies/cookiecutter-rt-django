@@ -15,7 +15,7 @@ mkdir -p .backups
 TARGET=".backups/db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
 
 if [[ "$DATABASE_URL" =~ "@db:" ]]; then
-  DOCKER_NETWORK=test-backups_default
+  DOCKER_NETWORK={{cookiecutter.repostory_name}}_default
 else
   DOCKER_NETWORK=host
 fi
