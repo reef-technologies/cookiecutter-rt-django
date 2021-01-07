@@ -31,12 +31,9 @@ if [ -n "$BACKUP_B2_BUCKET" ]; then
   bin/backup-db-to-b2.sh "$TARGET" || true
 fi
 
-if [ -n "$BACKUP_ROTATE_KEEP_LAST" ]; then
-  echo "Rotating backup files - keeping $BACKUP_ROTATE_KEEP_LAST last ones"
-  lines=$(($BACKUP_ROTATE_KEEP_LAST+1))
-  cd .backups
-  ls -t1 | tail -n "+$lines" | xargs rm
-  cd ..
+if [ -n "$BACKUP_LOCAL_ROTATE_KEEP_LAST" ]; then
+  echo "Rotating backup files - keeping $BACKUP_LOCAL_ROTATE_KEEP_LAST last ones"
+  bin/rotate-files.py .backups "$BACKUP_LOCAL_ROTATE_KEEP_LAST"
 fi
 
 

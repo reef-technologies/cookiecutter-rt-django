@@ -65,9 +65,13 @@ $ ./letsencrypt_setup.sh
 Setting up periodic backups
 ------------------
 
-Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-db.sh` to crontab. 
+Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-db.sh` to crontab.
 
-### Configuring targets for backups:
+Set BACKUP_LOCAL_ROTATE_KEEP_LAST to keep only a specific number of most recent backups in local .backups directory.
+
+### Configuring offsite targets for backups:
+
+Backups are put in .backups directory locally, additionally then can be stored offsite in following ways:
 
 #### Backblaze
 
