@@ -11,4 +11,4 @@ COPY ./send_backup.sh /root/
 RUN chmod u+x send_backup.sh
 
 COPY ./retrieve_backup.sh /root/
-RUN chmod u+x send_backup.sh
+RUN chmod u+x retrieve_backup.sh
