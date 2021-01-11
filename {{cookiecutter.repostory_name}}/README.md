@@ -67,19 +67,19 @@ Setting up periodic backups
 
 Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-db.sh` to crontab.
 
-Set BACKUP_LOCAL_ROTATE_KEEP_LAST to keep only a specific number of most recent backups in local .backups directory.
+Set BACKUP_LOCAL_ROTATE_KEEP_LAST to keep only a specific number of most recent backups in local `.backups` directory.
 
 ### Configuring offsite targets for backups:
 
-Backups are put in .backups directory locally, additionally then can be stored offsite in following ways:
+Backups are put in `.backups` directory locally, additionally then can be stored offsite in following ways:
 
 #### Backblaze
 
-Set BACKUP_B2_BUCKET_NAME, BACKUP_B2_KEY_ID, BACKUP_B2_KEY_SECRET in .env file
+Set BACKUP_B2_BUCKET_NAME, BACKUP_B2_KEY_ID, BACKUP_B2_KEY_SECRET in `.env` file
 
 #### Email
 
-Set EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_TARGET in .env file
+Set EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_TARGET in `.env` file
 
 
 

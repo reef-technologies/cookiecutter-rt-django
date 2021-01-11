@@ -33,7 +33,7 @@ fi
 
 if [ -n "$BACKUP_LOCAL_ROTATE_KEEP_LAST" ]; then
   echo "Rotating backup files - keeping $BACKUP_LOCAL_ROTATE_KEEP_LAST last ones"
-  bin/rotate-files.py .backups "$BACKUP_LOCAL_ROTATE_KEEP_LAST"
+  bin/rotate-local-backups.py "$BACKUP_LOCAL_ROTATE_KEEP_LAST"
 fi
 
 

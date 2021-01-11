@@ -9,12 +9,13 @@ if [ ! -e "$1" ]; then
   exit 127
 fi
 
-CONTAINER_NAME="{{ cookiecutter.repostory_name }}-backups-b2"
-docker build --quiet -t "$CONTAINER_NAME" tools/backup-b2
+IMAGE_NAME="{{ cookiecutter.repostory_name }}-backups-b2"
+docker build --quiet -t "$IMAGE_NAME" tools/backup-b2
 
 docker run \
   --mount type=bind,src="$(pwd)"/.backups,target=/root/.backups,readonly \
+  --rm
   --env-file=.env \
-  "$CONTAINER_NAME" ./send_backup.sh "$1"
+  "$IMAGE_NAME" ./send_backup.sh "$1"
 
 
