@@ -14,7 +14,7 @@ docker build --quiet -t "$IMAGE_NAME" tools/backup-b2
 
 docker run \
   --mount type=bind,src="$(pwd)"/.backups,target=/root/.backups,readonly \
-  --rm
+  --rm \
   --env-file=.env \
   "$IMAGE_NAME" ./send_backup.sh "$1"
 

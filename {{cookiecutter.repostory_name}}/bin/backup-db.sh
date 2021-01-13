@@ -11,6 +11,12 @@ if [ "$(basename "$0")" == 'bin' ]; then
 fi
 
 . .env
+
+if [ -n "${SENTRY_DSN}" ]; then
+  export SENTRY_DSN
+  eval "$(sentry-cli bash-hook)"
+fi
+
 mkdir -p .backups
 TARGET=".backups/db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
 
@@ -21,19 +27,20 @@ else
 fi
 
 docker run --rm --network $DOCKER_NETWORK postgres:9.6-alpine pg_dump -c "$DATABASE_URL" | gzip > "$TARGET"
-echo "$TARGET"
+echo "${TARGET}"
 
-if [ -n "$EMAIL_HOST" ]; then
-  bin/backup-db-to-email.sh "$TARGET" || true
+if [ -n "${BACKUP_B2_BUCKET}" ]; then
+  bin/backup-db-to-b2.sh "${TARGET}"
 fi
 
-if [ -n "$BACKUP_B2_BUCKET" ]; then
-  bin/backup-db-to-b2.sh "$TARGET" || true
+if [ -n "${EMAIL_HOST}" ] && [ -n "${EMAIL_TARGET}" ]; then
+  bin/backup-db-to-email.sh "${TARGET}"
 fi
 
-if [ -n "$BACKUP_LOCAL_ROTATE_KEEP_LAST" ]; then
-  echo "Rotating backup files - keeping $BACKUP_LOCAL_ROTATE_KEEP_LAST last ones"
-  bin/rotate-local-backups.py "$BACKUP_LOCAL_ROTATE_KEEP_LAST"
+
+if [ -n "${BACKUP_LOCAL_ROTATE_KEEP_LAST}" ]; then
+  echo "Rotating backup files - keeping ${BACKUP_LOCAL_ROTATE_KEEP_LAST} last ones"
+  bin/rotate-local-backups.py "${BACKUP_LOCAL_ROTATE_KEEP_LAST}"
 fi
 
 

@@ -19,7 +19,7 @@ docker build --quiet -t "$IMAGE_NAME" tools/backup-b2
 
 docker run \
   --mount type=bind,src="$(pwd)"/.backups,target=/root/.backups \
-  --rm
+  --rm \
   --env BACKUP_B2_BUCKET \
   --env BACKUP_B2_KEY_ID \
   --env BACKUP_B2_KEY_SECRET \
