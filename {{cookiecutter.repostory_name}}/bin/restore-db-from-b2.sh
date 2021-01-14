@@ -6,7 +6,7 @@ fi
 
 if [ -z "$1" ]; then
   echo "Pass backup file name/path (in B2) as the first argument"
-  exit 127
+  exit 2
 fi
 
 if [[ -z "$BACKUP_B2_BUCKET" || -z "$BACKUP_B2_KEY_ID" || -z "$BACKUP_B2_KEY_SECRET" ]]; then

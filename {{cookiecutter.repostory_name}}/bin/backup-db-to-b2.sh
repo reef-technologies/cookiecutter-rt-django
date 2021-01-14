@@ -6,7 +6,7 @@ fi
 
 if [ ! -f "$1" ]; then
   echo "Pass existing backup file name (with .backups/ directory name) as the first argument"
-  exit 127
+  exit 2
 fi
 
 IMAGE_NAME="{{ cookiecutter.repostory_name }}-backups-b2"

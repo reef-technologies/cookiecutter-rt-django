@@ -8,14 +8,14 @@ from pathlib import Path
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Keep all but N most recent files in a directory')
-    parser.add_argument('file_number', help='How many last files to keep', type=int)
+    parser.add_argument('file_count', help='How many last files to keep', type=int)
     return parser.parse_args()
 
 
-def rotate_backups(arguments):
-    files = [(f.stat().st_mtime, f) for f in Path('.backups').iterdir() if f.is_file()]
+def rotate_backups(path, file_count):
+    files = [(f.stat().st_mtime, f) for f in Path(path).iterdir() if f.is_file()]
     files.sort()
-    files = files[:-arguments.file_number]
+    files = files[:-file_count]
     if files:
         print(f"Removing {len(files)} old files")
         for mtime, f in files:
@@ -26,4 +26,4 @@ def rotate_backups(arguments):
 
 if __name__ == '__main__':
     parser_result = parse_arguments()
-    rotate_backups(parser_result)
+    rotate_backups('.backups', parser_result.file_count)
