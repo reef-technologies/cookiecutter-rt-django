@@ -75,11 +75,11 @@ Backups are put in `.backups` directory locally, additionally then can be stored
 
 #### Backblaze
 
-Set BACKUP_B2_BUCKET_NAME, BACKUP_B2_KEY_ID, BACKUP_B2_KEY_SECRET in `.env` file
+Set `BACKUP_B2_BUCKET_NAME`, `BACKUP_B2_KEY_ID`, `BACKUP_B2_KEY_SECRET` in `.env` file
 
 #### Email
 
-Set EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_TARGET in `.env` file
+Set `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_TARGET` in `.env` file
 
 
 

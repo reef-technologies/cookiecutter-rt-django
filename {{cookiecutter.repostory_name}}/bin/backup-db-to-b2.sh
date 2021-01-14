@@ -1,10 +1,10 @@
-#!/bin/bash -e
+#!/bin/bash -eu
 
 if [ "$(basename "$0")" == 'bin' ]; then
   cd ..
 fi
 
-if [ ! -e "$1" ]; then
+if [ ! -f "$1" ]; then
   echo "Pass existing backup file name (with .backups/ directory name) as the first argument"
   exit 127
 fi
@@ -17,5 +17,4 @@ docker run \
   --rm \
   --env-file=.env \
   "$IMAGE_NAME" ./send_backup.sh "$1"
-
 
