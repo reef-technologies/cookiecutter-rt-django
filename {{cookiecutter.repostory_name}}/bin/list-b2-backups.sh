@@ -5,7 +5,7 @@ if [ "$(basename "$0")" == 'bin' ]; then
 fi
 
 if [[ $# -ne 3 ]]; then
-    echo "Usage: bin/restore-db-from-b2.sh <B2_KEY_ID> <B2_KEY_SECRET> <B2_FILE_ID>"
+    echo "Usage: bin/list-b2-backups-b2.sh <B2_KEY_ID> <B2_KEY_SECRET> <B2_BUCKET_NAME>"
     echo "All arguments are required"
     exit 2
 fi
@@ -20,7 +20,4 @@ docker run \
   --rm \
   --env BACKUP_B2_KEY_ID="$1" \
   --env BACKUP_B2_KEY_SECRET="$2" \
-  --env B2_FILE_ID="$3" \
-  "$IMAGE_NAME" ./retrieve_backup.sh "$FILENAME"
-
-bin/restore-db.sh "$FILENAME"
+  "$IMAGE_NAME" ./list_backups.sh --long "$3"
