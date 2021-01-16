@@ -13,8 +13,6 @@ fi
 IMAGE_NAME="{{ cookiecutter.repostory_name }}-backups-b2"
 docker build --quiet -t "$IMAGE_NAME" tools/backup-b2
 
-FILENAME=.backups/restore_from_b2.sql.gz
-
 docker run \
   --mount type=bind,src="$(pwd)"/.backups,target=/root/.backups \
   --rm \
