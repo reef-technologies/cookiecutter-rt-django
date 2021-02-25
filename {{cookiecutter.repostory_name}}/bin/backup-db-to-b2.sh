@@ -9,12 +9,10 @@ if [ ! -f "$1" ]; then
   exit 2
 fi
 
-IMAGE_NAME="{{ cookiecutter.repostory_name }}-backups-b2"
-docker build --quiet -t "$IMAGE_NAME" tools/backup-b2
+. .env
 
-docker run \
-  --mount type=bind,src="$(pwd)"/.backups,target=/root/.backups,readonly \
-  --rm \
-  --env-file=.env \
-  "$IMAGE_NAME" ./send_backup.sh "$1"
+b2 authorize-account "$BACKUP_B2_KEY_ID" "$BACKUP_B2_KEY_SECRET"
+b2 upload-file "$BACKUP_B2_BUCKET" "$1" "$(basename "$1")"
+
+
 
