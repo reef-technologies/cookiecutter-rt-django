@@ -1,4 +1,4 @@
-Django==2.2.19
+Django==2.2.20
 {% if cookiecutter.csp_enabled == "y" -%}
 django-csp==3.6
 {% endif -%}
