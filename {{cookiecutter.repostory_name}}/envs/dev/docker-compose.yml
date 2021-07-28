@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   redis:
-    image: redis:3-alpine
+    image: redis:6-alpine
     command: redis-server --appendonly yes
     healthcheck:
       test: redis-cli ping
@@ -12,7 +12,7 @@ services:
       - 8379:6379
 
   db:
-    image: postgres:9.6-alpine
+    image: postgres:13.3-alpine
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
     environment:

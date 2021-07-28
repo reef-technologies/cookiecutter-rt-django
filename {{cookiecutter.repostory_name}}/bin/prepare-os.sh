@@ -35,5 +35,3 @@ fi
 if [ ! -x "${DOCKER_COMPOSE_BIN}" ]; then
     apt-get -y install docker-ce docker-compose
 fi
-
-

@@ -2,10 +2,11 @@ version: '3.7'
 
 services:
   redis:
-    image: 'redis:3-alpine'
+    image: 'redis:6-alpine'
     command: redis-server --appendonly yes
     healthcheck:
       test: redis-cli ping
+    restart: unless-stopped
     volumes:
       - ./redis/data:/data
     logging: &logging
@@ -14,9 +15,10 @@ services:
         tag: {% raw %}'{{.Name}}'{% endraw %}
 
   db:
-    image: 'postgres:9.6-alpine'
+    image: 'postgres:13.3-alpine'
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
+    restart: unless-stopped
     env_file: ./.env
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -35,7 +37,7 @@ services:
     healthcheck:
       test: wget -q 127.0.0.1:8000
     init: true
-    restart: always
+    restart: unless-stopped
     env_file: ./.env
     volumes:
       - backend-static:/root/src/static
@@ -52,10 +54,12 @@ services:
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
     init: true
+    restart: unless-stopped
     env_file: ./.env
     environment:
       - DEBUG=off
-    command: celery -A {{cookiecutter.django_project_name}} worker -l INFO --concurrency=4
+    command: ./celery-entrypoint.sh
+    tmpfs: /run
     links:
       - redis:redis
     depends_on:
@@ -66,7 +70,7 @@ services:
   celery-beat:
     image: {{cookiecutter.django_project_name}}/app
     init: true
-    restart: always
+    restart: unless-stopped
     env_file: ./.env
     environment:
       - DEBUG=off
@@ -86,7 +90,7 @@ services:
     healthcheck:
       test: wget -q 0.0.0.0:80
     init: true
-    restart: always
+    restart: unless-stopped
     env_file: ./.env
     environment:
       - DEBUG=off
@@ -102,7 +106,7 @@ services:
 
   nginx:
     image: 'nginx:stable-alpine'
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: wget -q 0.0.0.0:80
     environment:

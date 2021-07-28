@@ -3,9 +3,15 @@ Django settings for {{cookiecutter.django_project_name}} project.
 """
 
 import datetime as dt
-import environ
-import sentry_sdk
 import logging
+from functools import wraps
+import inspect
+
+import environ
+{% if cookiecutter.use_celery == "y" %}
+from celery.schedules import crontab
+{% endif %}
+import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -13,6 +19,20 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 root = environ.Path(__file__) - 2
 
 env = environ.Env(DEBUG=(bool, False))
+
+if env.bool('ENV_FILL_MISSING_VALUES', default=False):
+
+    def patch(fn):
+        @wraps(fn)
+        def wrapped(*args, **kwargs):
+            if kwargs.get('default') is env.NOTSET:
+                kwargs['default'] = None
+            return fn(*args, **kwargs)
+        return wrapped
+
+    for name, method in inspect.getmembers(env, predicate=inspect.ismethod):
+        setattr(env, name, patch(method))
+
 # read from the .env file if hasn't been sourced already
 if env('ENV', default=None) is None:
     env.read_env(root('../../.env'))
@@ -51,9 +71,22 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': lambda _request: True
+    }
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
+
+if CORS_ENABLED := env.bool('CORS_ENABLED', default=True):
+    INSTALLED_APPS.append('corsheaders')
+    MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
+    CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
+    CORS_ALLOWED_ORIGIN_REGEXES = env.list('CORS_ALLOWED_ORIGIN_REGEXES', default=[])
+    CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
+
 # Content Security Policy
-CSP_ENABLED = env.bool('CSP_ENABLED')
-if CSP_ENABLED:
+if CSP_ENABLED := env.bool('CSP_ENABLED'):
     MIDDLEWARE.append('csp.middleware.CSPMiddleware')
 
     CSP_REPORT_ONLY = env.bool('CSP_REPORT_ONLY', default=True)
@@ -101,6 +134,7 @@ if env('DATABASE_URL'):
     DATABASES = {
         'default': env.db(),
     }
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -150,26 +184,28 @@ else:
     SECURE_PROXY_SSL_HEADER = None
 
 {% if cookiecutter.use_celery == "y" %}
-# Celery
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
-
-# Store task results in Redis
-CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')
-
-# Task result life time until they will be deleted
-CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())
-
-# Needed for worker monitoring
-CELERY_SEND_EVENTS = True
-
-CELERY_BEAT_SCHEDULE = {}
-
-# default to json serialization only
+CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')  # store results in Redis
+CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())  # time until task result deletion
+CELERY_SEND_EVENTS = True  # needed for worker monitoring
+CELERY_BEAT_SCHEDULE = {
+    # 'task_name': {
+    #     'task': '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}.tasks.demo_task',
+    #     'args': [2, 2],
+    #     'kwargs': {},
+    #     'schedule': crontab(minute=0, hour=0),
+    # },
+}
+CELERY_TASK_ROUTES = ['{{cookiecutter.django_project_name}}.celery.route_task']
+CELERY_TASK_TIME_LIMIT = 60 * 5
 CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
+CELERY_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+CELERY_WORKER_PREFETCH_MULTIPLIER = env.int('CELERY_WORKER_PREFETCH_MULTIPLIER', default=10)
+CELERY_BROKER_POOL_LIMIT = env.int('CELERY_BROKER_POOL_LIMIT', default=50)
 {% endif %}
 
+SLACK_BOT_TOKEN = env('SLACK_BOT_TOKEN', default='')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -199,13 +235,14 @@ LOGGING = {
 }
 
 # Sentry
-if env('SENTRY_DSN', default=''):
-    sentry_logging = LoggingIntegration(
-        level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.ERROR  # Send error events from log messages
-    )
-
+if SENTRY_DSN := env('SENTRY_DSN', default=''):
     sentry_sdk.init(
-        dsn=env('SENTRY_DSN', default=''),
-        integrations=[DjangoIntegration(), sentry_logging]
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            LoggingIntegration(
+                level=logging.INFO,  # Capture info and above as breadcrumbs
+                event_level=logging.ERROR  # Send error events from log messages
+            ),
+        ]
     )
