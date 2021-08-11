@@ -1,50 +1,18 @@
 #!/bin/sh
+set -e
 
-# safety switch, exit script if there's error. Full command of shortcut `set -e`
-set -o errexit
-# safety switch, uninitialized variables will stop script. Full command of shortcut `set -u`
-set -o nounset
+# below we define two workers types (each may have any concurrency);
+# each worker may have its own settings
+WORKERS="master other"
+OPTIONS="-A {{cookiecutter.django_project_name}} -E -l ERROR --pidfile=/var/run/celery/%n.pid --logfile=-"
 
-# tear down function
-teardown()
-{
-    echo " Signal caught..."
-    echo "Stopping celery multi gracefully..."
+# set up settings for workers and run the latter;
+# here events from "celery" queue (default one, will be used if queue not specified)
+# will go to "master" workers, and events from "other" queue go to "other" workers;
+# by default there are no workers, but each type of worker may scale up to 4 processes
+celery multi start $WORKERS $OPTIONS \
+    -Q:master celery --autoscale:master=4,0 \
+    -Q:other other --autoscale:other=4,0
 
-    # send shutdown signal to celery workser via `celery multi`
-    # command must mirror some of `celery multi start` arguments
-    celery multi stop \
-        master \
-        --pidfile=/run/celery-%n.pid \
-        --logfile=./celery-%n%I.log
-
-    echo "Stopped celery multi..."
-    echo "Stopping last waited process"
-    kill -s TERM "$child" 2> /dev/null
-    echo "Stopped last waited process. Exiting..."
-    exit 1
-}
-
-# start celery worker via `celery multi` with declared logfile for `tail -f`
-# -Q:<worker-name> <queue-name> --autoscale:<worker-name>=max,min
-# "celery" is default queue name
-celery multi start \
-    master \
-    -A {{cookiecutter.django_project_name}} -E \
-    -Q:master=celery --autoscale:master=4,0 \
-    -l ERROR \
-    --pidfile=/run/celery-%n.pid \
-    --logfile=./celery-%n%I.log
-
-# start trapping signals (docker sends `SIGTERM` for shudown)
-trap teardown SIGINT SIGTERM
-
-# tail all the logs continuously to console for `docker logs` to see
-tail -f ./celery*.log &
-
-# capture process id of `tail` for tear down
-child=$!
-
-# waits for `tail -f` indefinitely and allows external signals,
-# including docker stop signals, to be captured by `trap`
-wait "$child"
+trap "celery multi stop $WORKERS $OPTIONS; exit 0" SIGINT SIGTERM
+sleep infinity
