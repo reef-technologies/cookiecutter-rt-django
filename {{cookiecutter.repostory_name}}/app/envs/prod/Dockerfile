@@ -11,7 +11,7 @@ WORKDIR /root/src/
 ENV PATH=/root/.local/bin:$PATH
 
 RUN pip3 install --no-cache-dir -U pip
-RUN pip3 install --user --no-cache-dir gunicorn==20.1.0 {% if cookiecutter.async == 'y' %}uvicorn==0.14.0{% endif %}
+RUN pip3 install --user --no-cache-dir gunicorn==20.1.0
 
 COPY ./src/requirements.txt requirements.txt
 

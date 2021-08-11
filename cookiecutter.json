@@ -3,7 +3,6 @@
     "project_short_description": "I am lazy and haven't written any project description",
     "django_project_name": "project",
     "django_default_app_name": "core",
-    "async": "n",
     "secret_key": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*50)|map('random')|join('')}}",
     "postgres_user": "postgres",
     "postgres_password": "{{(['QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890']*16)|map('random')|join('')}}",
