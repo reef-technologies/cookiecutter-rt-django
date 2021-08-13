@@ -17,11 +17,9 @@ SERVICES=$(docker-compose ps --services 2>&1 > /dev/stderr \
 
 docker-compose stop $SERVICES
 
-# start the app only in order to perform migrations
-# (celery-worker is not started yet)
-docker-compose up -d app
-docker-compose exec -T app python manage.py wait_for_database
-docker-compose exec -T app python manage.py migrate
+# start the app container only in order to perform migrations
+docker-compose up -d db  # in case it hasn't been launched before
+docker-compose run app sh -c "python manage.py wait_for_database; python manage.py migrate"
 
 # start everything
 docker-compose up -d
