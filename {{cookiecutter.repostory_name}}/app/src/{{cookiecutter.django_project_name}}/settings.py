@@ -213,7 +213,6 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = env.int('CELERY_WORKER_PREFETCH_MULTIPLIER',
 CELERY_BROKER_POOL_LIMIT = env.int('CELERY_BROKER_POOL_LIMIT', default=50)
 {% endif %}
 
-SLACK_BOT_TOKEN = env('SLACK_BOT_TOKEN', default='')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
