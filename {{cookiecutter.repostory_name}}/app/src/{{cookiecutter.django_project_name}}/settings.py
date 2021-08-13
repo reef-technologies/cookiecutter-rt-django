@@ -14,6 +14,8 @@ from celery.schedules import crontab
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
 
 
 root = environ.Path(__file__) - 2
@@ -246,6 +248,8 @@ if SENTRY_DSN := env('SENTRY_DSN', default=''):
         dsn=SENTRY_DSN,
         integrations=[
             DjangoIntegration(),
+            CeleryIntegration(),
+            RedisIntegration(),
             LoggingIntegration(
                 level=logging.INFO,  # Capture info and above as breadcrumbs
                 event_level=logging.ERROR  # Send error events from log messages
