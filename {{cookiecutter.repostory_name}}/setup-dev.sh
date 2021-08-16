@@ -16,6 +16,10 @@ pip install --upgrade -r "${PROJECT_DIR}/app/src/requirements.txt"
 # Create .env from the template if doesn't exist
 [[ -f "${ENV_DIR}/.env" ]] || cp "${ENV_DIR}/.env.template" "${ENV_DIR}/.env"
 
+# "install" this package in the venv
+# works for python versions
+find "$VIRTUAL_ENV/lib/" -type d -maxdepth 1 -mindepth 1 -exec bash -c 'echo "$PWD/app/src" > "$1/site-packages/this.pth"' bash {} \;
+
 # Set symlinks
 ln -sf "${ENV_DIR}/.env" .env
 ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml
