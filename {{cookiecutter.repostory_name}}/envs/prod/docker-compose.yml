@@ -90,7 +90,7 @@ services:
   celery-flower:
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
-      test: wget -q --spider 0.0.0.0:80 || exit 1
+      test: wget --user ${CELERY_FLOWER_USER} --password ${CELERY_FLOWER_PASSWORD} -qO- 127.0.0.1:5555 > /dev/null || exit 1
     init: true
     restart: unless-stopped
     env_file: ./.env
