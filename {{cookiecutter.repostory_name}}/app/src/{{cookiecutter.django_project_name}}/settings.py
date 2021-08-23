@@ -195,6 +195,8 @@ else:
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')  # store results in Redis
 CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())  # time until task result deletion
+CELERY_COMPRESSION = 'gzip'  # task compression
+CELERY_MESSAGE_COMPRESSION = 'gzip'  # result compression
 CELERY_SEND_EVENTS = True  # needed for worker monitoring
 CELERY_BEAT_SCHEDULE = {
     # 'task_name': {
@@ -202,10 +204,11 @@ CELERY_BEAT_SCHEDULE = {
     #     'args': [2, 2],
     #     'kwargs': {},
     #     'schedule': crontab(minute=0, hour=0),
+    #     'options': {'time_limit': 300},
     # },
 }
 CELERY_TASK_ROUTES = ['{{cookiecutter.django_project_name}}.celery.route_task']
-CELERY_TASK_TIME_LIMIT = 60 * 5
+CELERY_TASK_TIME_LIMIT = int(timedelta(minutes=5).total_seconds())
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
