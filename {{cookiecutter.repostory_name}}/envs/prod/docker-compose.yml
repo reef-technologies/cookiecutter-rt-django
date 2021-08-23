@@ -35,7 +35,7 @@ services:
       dockerfile: Dockerfile
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
-      test: wget -q 127.0.0.1:8000
+      test: wget -q --spider 127.0.0.1:8000/admin/login/ || exit 1
     init: true
     restart: unless-stopped
     env_file: ./.env
@@ -54,6 +54,8 @@ services:
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
     init: true
+    healthcheck:
+      test: celery -A {{cookiecutter.django_project_name}} status --quiet || exit 1
     restart: unless-stopped
     env_file: ./.env
     environment:
@@ -88,7 +90,7 @@ services:
   celery-flower:
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
-      test: wget -q 0.0.0.0:80
+      test: wget --user ${CELERY_FLOWER_USER} --password ${CELERY_FLOWER_PASSWORD} -qO- 127.0.0.1:5555 > /dev/null || exit 1
     init: true
     restart: unless-stopped
     env_file: ./.env
@@ -108,7 +110,7 @@ services:
     image: 'nginx:stable-alpine'
     restart: unless-stopped
     healthcheck:
-      test: wget -q 0.0.0.0:80
+      test: wget -q --spider 0.0.0.0:80/admin/login/ || exit 1
     environment:
       - NGINX_HOST=${NGINX_HOST}
     volumes:

@@ -41,6 +41,7 @@ ENV PATH=/root/.local/bin:$PATH
 COPY --from=base-image /root/ /root/
 
 {% if cookiecutter.use_alpine_linux == "y" -%}
+RUN apk add wget
 RUN grep psycopg2 requirements.txt && apk add --no-cache libpq || true
 RUN grep Pillow requirements.txt && apk add --no-cache jpeg tiff zlib libwebp || true
 {% endif -%}
