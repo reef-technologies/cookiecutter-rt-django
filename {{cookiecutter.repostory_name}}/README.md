@@ -3,6 +3,8 @@
 
 {{ cookiecutter.project_short_description }}
 
+------------------------------------------------
+
 Skeleton of this project was generated with `cookiecutter-rt-django`, which sometimes gets upgrades that are easy to retrofit into already older projects.
 
 Base requirements
@@ -10,7 +12,7 @@ Base requirements
 
 * docker
 * docker-compose
-* Python 3.8
+* Python 3.9
 
 For a fresh Ubuntu 20.04 you can install the above with:
 ```

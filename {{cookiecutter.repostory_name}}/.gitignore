@@ -6,5 +6,6 @@
 /redis/
 /db/
 .env
+venv
 media/
 .backups/

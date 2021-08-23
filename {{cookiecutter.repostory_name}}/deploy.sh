@@ -16,10 +16,13 @@ SERVICES=$(docker-compose ps --services 2>&1 > /dev/stderr \
            | grep -v -e 'is not set' -e nginx -e db -e redis)
 
 docker-compose stop $SERVICES
-docker-compose up -d
 
-docker-compose exec -T app python manage.py wait_for_database
-docker-compose exec -T app python manage.py migrate
+# start the app container only in order to perform migrations
+docker-compose up -d db  # in case it hasn't been launched before
+docker-compose run app sh -c "python manage.py wait_for_database; python manage.py migrate"
+
+# start everything
+docker-compose up -d
 
 # Reloading nginx configuration without the process downtime
 # so it won't terminate connections established between clients and nginx.
