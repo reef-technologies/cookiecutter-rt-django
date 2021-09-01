@@ -5,11 +5,32 @@ CookieCutter template for Django application projects with docker-compose etc.
 
 Requirements
 ------------
-Install `cruft` command line: `pip install cruft`
+
+```sh
+pip install cruft
+```
 
 Usage
 -----
-Generate a new Cookiecutter template layout: `cruft create https://github.com/reef-technologies/cookiecutter-rt-django`
+
+* Generate a new Cookiecutter template layout:
+  ```sh
+  cruft create https://github.com/reef-technologies/cookiecutter-rt-django
+  ```
+* See diff with
+  ```sh
+  cruft diff
+  ```
+* Update the project by running
+  ```sh
+  cruft update
+  ```
+* If you have a repo which was initialized without cruft (i.e. with `cookiecutter` command), you can still link the project:
+  ```sh
+  cruft link https://github.com/reef-technologies/cookiecutter-rt-django
+  ```
+
+More on cruft: https://github.com/cruft/cruft
 
 License
 -------
