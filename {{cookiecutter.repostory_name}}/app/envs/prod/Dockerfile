@@ -16,6 +16,7 @@ RUN pip3 install --user --no-cache-dir gunicorn==20.1.0
 COPY ./src/requirements.txt requirements.txt
 
 {% if cookiecutter.use_alpine_linux == "y" -%}
+RUN grep uvicorn requirements.txt && apk add --no-cache build-base || true
 RUN grep psycopg2 requirements.txt && apk add --no-cache postgresql-dev gcc python3-dev musl-dev libffi-dev || true
 RUN grep Pillow requirements.txt && apk add --no-cache jpeg-dev tiff-dev zlib-dev libwebp-dev gcc python3-dev musl-dev || true
 RUN grep git+ requirements.txt && apk add --no-cache git || true

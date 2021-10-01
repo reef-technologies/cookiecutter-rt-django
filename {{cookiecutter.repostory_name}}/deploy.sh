@@ -19,7 +19,7 @@ docker-compose stop $SERVICES
 
 # start the app container only in order to perform migrations
 docker-compose up -d db  # in case it hasn't been launched before
-docker-compose run app sh -c "python manage.py wait_for_database; python manage.py migrate"
+docker-compose run --rm app sh -c "python manage.py wait_for_database; python manage.py migrate"
 
 # start everything
 docker-compose up -d
