@@ -2,7 +2,7 @@
 Django settings for {{cookiecutter.django_project_name}} project.
 """
 
-import datetime as dt
+from datetime import timedelta
 import logging
 from functools import wraps
 import inspect
@@ -194,7 +194,7 @@ else:
 {% if cookiecutter.use_celery == "y" %}
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')  # store results in Redis
-CELERY_RESULT_EXPIRES = int(dt.timedelta(days=1).total_seconds())  # time until task result deletion
+CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until task result deletion
 CELERY_COMPRESSION = 'gzip'  # task compression
 CELERY_MESSAGE_COMPRESSION = 'gzip'  # result compression
 CELERY_SEND_EVENTS = True  # needed for worker monitoring
@@ -208,7 +208,7 @@ CELERY_BEAT_SCHEDULE = {
     # },
 }
 CELERY_TASK_ROUTES = ['{{cookiecutter.django_project_name}}.celery.route_task']
-CELERY_TASK_TIME_LIMIT = int(dt.timedelta(minutes=5).total_seconds())
+CELERY_TASK_TIME_LIMIT = int(timedelta(minutes=5).total_seconds())
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
