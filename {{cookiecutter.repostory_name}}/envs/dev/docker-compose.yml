@@ -9,7 +9,7 @@ services:
     volumes:
       - ./redis/data:/data
     ports:
-      - 8379:6379
+      - ${REDIS_PORT}:6379
 
   db:
     image: postgres:13.3-alpine
@@ -22,4 +22,4 @@ services:
     volumes:
       - ./db/data:/var/lib/postgresql/data
     ports:
-      - 8432:5432
+      - ${POSTGRES_PORT}:5432
