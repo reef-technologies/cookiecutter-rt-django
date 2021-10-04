@@ -13,4 +13,4 @@ else
 fi
 
 # this works even if `app` container doesn't have psql installed (where `bin/run-manage-py.sh dbshell` fails)
-docker run -it --rm --network $DOCKER_NETWORK postgres:9.6-alpine psql "$DATABASE_URL"
+docker run -it --rm --network $DOCKER_NETWORK postgres:13.3-alpine psql "$DATABASE_URL"

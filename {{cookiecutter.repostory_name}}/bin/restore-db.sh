@@ -16,6 +16,6 @@ else
   DOCKER_NETWORK=host
 fi
 
-zcat "$target" | docker run -i --rm --network $DOCKER_NETWORK postgres:9.6-alpine psql "$DATABASE_URL"
+zcat "$target" | docker run -i --rm --network $DOCKER_NETWORK postgres:13.3-alpine psql "$DATABASE_URL"
 
 echo 'restore finished'
