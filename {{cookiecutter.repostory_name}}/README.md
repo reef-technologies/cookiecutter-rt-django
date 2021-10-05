@@ -23,7 +23,7 @@ Setup development environment (virtualenv)
 ------------------------------------------
 
 ```
-$ mkvirtualenv -p /usr/bin/python3.8 {{ cookiecutter.django_project_name }}
+$ mkvirtualenv -p /usr/bin/python3.9 {{ cookiecutter.django_project_name }}
 $ ./setup-dev.sh
 
 # on second tab
