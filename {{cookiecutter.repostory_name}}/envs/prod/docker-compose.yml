@@ -15,7 +15,7 @@ services:
         tag: {% raw %}'{{.Name}}'{% endraw %}
 
   db:
-    image: postgres:13.3-alpine
+    image: postgres:14.0-alpine
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
     restart: unless-stopped

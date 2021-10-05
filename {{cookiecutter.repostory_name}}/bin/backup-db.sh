@@ -26,7 +26,7 @@ else
   DOCKER_NETWORK=host
 fi
 
-docker run --rm --network $DOCKER_NETWORK postgres:13.3-alpine pg_dump -Z 9 -c --if-exists "$DATABASE_URL" > "$TARGET"
+docker run --rm --network $DOCKER_NETWORK postgres:14.0-alpine pg_dump -Z 9 -c --if-exists "$DATABASE_URL" > "$TARGET"
 echo "${TARGET}"
 
 if [ -n "${BACKUP_B2_BUCKET}" ]; then
