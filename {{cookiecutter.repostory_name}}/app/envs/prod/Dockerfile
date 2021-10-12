@@ -1,7 +1,7 @@
 {% if cookiecutter.use_alpine_linux == "y" -%}
 ARG BASE_IMAGE=python:3.9-alpine
 {% else -%}
-ARG BASE_IMAGE=python:3.9
+ARG BASE_IMAGE=python:3.9-slim
 {% endif %}
 
 FROM $BASE_IMAGE AS base-image
