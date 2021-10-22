@@ -14,7 +14,7 @@ fi
 DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y apt-transport-https ca-certificates curl software-properties-common python3-pip
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common python3-pip haveged
 
 if [ ! -x "${SENTRY_CLI}" ]; then
   curl -sL https://sentry.io/get-cli/ | bash
