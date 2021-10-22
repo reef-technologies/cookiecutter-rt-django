@@ -4,7 +4,6 @@
     "django_project_name": "project",
     "django_default_app_name": "core",
     "postgres_user": "postgres",
-    "use_https": "y",
     "use_celery": "y",
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
     "sentry_dsn": "",
@@ -27,6 +26,6 @@
     "csp_worker_src": "'self'",
     "csp_block_all_mixed_content": "y",
     "csp_exclude_url_prefixes": "",
-    "nginx_compression_enabled": "{% if cookiecutter.use_https == 'y' %}n{% else %}y{% endif %}",
+    "nginx_compression_enabled": "n",
     "use_alpine_linux": "y"
 }

@@ -1,88 +1,79 @@
-{% if cookiecutter.use_https == 'y' %}
-    server {
-        listen 80;
-        rewrite ^/(.*)$ https://${NGINX_HOST}/$1 permanent;
-    }
-{% endif %}
+server {
+    listen 80;
+    rewrite ^/(.*)$ https://${NGINX_HOST}/$1 permanent;
+}
 
 server {
     server_name               ${NGINX_HOST};
 
-    {% if cookiecutter.use_https == 'y' %}
-        listen      443           ssl http2;
-        add_header                Strict-Transport-Security "max-age=31536000" always;
+    listen      443           ssl http2;
+    add_header                Strict-Transport-Security "max-age=31536000" always;
 
-        ssl_session_cache         shared:SSL:20m;
-        ssl_session_timeout       10m;
+    ssl_session_cache         shared:SSL:20m;
+    ssl_session_timeout       10m;
 
-        ssl_protocols             TLSv1.2 TLSv1.3;
-        ssl_prefer_server_ciphers on;
-        ssl_ciphers               "ECDH+AESGCM:ECDH+AES256:ECDH+AES128:!ADH:!AECDH:!MD5;";
+    ssl_protocols             TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers               "ECDH+AESGCM:ECDH+AES256:ECDH+AES128:!ADH:!AECDH:!MD5;";
 
-        ssl_stapling              on;
-        ssl_stapling_verify       on;
+    ssl_stapling              on;
+    ssl_stapling_verify       on;
 
-        ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
-        ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
-        ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
+    ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
+    ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
+    ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
 
-        resolver 8.8.8.8 8.8.4.4 valid=300s;
-        resolver_timeout 5s;
-    {% else %}
-        listen      80;
-    {% endif %}
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
 
-    {% if cookiecutter.nginx_compression_enabled == 'y'%}
-        gzip on;
-        gzip_static on;
-        gzip_proxied any;
-        gzip_vary on;
-        gzip_comp_level 6;
-        gzip_buffers 16 8k;
-        gzip_http_version 1.1;
-        gzip_types
-            # text/html is always in gzip_types
-            text/richtext
-            text/plain
-            text/css
-            text/x-script
-            text/x-component
-            text/x-java-source
-            text/x-markdown
-            application/javascript
-            application/x-javascript
-            text/javascript
-            text/js
-            image/x-icon
-            application/x-perl
-            application/x-httpd-cgi
-            text/xml
-            application/xml
-            application/xml+rss
-            application/json
-            multipart/bag
-            multipart/mixed
-            application/xhtml+xml
-            font/ttf
-            font/otf
-            font/x-woff
-            image/svg+xml
-            application/vnd.ms-fontobject
-            application/ttf
-            application/x-ttf
-            application/otf
-            application/x-otf
-            application/truetype
-            application/opentype
-            application/x-opentype
-            application/font-woff
-            application/eot
-            application/font
-            application/font-sfnt
-            application/wasm;
-    {% else %}
-        gzip off;
-    {% endif %}
+
+    gzip {% if cookiecutter.nginx_compression_enabled == 'y'%}on{% else %}off{% endif %};
+    gzip_static {% if cookiecutter.nginx_compression_enabled == 'y'%}on{% else %}off{% endif %};
+    gzip_proxied {% if cookiecutter.nginx_compression_enabled == 'y'%}any{% else %}off{% endif %};
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_buffers 16 8k;
+    gzip_http_version 1.1;
+    gzip_types
+        # text/html is always in gzip_types
+        text/richtext
+        text/plain
+        text/css
+        text/x-script
+        text/x-component
+        text/x-java-source
+        text/x-markdown
+        application/javascript
+        application/x-javascript
+        text/javascript
+        text/js
+        image/x-icon
+        application/x-perl
+        application/x-httpd-cgi
+        text/xml
+        application/xml
+        application/xml+rss
+        application/json
+        multipart/bag
+        multipart/mixed
+        application/xhtml+xml
+        font/ttf
+        font/otf
+        font/x-woff
+        image/svg+xml
+        application/vnd.ms-fontobject
+        application/ttf
+        application/x-ttf
+        application/otf
+        application/x-otf
+        application/truetype
+        application/opentype
+        application/x-opentype
+        application/font-woff
+        application/eot
+        application/font
+        application/font-sfnt
+        application/wasm;
 
     access_log                /dev/stdout;
     error_log                 /dev/stderr info;
@@ -97,18 +88,11 @@ server {
         root /srv/;
     }
 
-{% if cookiecutter.use_https == 'y'%}
+
     location ^~ /.well-known {
         allow all;
         root  /data/letsencrypt/;
     }
-{% else %}
-    # uncomment for letsencrypt https
-    # location ^~ /.well-known {
-    #     allow all;
-    #     root  /data/letsencrypt/;
-    # }
-{% endif %}
 
     location / {
         proxy_pass_header Server;

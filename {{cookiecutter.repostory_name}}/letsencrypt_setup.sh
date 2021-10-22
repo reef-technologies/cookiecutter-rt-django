@@ -19,9 +19,3 @@ docker run -it --rm \
 ./letsencrypt_setup_crontab.sh
 
 crontab -l
-
-{% if cookiecutter.use_https != 'y' %}
-echo ""
-echo "Project was generated without https configured."
-echo "Please remember to uncomment lines in envs/prod/docker-compose.yml and nginx/templates/default.conf.template"
-{% endif %}

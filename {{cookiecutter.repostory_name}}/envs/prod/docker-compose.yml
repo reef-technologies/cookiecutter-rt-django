@@ -117,10 +117,8 @@ services:
       - ./nginx/templates:/etc/nginx/templates
       - backend-static:/srv/static:ro
       - ./media:/srv/media:ro
-      {% if cookiecutter.use_https == 'y' -%}
       - ./letsencrypt/etc:/etc/letsencrypt
       - ./letsencrypt/data:/data/letsencrypt
-      {% else -%}
       # uncomment for letsencrypt https
       # - ./letsencrypt/etc:/etc/letsencrypt
       # - ./letsencrypt/data:/data/letsencrypt
@@ -130,12 +128,7 @@ services:
     command: nginx -g 'daemon off;'
     ports:
       - 80:80
-      {% if cookiecutter.use_https == 'y' -%}
       - 443:443
-      {% else -%}
-      # uncomment for letsencrypt https
-      # - 443:443
-      {%- endif %}
     logging:
       <<: *logging
 
