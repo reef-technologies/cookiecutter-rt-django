@@ -137,7 +137,7 @@ if env('DATABASE_URL'):
     DATABASES = {
         'default': env.db(),
     }
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
