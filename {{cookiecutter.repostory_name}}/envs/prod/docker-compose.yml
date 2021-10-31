@@ -107,10 +107,10 @@ services:
   {% endif -%}
 
   nginx:
-    image: 'nginx:stable-alpine'
+    image: 'wojciechbancer/nginx-rt'
     restart: unless-stopped
     healthcheck:
-      test: wget -q --spider 0.0.0.0:80/admin/login/ || exit 1
+      test: wget -q --spider 0.0.0.0:80 || exit 1
     environment:
       - NGINX_HOST=${NGINX_HOST}
     volumes:
@@ -118,11 +118,6 @@ services:
       - backend-static:/srv/static:ro
       - ./media:/srv/media:ro
       - ./letsencrypt/etc:/etc/letsencrypt
-      - ./letsencrypt/data:/data/letsencrypt
-      # uncomment for letsencrypt https
-      # - ./letsencrypt/etc:/etc/letsencrypt
-      # - ./letsencrypt/data:/data/letsencrypt
-      {%- endif %}
     links:
       - app:app
     command: nginx -g 'daemon off;'

@@ -27,12 +27,6 @@ docker-compose run --rm app sh -c "python manage.py wait_for_database --timeout 
 # start everything
 docker-compose up -d
 
-# Reloading nginx configuration without the process downtime
-# so it won't terminate connections established between clients and nginx.
-# In case of changes related to nginx in the compose file entire service
-# needs to be restarted manually `docker-compose restart nginx`
-docker-compose exec -T nginx nginx -s reload
-
 # Clean all dangling images
 docker images --quiet --filter=dangling=true \
     | xargs --no-run-if-empty docker rmi \
