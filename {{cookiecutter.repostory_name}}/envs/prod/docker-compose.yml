@@ -107,7 +107,7 @@ services:
   {% endif -%}
 
   nginx:
-    image: 'wojciechbancer/nginx-rt'
+    image: 'ghcr.io/reef-technologies/nginx-rt:master'
     restart: unless-stopped
     healthcheck:
       test: wget -q --spider 0.0.0.0:80 || exit 1
