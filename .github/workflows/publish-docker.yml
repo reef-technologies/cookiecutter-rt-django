@@ -5,6 +5,10 @@ on:
     branches:
       - 'master'
       - 'docker-release'
+      - 'docker-releases/*'
+
+    tags:
+      - '*'
 
   pull_request:
     branches:
