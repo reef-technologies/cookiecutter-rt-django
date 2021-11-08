@@ -1,5 +1,8 @@
 #!/bin/sh
 # vim:sw=4:ts=4:et
+#
+# Copied from: https://github.com/nginxinc/docker-nginx/1.21.4/master/entrypoint/docker-entrypoint.sh
+# License: https://github.com/nginxinc/docker-nginx/blob/1.21.4/LICENSE
 
 set -e
 

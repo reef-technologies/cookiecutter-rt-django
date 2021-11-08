@@ -1,5 +1,8 @@
 #!/bin/sh
 # vim:sw=2:ts=2:sts=2:et
+#
+# Copied from: https://github.com/nginxinc/docker-nginx/blob/1.21.4/entrypoint/10-listen-on-ipv6-by-default.sh
+# license: https://github.com/nginxinc/docker-nginx/blob/1.21.4/LICENSE
 
 set -eu
 

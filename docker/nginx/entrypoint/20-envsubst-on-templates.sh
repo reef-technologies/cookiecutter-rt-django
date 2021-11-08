@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# Copied from: https://github.com/nginxinc/docker-nginx/blob/1.21.4/entrypoint/20-envsubst-on-templates.sh
+# License: https://github.com/nginxinc/docker-nginx/blob/1.21.4/LICENSE
 
 set -e
 
