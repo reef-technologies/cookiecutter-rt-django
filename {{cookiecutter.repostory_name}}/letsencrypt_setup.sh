@@ -6,7 +6,7 @@ ABSPATH="$(realpath "$RELPATH")"
 cd "$ABSPATH"
 
 source ./.env
-mkdir -p $ABSPATH/letsencrypt/etc/dhparams
+mkdir -p "$ABSPATH/letsencrypt/etc/dhparams"
 
 docker run -it --rm \
       -v "$ABSPATH/letsencrypt/etc:/etc/letsencrypt" \
