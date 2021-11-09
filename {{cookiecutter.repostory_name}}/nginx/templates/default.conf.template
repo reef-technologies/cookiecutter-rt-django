@@ -1,31 +1,69 @@
+#
+# SSL config below is inspired by websites:
+#  - https://syslink.pl/cipherlist/
+#  - https://ssl-config.mozilla.org/
+# Generated for Intermediate configuration, nginx 1.20.1 or later
+#
+
 server {
-    listen 80;
-    rewrite ^/(.*)$ https://${NGINX_HOST}/$1 permanent;
+    listen 80 default_server;
+    server_name _;
+    server_name_in_redirect off;
+    root /usr/share/nginx/html/;
 }
 
 server {
-    server_name               ${NGINX_HOST};
+    listen 80;
+    server_name www.${NGINX_HOST} ${NGINX_HOST};
+    return 301 https://${NGINX_HOST}$request_uri;
+}
 
-    listen      443           ssl http2;
-    add_header                Strict-Transport-Security "max-age=31536000" always;
+server {
+    listen 443 ssl default_server;
+    server_name _;
+    server_name_in_redirect off;
 
-    ssl_session_cache         shared:SSL:20m;
-    ssl_session_timeout       10m;
-
-    ssl_protocols             TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers               "ECDH+AESGCM:ECDH+AES256:ECDH+AES128:!ADH:!AECDH:!MD5;";
-
-    ssl_stapling              on;
-    ssl_stapling_verify       on;
+    # Load the Diffie-Hellman parameter.
+    ssl_dhparam               /etc/letsencrypt/dhparams/dhparam.pem;
 
     ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
     ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
     ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
 
-    resolver 8.8.8.8 8.8.4.4 valid=300s;
-    resolver_timeout 5s;
+    root /usr/share/nginx/html/;
+}
 
+{% if cookiecutter.nginx_redirect_www_prefix == 'y' %}
+server {
+    listen 443 ssl;
+    server_name www.${NGINX_HOST};
+
+    # Load the Diffie-Hellman parameter.
+    ssl_dhparam               /etc/letsencrypt/dhparams/dhparam.pem;
+
+    ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
+    ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
+    ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
+
+    return 301 https://${NGINX_HOST}$request_uri;
+}
+{% endif %}
+
+server {
+    listen                    443 ssl http2;
+    server_name               ${NGINX_HOST} {% if cookiecutter.nginx_redirect_www_prefix == 'n' %}www.${NGINX_HOST}{% endif %};
+
+    add_header                Strict-Transport-Security "max-age=31536000" always;
+    add_header                X-Content-Type-Options nosniff;
+    add_header                X-XSS-Protection "1; mode=block";
+    add_header                X-Frame-Options DENY;
+
+    # Load the Diffie-Hellman parameter.
+    ssl_dhparam               /etc/letsencrypt/dhparams/dhparam.pem;
+
+    ssl_certificate           /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem;
+    ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
+    ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
 
     gzip {% if cookiecutter.nginx_compression_enabled == 'y'%}on{% else %}off{% endif %};
     gzip_static {% if cookiecutter.nginx_compression_enabled == 'y'%}on{% else %}off{% endif %};
@@ -88,18 +126,11 @@ server {
         root /srv/;
     }
 
-
-    location ^~ /.well-known {
-        allow all;
-        root  /data/letsencrypt/;
-    }
-
     location / {
         proxy_pass_header Server;
         proxy_redirect off;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header {{cookiecutter.https_proxy_header}} $scheme;
         proxy_pass http://app:8000/;
     }
 }

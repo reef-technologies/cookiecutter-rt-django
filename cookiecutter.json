@@ -7,8 +7,6 @@
     "use_celery": "y",
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
     "sentry_dsn": "",
-    "https_redirect": "n",
-    "https_proxy_header": "X_SCHEME",
     "csp_enabled": "n",
     "csp_report_only": "y",
     "csp_report_url": "{% if cookiecutter.csp_enabled == 'y' %}https://sentry.io/api/-1/security/?sentry_key=key{% endif %}",
@@ -26,6 +24,7 @@
     "csp_worker_src": "'self'",
     "csp_block_all_mixed_content": "y",
     "csp_exclude_url_prefixes": "",
+    "nginx_redirect_www_prefix": "y",
     "nginx_compression_enabled": "n",
     "use_alpine_linux": "y"
 }

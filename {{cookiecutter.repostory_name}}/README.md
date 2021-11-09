@@ -48,21 +48,12 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 ./setup-prod.sh
 
 # change SECRET_KEY and (POSTGRES_PASSWORD or DATABASE_URL) in `.env`, adjust the rest of `.env` to your liking
-{% if cookiecutter.use_https == 'y'%}
 # set correct NGINX_HOSTNAME in .env for https
 
 $ ./letsencrypt_setup.sh
-{% endif %}
 $ ./deploy.sh
 
 ```
-{% if cookiecutter.use_https != 'y' %}
-You've chosen http only project, but you can always add https - just set correct `NGINX_HOSTNAME` in `.env`
-and uncomment lines in dc-prod.yml and nginx/conf/default.template and run
-```
-$ ./letsencrypt_setup.sh
-```
-{% endif %}
 
 Setting up periodic backups
 ------------------
