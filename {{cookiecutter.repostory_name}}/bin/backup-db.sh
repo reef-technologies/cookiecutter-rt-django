@@ -33,12 +33,12 @@ if [ -n "${BACKUP_B2_BUCKET}" ]; then
   bin/backup-db-to-b2.sh "${TARGET}"
 fi
 
-if [ -n "${EMAIL_HOST}" ] && [ -n "${EMAIL_TARGET}" ]; then
+if [ -n "${EMAIL_HOST:-}" ] && [ -n "${EMAIL_TARGET:-}" ]; then
   bin/backup-db-to-email.sh "${TARGET}"
 fi
 
 
-if [ -n "${BACKUP_LOCAL_ROTATE_KEEP_LAST}" ]; then
+if [ -n "${BACKUP_LOCAL_ROTATE_KEEP_LAST:-}" ]; then
   echo "Rotating backup files - keeping ${BACKUP_LOCAL_ROTATE_KEEP_LAST} last ones"
   bin/rotate-local-backups.py "${BACKUP_LOCAL_ROTATE_KEEP_LAST}"
 fi
