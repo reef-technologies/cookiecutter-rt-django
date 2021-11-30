@@ -118,14 +118,57 @@ services:
       - backend-static:/srv/static:ro
       - ./media:/srv/media:ro
       - ./letsencrypt/etc:/etc/letsencrypt
+      - ./nginx/monitoring_certs:/etc/monitoring_certs
     links:
       - app:app
+      {% if cookiecutter.monitoring == 'y' %}
+      - cadvisor:cadvisor
+      - node-exporter:node-exporter
+      {% endif %}
     command: nginx -g 'daemon off;'
     ports:
       - 80:80
       - 443:443
+      {% if cookiecutter.monitoring == 'y' %}
+      - 10443:10443
+      {% endif %}
     logging:
       <<: *logging
+
+  {% if cookiecutter.monitoring == 'y' %}
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    logging:
+      <<: *logging
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.40.0
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro
+    restart: unless-stopped
+    logging:
+      <<: *logging
+
+  {% endif %}
 
 volumes:
   backend-static:

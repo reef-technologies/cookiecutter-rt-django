@@ -42,6 +42,15 @@ $ python manage.py runserver
 Setup production environment (docker deployment)
 ------------------------------------------------
 
+{% if cookiecutter.monitoring == 'y' %}
+**Monitoring**
+
+Running the app requires proper certificates to be put into `nginx/monitoring_certs`, see `README` located there. 
+
+**Running**
+
+{% endif %}
+
 Use `ssh-keygen` to generate a key pair for the server, then add read-only access to repository in "deployment keys" section (`ssh -A` is easy to use, but not safe).
 
 ```
