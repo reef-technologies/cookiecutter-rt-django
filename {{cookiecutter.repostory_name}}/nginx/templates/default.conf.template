@@ -65,53 +65,7 @@ server {
     ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
     ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
 
-    gzip {% if cookiecutter.nginx_compression_enabled == 'y'%}on{% else %}off{% endif %};
-    gzip_static {% if cookiecutter.nginx_compression_enabled == 'y'%}on{% else %}off{% endif %};
-    gzip_proxied {% if cookiecutter.nginx_compression_enabled == 'y'%}any{% else %}off{% endif %};
-    gzip_vary on;
-    gzip_comp_level 6;
-    gzip_buffers 16 8k;
-    gzip_http_version 1.1;
-    gzip_types
-        # text/html is always in gzip_types
-        text/richtext
-        text/plain
-        text/css
-        text/x-script
-        text/x-component
-        text/x-java-source
-        text/x-markdown
-        application/javascript
-        application/x-javascript
-        text/javascript
-        text/js
-        image/x-icon
-        application/x-perl
-        application/x-httpd-cgi
-        text/xml
-        application/xml
-        application/xml+rss
-        application/json
-        multipart/bag
-        multipart/mixed
-        application/xhtml+xml
-        font/ttf
-        font/otf
-        font/x-woff
-        image/svg+xml
-        application/vnd.ms-fontobject
-        application/ttf
-        application/x-ttf
-        application/otf
-        application/x-otf
-        application/truetype
-        application/opentype
-        application/x-opentype
-        application/font-woff
-        application/eot
-        application/font
-        application/font-sfnt
-        application/wasm;
+    include /etc/nginx/config_helpers/gzip.conf;
 
     access_log                /dev/stdout;
     error_log                 /dev/stderr info;
@@ -140,15 +94,7 @@ server {
     server_name monitoring;
     listen      10443           ssl http2;
 
-    ssl_session_cache         shared:SSL:20m;
-    ssl_session_timeout       10m;
-
-    ssl_protocols             TLSv1 TLSv1.1 TLSv1.2;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers               "ECDH+AESGCM:ECDH+AES256:ECDH+AES128:!ADH:!AECDH:!MD5;";
-
-    ssl_stapling              on;
-    ssl_stapling_verify       on;
+    include /etc/nginx/config_helpers/gzip.conf;
 
     ssl_certificate /etc/monitoring_certs/cert.crt;
     ssl_certificate_key /etc/monitoring_certs/cert.key;
@@ -156,13 +102,6 @@ server {
 
     ssl_client_certificate /etc/monitoring_certs/ca.crt;
     ssl_verify_client on;
-
-    resolver 8.8.8.8 8.8.4.4 valid=300s;
-    resolver_timeout 5s;
-
-
-    gzip off;
-
 
     access_log                /dev/stdout;
     error_log                 /dev/stderr info;

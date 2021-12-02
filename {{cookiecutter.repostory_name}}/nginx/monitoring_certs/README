@@ -1,2 +1,0 @@
-Obtain ssl cert and key for this deployment and place them here, named `cert.crt` and `cert.key`. Also get the ca cert
-used to verify the client fetching monitoring data and place it here, name `ca.crt`.

@@ -115,6 +115,7 @@ services:
       - NGINX_HOST=${NGINX_HOST}
     volumes:
       - ./nginx/templates:/etc/nginx/templates
+      - ./nginx/config_helpers:/etc/nginx/config_helpers
       - backend-static:/srv/static:ro
       - ./media:/srv/media:ro
       - ./letsencrypt/etc:/etc/letsencrypt
