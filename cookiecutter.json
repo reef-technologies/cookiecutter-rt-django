@@ -3,6 +3,7 @@
     "project_short_description": "I am lazy and haven't written any project description",
     "django_project_name": "project",
     "django_default_app_name": "core",
+    "monitoring": "y",
     "postgres_user": "postgres",
     "use_celery": "y",
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
