@@ -106,8 +106,6 @@ server {
     access_log                /dev/stdout;
     error_log                 /dev/stderr info;
 
-    client_max_body_size 100M;
-
     location /node-exporter-metrics/ {
         proxy_pass_header Server;
         proxy_redirect off;
