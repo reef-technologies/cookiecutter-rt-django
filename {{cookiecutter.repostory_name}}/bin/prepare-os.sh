@@ -96,6 +96,5 @@ EOF
 fi
 
 if [ ! -x "${JQ_BIN}" ]; then
-  curl -s --output /usr/local/bin/jq -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-  chmod a+x /usr/local/bin/jq
+  apt-get -y install jq
 fi
