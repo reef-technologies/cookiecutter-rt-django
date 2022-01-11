@@ -249,6 +249,7 @@ if SENTRY_DSN := env('SENTRY_DSN', default=''):
     from sentry_sdk.integrations.redis import RedisIntegration
     sentry_sdk.init(
         dsn=SENTRY_DSN,
+        environment=ENV,
         integrations=[
             DjangoIntegration(),
             CeleryIntegration(),
