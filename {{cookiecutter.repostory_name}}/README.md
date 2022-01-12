@@ -47,12 +47,13 @@ Setup production environment (docker deployment)
 
 Running the app requires proper certificates to be put into `nginx/monitoring_certs`, see `README` located there. 
 
-**Running**
-
 {% endif %}
+
+**Self-managed machines**
 
 Use `ssh-keygen` to generate a key pair for the server, then add read-only access to repository in "deployment keys" section (`ssh -A` is easy to use, but not safe).
 
+On the target machine: 
 ```
 ./setup-prod.sh
 
@@ -63,6 +64,21 @@ $ ./letsencrypt_setup.sh
 $ ./deploy.sh
 
 ```
+
+**AWS**
+
+Initiate the infrastructure with terraform:
+TODO
+
+To push a new version of the application to AWS, just push to a branch named `deploy-$(ENVIRONMENT_NAME)`. Typical
+values for `$(ENVIRONMENT_NAME)` are `prod` and `staging`. For this to work, GitHub actions needs to be provided with
+credentials for an account that has the following policies enabled:
+
+- AutoScalingFullAccess
+- AmazonEC2ContainerRegistryFullAccess
+- AmazonS3FullAccess
+
+See `.github/workflows/cd.yml` to find out the secret names.
 
 Setting up periodic backups
 ------------------
