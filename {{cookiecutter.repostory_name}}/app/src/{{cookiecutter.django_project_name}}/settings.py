@@ -15,7 +15,7 @@ from celery.schedules import crontab
 
 root = environ.Path(__file__) - 2
 
-env = environ.Env(DEBUG=(bool, False))
+env = environ.Env()
 
 # .env file contents are not passed to docker image during build stage;
 # this results in errors if you require some env var to be set, as if in "env('MYVAR')" -
@@ -46,7 +46,7 @@ ENV = env('ENV')
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG')
 
 ALLOWED_HOSTS = ['*']
 
@@ -74,26 +74,26 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
+if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR'):
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda _request: True
     }
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
 
-if CORS_ENABLED := env.bool('CORS_ENABLED', default=True):
+if CORS_ENABLED := env.bool('CORS_ENABLED'):
     INSTALLED_APPS.append('corsheaders')
     MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
-    CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
-    CORS_ALLOWED_ORIGIN_REGEXES = env.list('CORS_ALLOWED_ORIGIN_REGEXES', default=[])
-    CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
+    CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS')
+    CORS_ALLOWED_ORIGIN_REGEXES = env.list('CORS_ALLOWED_ORIGIN_REGEXES')
+    CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS')
 
 # Content Security Policy
 if CSP_ENABLED := env.bool('CSP_ENABLED'):
     MIDDLEWARE.append('csp.middleware.CSPMiddleware')
 
-    CSP_REPORT_ONLY = env.bool('CSP_REPORT_ONLY', default=True)
-    CSP_REPORT_URL = env('CSP_REPORT_URL', default=None) or None
+    CSP_REPORT_ONLY = env.bool('CSP_REPORT_ONLY')
+    CSP_REPORT_URL = env('CSP_REPORT_URL') or None
 
     CSP_DEFAULT_SRC = env.tuple('CSP_DEFAULT_SRC')
     CSP_SCRIPT_SRC = env.tuple('CSP_SCRIPT_SRC')
@@ -108,8 +108,8 @@ if CSP_ENABLED := env.bool('CSP_ENABLED'):
     CSP_MANIFEST_SRC = env.tuple('CSP_MANIFEST_SRC')
     CSP_WORKER_SRC = env.tuple('CSP_WORKER_SRC')
 
-    CSP_BLOCK_ALL_MIXED_CONTENT = env.bool('CSP_BLOCK_ALL_MIXED_CONTENT', default=False)
-    CSP_EXCLUDE_URL_PREFIXES = env.tuple('CSP_EXCLUDE_URL_PREFIXES', default=tuple())
+    CSP_BLOCK_ALL_MIXED_CONTENT = env.bool('CSP_BLOCK_ALL_MIXED_CONTENT')
+    CSP_EXCLUDE_URL_PREFIXES = env.tuple('CSP_EXCLUDE_URL_PREFIXES')
 
 
 ROOT_URLCONF = '{{cookiecutter.django_project_name}}.urls'
@@ -162,14 +162,13 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = env('STATIC_URL', default='/static/')
-STATIC_ROOT = env('STATIC_ROOT', default=root('static'))
-MEDIA_URL = env('MEDIA_URL', default='/media/')
-MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
+STATIC_URL = env('STATIC_URL')
+STATIC_ROOT = env('STATIC_ROOT')
+MEDIA_URL = env('MEDIA_URL')
+MEDIA_ROOT = env('MEDIA_ROOT')
 
-# Security
-# redirect HTTP to HTTPS
-if env.bool('HTTPS_REDIRECT', default=False) and not DEBUG:
+# Redirect HTTP to HTTPS
+if env.bool('HTTPS_REDIRECT') and not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_REDIRECT_EXEMPT = []
     SESSION_COOKIE_SECURE = True
@@ -178,8 +177,8 @@ else:
     SECURE_SSL_REDIRECT = False
 
 {% if cookiecutter.use_celery == "y" %}
-CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
-CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')  # store results in Redis
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL')  # store results in Redis
 CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until task result deletion
 CELERY_COMPRESSION = 'gzip'  # task compression
 CELERY_MESSAGE_COMPRESSION = 'gzip'  # result compression
@@ -195,22 +194,22 @@ CELERY_BEAT_SCHEDULE = {
 }
 CELERY_TASK_ROUTES = ['{{cookiecutter.django_project_name}}.celery.route_task']
 CELERY_TASK_TIME_LIMIT = int(timedelta(minutes=5).total_seconds())
-CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=False)
+CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_WORKER_PREFETCH_MULTIPLIER = env.int('CELERY_WORKER_PREFETCH_MULTIPLIER', default=10)
-CELERY_BROKER_POOL_LIMIT = env.int('CELERY_BROKER_POOL_LIMIT', default=50)
+CELERY_WORKER_PREFETCH_MULTIPLIER = env.int('CELERY_WORKER_PREFETCH_MULTIPLIER')
+CELERY_BROKER_POOL_LIMIT = env.int('CELERY_BROKER_POOL_LIMIT')
 {% endif %}
 
-EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
-EMAIL_FILE_PATH = env('EMAIL_FILE_PATH', default='')
-EMAIL_HOST = env('EMAIL_HOST', default='')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_FILE_PATH = env('EMAIL_FILE_PATH')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env.int('EMAIL_PORT')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 LOGGING = {
     'version': 1,
@@ -241,7 +240,7 @@ LOGGING = {
 }
 
 # Sentry
-if SENTRY_DSN := env('SENTRY_DSN', default=''):
+if SENTRY_DSN := env('SENTRY_DSN'):
     import sentry_sdk
     from sentry_sdk.integrations.celery import CeleryIntegration
     from sentry_sdk.integrations.django import DjangoIntegration
