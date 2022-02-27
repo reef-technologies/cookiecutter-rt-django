@@ -27,5 +27,5 @@
     "csp_exclude_url_prefixes": "",
     "nginx_redirect_www_prefix": "y",
     "nginx_compression_enabled": "n",
-    "use_alpine_linux": "y"
+    "use_alpine_linux": "n"
 }
