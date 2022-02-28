@@ -9,7 +9,8 @@ server {
     listen 80 default_server;
     server_name _;
     server_name_in_redirect off;
-    root /usr/share/nginx/html/;
+
+    return 444;
 }
 
 server {
@@ -30,7 +31,7 @@ server {
     ssl_certificate_key       /etc/letsencrypt/live/${NGINX_HOST}/privkey.pem;
     ssl_trusted_certificate   /etc/letsencrypt/live/${NGINX_HOST}/chain.pem;
 
-    root /usr/share/nginx/html/;
+    return 444;
 }
 
 {% if cookiecutter.nginx_redirect_www_prefix == 'y' %}
