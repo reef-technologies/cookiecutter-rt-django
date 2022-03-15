@@ -88,6 +88,8 @@ if CORS_ENABLED := env.bool('CORS_ENABLED', default=True):
     CORS_ALLOWED_ORIGIN_REGEXES = env.list('CORS_ALLOWED_ORIGIN_REGEXES', default=[])
     CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Content Security Policy
 if CSP_ENABLED := env.bool('CSP_ENABLED'):
     MIDDLEWARE.append('csp.middleware.CSPMiddleware')
