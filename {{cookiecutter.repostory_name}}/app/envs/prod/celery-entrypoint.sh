@@ -14,5 +14,5 @@ nice celery multi start $WORKERS $OPTIONS \
     -Q:master celery --autoscale:master=$CELERY_MASTER_CONCURRENCY,0 \
     -Q:worker worker --autoscale:worker=$CELERY_WORKER_CONCURRENCY,0
 
-trap "celery multi stop $WORKERS $OPTIONS; exit 0" SIGINT SIGTERM
+trap "celery multi stop $WORKERS $OPTIONS; exit 0" INT TERM
 tail -f /var/log/celery-*.log
