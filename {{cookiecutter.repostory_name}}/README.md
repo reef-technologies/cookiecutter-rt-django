@@ -136,7 +136,12 @@ See `.github/workflows/cd.yml` to find out the secret names.
 
 # Setting up periodic backups
 
-Add `cd {{ cookiecutter.repostory_name }}; {{ cookiecutter.repostory_name }}/bin/backup-db.sh` to crontab.
+Add to crontab:
+
+```sh
+# crontab -e
+30 0 * * * cd ~/domains/{{ cookiecutter.repostory_name }} && ./bin/backup-db.sh > ~/backup.log 2>&1
+```
 
 Set `BACKUP_LOCAL_ROTATE_KEEP_LAST` to keep only a specific number of most recent backups in local `.backups` directory.
 
