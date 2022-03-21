@@ -39,9 +39,14 @@ services:
     init: true
     restart: unless-stopped
     env_file: ./.env
+    {% if cookiecutter.monitoring == 'y' %}
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
+    {% endif %}
     volumes:
       - backend-static:/root/src/static
       - ./media:/root/src/media
+      {% if cookiecutter.monitoring == 'y' %}- ./prometheus-multiproc-dir/app:${PROMETHEUS_MULTIPROC_DIR}{% endif %}
     links:
       - redis:redis
     depends_on:

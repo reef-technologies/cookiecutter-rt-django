@@ -81,6 +81,12 @@ server {
         root /srv/;
     }
 
+    {% if cookiecutter.monitoring == 'y' %}
+    location /metrics {
+        return 404;
+    }
+    {% endif %}
+
     location / {
         proxy_pass_header Server;
         proxy_redirect off;
@@ -129,6 +135,15 @@ server {
     location /nginx-metrics/ {
         vhost_traffic_status_display;
         vhost_traffic_status_display_format prometheus;
+    }
+
+    location /application-metrics/ {
+        proxy_pass_header Server;
+        proxy_redirect off;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X_SCHEME $scheme;
+        proxy_pass http://app:8000/metrics;
     }
 
 }

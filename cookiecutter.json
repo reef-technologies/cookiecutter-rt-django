@@ -4,6 +4,7 @@
     "django_project_name": "project",
     "django_default_app_name": "core",
     "monitoring": "y",
+    "monitor_view_execution_time_in_djagno": "y",
     "postgres_user": "postgres",
     "use_celery": "y",
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",

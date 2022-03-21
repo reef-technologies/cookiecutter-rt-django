@@ -51,6 +51,7 @@ DEBUG = env('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+    {% if cookiecutter.monitoring == "y" %}'django_prometheus',{% endif %}
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,7 +65,12 @@ INSTALLED_APPS = [
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
 ]
 
+{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+PROMETHEUS_LATENCY_BUCKETS = (.008, .016, .032, .062, .125, .25, .5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, float("inf"))
+{% endif %}
+
 MIDDLEWARE = [
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}'django_prometheus.middleware.PrometheusBeforeMiddleware',{% endif %}
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -72,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}'django_prometheus.middleware.PrometheusAfterMiddleware',{% endif %}
 ]
 
 if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
