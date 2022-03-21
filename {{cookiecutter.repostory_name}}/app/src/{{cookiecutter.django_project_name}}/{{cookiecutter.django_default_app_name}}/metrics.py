@@ -15,7 +15,7 @@ class RecursiveMultiProcessCollector(multiprocess.MultiProcessCollector):
         return self.merge(files, accumulate=True)
 
 
-env_var_name = 'PROMETHEUS_MULTIPROC_DIR'
+ENV_VAR_NAME = 'PROMETHEUS_MULTIPROC_DIR'
 
 
 def metrics_view(request):
