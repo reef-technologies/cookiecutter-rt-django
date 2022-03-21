@@ -20,7 +20,7 @@ ENV_VAR_NAME = 'PROMETHEUS_MULTIPROC_DIR'
 
 def metrics_view(request):
     """Exports metrics as a Django view"""
-    if os.environ.get(env_var_name) or os.environ.get(env_var_name.lower()):
+    if os.environ.get(ENV_VAR_NAME):
         registry = prometheus_client.CollectorRegistry()
         RecursiveMultiProcessCollector(registry)
         return HttpResponse(
