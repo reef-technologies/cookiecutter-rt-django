@@ -94,7 +94,7 @@ done
 EOT
 
 chmod +x hooks/post-receive
-./hooks/post-receive
+echo "_ _ production/master" | ./hooks/post-receive
 ```
 
 Please note that first hook execution (deployment) will fail.
