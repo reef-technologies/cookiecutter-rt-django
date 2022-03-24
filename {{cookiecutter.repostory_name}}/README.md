@@ -74,7 +74,7 @@ git push production master
 # remote server
 cd ~/repos/{{ cookiecutter.repostory_name }}.git
 
-cat <<'EOT' >> hooks/post-receive
+cat <<'EOT' > hooks/post-receive
 #!/bin/bash
 unset GIT_INDEX_FILE
 export ROOT=/root
