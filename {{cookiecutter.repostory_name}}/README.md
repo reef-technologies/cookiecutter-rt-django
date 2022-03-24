@@ -82,6 +82,7 @@ export REPO={{ cookiecutter.repostory_name }}
 while read oldrev newrev ref
 do
     if [[ $ref =~ .*/master$ ]]; then
+        echo "Deploying revision $newrev pushed to $ref."
         export GIT_DIR="$ROOT/repos/$REPO.git/"
         export GIT_WORK_TREE="$ROOT/domains/$REPO/"
         git checkout -f master
