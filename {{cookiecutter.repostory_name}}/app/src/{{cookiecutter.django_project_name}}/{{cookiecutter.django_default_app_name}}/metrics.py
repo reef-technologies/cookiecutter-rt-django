@@ -11,7 +11,7 @@ from prometheus_client import multiprocess
 class RecursiveMultiProcessCollector(multiprocess.MultiProcessCollector):
     """A multiprocess collector that scans the directory recursively"""
     def collect(self):
-        files = glob.glob(os.path.join(self._path, '*.db'), recursive=True)
+        files = glob.glob(os.path.join(self._path, '**/*.db'), recursive=True)
         return self.merge(files, accumulate=True)
 
 
