@@ -95,11 +95,23 @@ EOT
 
 chmod +x hooks/post-receive
 ./hooks/post-receive
+```
+
+Please note that first hook execution (deployment) will fail.
+
+Continue with production environment day one setup:
+
+```sh
+# remote server
 cd ~/domains/{{ cookiecutter.repostory_name }}
 ./setup-prod.sh
+```
 
-# adjust the `.env` file
+Adjust the `.env` file (`SECRET_KEY`, `POSTGRES_PASSWORD` etc.)
 
+Setup certificates:
+```sh
+# remote server
 mkdir letsencrypt
 ./letsencrypt_setup.sh
 ./deploy.sh
