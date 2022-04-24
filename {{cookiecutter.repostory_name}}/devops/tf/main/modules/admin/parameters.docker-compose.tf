@@ -10,11 +10,17 @@ version: '3.7'
 services:
   app:
     image: ${var.ecr_base_url}/${var.ecr_image}
-    healthcheck:
-      test: wget -q 127.0.0.1:8000/admin/login
     init: true
     restart: always
     env_file: ./.env
+    {% if cookiecutter.monitoring == 'y' %}
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
+    {% endif %}
+    volumes:
+      - backend-static:/root/src/static
+      - ./media:/root/src/media
+      {% if cookiecutter.monitoring == 'y' %}- ./prometheus-multiproc-dir/app:${PROMETHEUS_MULTIPROC_DIR}{% endif %}
     logging:
       driver: awslogs
       options:
@@ -22,6 +28,7 @@ services:
         awslogs-group: /aws/ec2/${var.name}-${var.env}-app
         awslogs-create-group: "true"
 
+  {% if cookiecutter.monitoring == 'y' %}
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -55,28 +62,40 @@ services:
     restart: unless-stopped
     logging:
       <<: *exporter_logging
+  {% endif %}
 
   nginx:
     image: 'ghcr.io/reef-technologies/nginx-rt:v1.0.0'
     restart: unless-stopped
     healthcheck:
-      test: wget -q 0.0.0.0:80
+      test: wget -q --spider http://0.0.0.0/admin/login || exit 1
     links:
+      - app:app
+      {% if cookiecutter.monitoring == 'y' %}
       - cadvisor:cadvisor
       - node-exporter:node-exporter
-      - app:app
+      {% endif %}
     command: nginx -g 'daemon off;'
     ports:
+      {% if cookiecutter.monitoring == 'y' %}
       - 10443:10443
+      {% endif %}
       - 8000:8000
     volumes:
-      - ./reef_monitoring:/etc/certs
+      - ./nginx/templates:/etc/nginx/templates
+      - ./nginx/config_helpers:/etc/nginx/config_helpers
+      - backend-static:/srv/static:ro
+      - ./media:/srv/media:ro
+      - ./nginx/monitoring_certs:/etc/monitoring_certs
     logging:
       driver: awslogs
       options:
         awslogs-region: ${var.region}
         awslogs-group: /aws/ec2/${var.name}-${var.env}-nginx
         awslogs-create-group: "true"
+
+volumes:
+  backend-static:
 EOF
 }
 {% endraw %}
