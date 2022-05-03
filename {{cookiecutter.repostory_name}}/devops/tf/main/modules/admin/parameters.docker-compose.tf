@@ -1,4 +1,3 @@
-{% raw %}
 data "aws_partition" "self" {}
 
 resource "aws_ssm_parameter" "compose" {
@@ -20,7 +19,9 @@ services:
     volumes:
       - backend-static:/root/src/static
       - ./media:/root/src/media
-      {% if cookiecutter.monitoring == 'y' %}- ./prometheus-multiproc-dir/app:${PROMETHEUS_MULTIPROC_DIR}{% endif %}
+    {% if cookiecutter.monitoring == 'y' %}
+      - ./prometheus-multiproc-dir/app:$${PROMETHEUS_MULTIPROC_DIR}
+    {% endif %}
     logging:
       driver: awslogs
       options:
@@ -45,7 +46,7 @@ services:
     logging: &exporter_logging
       driver: journald
       options:
-        tag: '{###{.Name}###}'
+        tag: {% raw %}'{###{.Name}###}'{% endraw %}
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.40.0
@@ -98,4 +99,3 @@ volumes:
   backend-static:
 EOF
 }
-{% endraw %}
