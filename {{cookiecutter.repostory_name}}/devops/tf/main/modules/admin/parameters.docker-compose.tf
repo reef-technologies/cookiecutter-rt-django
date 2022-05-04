@@ -14,11 +14,17 @@ services:
     env_file: ./.env
     {% if cookiecutter.monitoring == 'y' %}
     environment:
+     # add this setting to any container that should dump prometheus metrics
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
     {% endif %}
     volumes:
       - backend-static:/root/src/static
       - ./media:/root/src/media
+
+      # If another container is using prometheus metrics, it should dump it's metrics to a subdirectory of the host dir,
+      # e.g `- ./prometheus-multiproc-dir/other_container:/prometheus-multiproc-dir` - all containers should use
+      # separate subdirs
+      - ./prometheus-multiproc-dir:/prometheus-multiproc-dir
     {% if cookiecutter.monitoring == 'y' %}
       - ./prometheus-multiproc-dir/app:$${PROMETHEUS_MULTIPROC_DIR}
     {% endif %}
