@@ -41,11 +41,11 @@ server {
 
     include /etc/nginx/config_helpers/gzip.conf;
 
-    ssl_certificate /etc/monitoring_certs/cert.crt;
-    ssl_certificate_key /etc/monitoring_certs/cert.key;
-    ssl_trusted_certificate   /etc/monitoring_certs/ca.crt;
+    ssl_certificate /etc/monitoring_certs/monitoring.crt;
+    ssl_certificate_key /etc/monitoring_certs/monitoring.key;
+    ssl_trusted_certificate   /etc/monitoring_certs/monitoring-ca.crt;
 
-    ssl_client_certificate /etc/monitoring_certs/ca.crt;
+    ssl_client_certificate /etc/monitoring_certs/monitoring-ca.crt;
     ssl_verify_client on;
 
     access_log                /dev/stdout;
