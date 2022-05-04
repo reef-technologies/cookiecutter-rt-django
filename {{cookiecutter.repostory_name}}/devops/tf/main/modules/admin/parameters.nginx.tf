@@ -8,7 +8,7 @@ locals {
   }] : []
 
   helper_dir   = "../../files/nginx/config_helpers"
-  helper_files = fileset(local.helper_dir, "*.conf")
+  helper_files = fileset(local.helper_dir, "*")
 
   helpers = length(local.helper_files) > 0 ? [for helper_file in local.helper_files : {
     name: helper_file,
@@ -16,7 +16,7 @@ locals {
   }] : []
 
   template_dir   = "../../files/nginx/templates"
-  template_files = fileset(local.template_dir, "*.conf")
+  template_files = fileset(local.template_dir, "*")
 
   templates = length(local.template_files) > 0 ? [for template_file in local.template_files : {
     name: template_file,
@@ -40,7 +40,7 @@ resource "aws_ssm_parameter" "helpers" {
 
 resource "aws_ssm_parameter" "templates" {
   count   = length(local.templates)
-  name    = "/application/${var.name}/${var.env}/nginx/templates/${local.helpers[count.index].name}"
+  name    = "/application/${var.name}/${var.env}/nginx/templates/${local.templates[count.index].name}"
   type    = "SecureString"
   value   = file(local.templates[count.index].content)
 }
