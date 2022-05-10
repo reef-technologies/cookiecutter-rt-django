@@ -9,3 +9,6 @@
 venv
 media/
 .backups/
+.envrc
+.terraform.lock.hcl
+.terraform/

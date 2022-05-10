@@ -28,5 +28,15 @@
     "csp_exclude_url_prefixes": "",
     "nginx_redirect_www_prefix": "y",
     "nginx_compression_enabled": "n",
-    "use_alpine_linux": "n"
+    "use_alpine_linux": "n",
+    "aws_use_packer": "n",
+    "aws_project_name": "{{ cookiecutter.repostory_name }}",
+    "aws_infra_bucket": "{{ cookiecutter.aws_project_name }}-{{ random_ascii_string(6)|lower }}",
+    "aws_region": "us-east-1",
+    "aws_ami_image": "{% if cookiecutter.aws_use_packer == 'n' %}*ubuntu-focal-20.04-amd64-minimal-*{% else %}docker-optimized-*{% endif %}",
+    "aws_ami_image_owner": "{% if cookiecutter.aws_use_packer == 'n' %}099720109477{% else %}self{% endif %}",
+    "aws_base_domain_name": "fake-domain.com",
+    "aws_domain_name": "api.{{ cookiecutter.aws_base_domain_name }}",
+    "aws_staging_domain_name": "staging.{{ cookiecutter.aws_domain_name }}",
+    "aws_ec2_ssh_key": ""
 }
