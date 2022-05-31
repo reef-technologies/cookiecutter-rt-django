@@ -61,6 +61,12 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'django_probes',
+{% if cookiecutter.use_constance == "y" %}
+    'constance',    # Project apps go AFTER constance
+    {% if cookiecutter.constance_backend == 'database' %}
+    'constance.backends.database',
+    {% endif %}
+{% endif %}
 
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
 ]
@@ -269,3 +275,10 @@ if SENTRY_DSN := env('SENTRY_DSN', default=''):
             ),
         ],
     )
+
+{% if cookiecutter.constance_backend == "redis" %}
+CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
+CONSTANCE_REDIS_CONNECTION = '{{ cookiecutter.constance_redis_url }}'
+{% elif cookiecutter.constance_backend == "database" %}
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+{% endif %}
