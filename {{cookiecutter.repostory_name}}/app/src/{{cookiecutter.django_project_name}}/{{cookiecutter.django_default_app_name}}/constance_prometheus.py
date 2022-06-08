@@ -1,3 +1,20 @@
+"""
+Export django-constance variables as Prometheus metrics.
+
+By default this module exports all constance variables which are of the ``int``,
+``float``, ``bool`` or ``decimal.Decimal`` types and not included in the
+``CONSTANCE_PROMETHEUS_BLACKLIST`` sequence.
+
+The variables will appear named ``constance_config_VARIABLE_KEY`` and the numeric
+types will be represented as Gauge metrics, while ``bool``s will turn into Enums.
+
+The ``CONSTANCE_PROMETHEUS_WHITELIST`` sequence may specify additional variables
+to be exported. Their values will be cast into ``str`` and appended to the metric
+name (e.g. ``VAR="foo bar"`` will become ``constance_config_VAR_foo_bar``) and
+get 1.0 value. Once changed, the old metric becomes 0.0 and new one will appear,
+allowing to present different values on a graph.
+
+"""
 import os
 import re
 
@@ -6,7 +23,7 @@ from constance.signals import config_updated
 from decimal import Decimal
 from django.conf import settings
 from django.dispatch import receiver
-from prometheus_client import REGISTRY, CollectorRegistry, Enum, Gauge, multiprocess
+from prometheus_client import REGISTRY, CollectorRegistry, Enum, Gauge
 
 from . import metrics
 
