@@ -5,8 +5,8 @@ By default this module exports all constance variables which are of the ``int``,
 ``float``, ``bool`` or ``decimal.Decimal`` types and not included in the
 ``CONSTANCE_PROMETHEUS_BLACKLIST`` sequence.
 
-The variables will appear named ``constance_config_VARIABLE_KEY`` and the numeric
-types will be represented as Gauge metrics, while ``bool``s will turn into Enums.
+The variables will appear named ``constance_config_VARIABLE_KEY`` and represented
+as Gauge metrics.
 
 The ``CONSTANCE_PROMETHEUS_WHITELIST`` sequence may specify additional variables
 to be exported. Their values will be cast into ``str`` and appended to the metric
@@ -56,14 +56,9 @@ class Metric:
         self.name = self._get_name()
         self.description = constance_settings.CONFIG[self.config_key][1]
         value = getattr(config, self.config_key)
-        if isinstance(value, bool):
-            self._metric = Enum(self.name, self.description, states=["true", "false"])
-            self.store = lambda v: self._metric.state("true" if v else "false")
-            return
-        elif isinstance(value, (int, float, Decimal)):
+        if isinstance(value, (bool, int, float, Decimal)):
             self._metric = Gauge(self.name, self.description)
             self.store = self._metric.set
-            return
         else:
             # a str or custom type; cast everything to str
             value = str(value)
