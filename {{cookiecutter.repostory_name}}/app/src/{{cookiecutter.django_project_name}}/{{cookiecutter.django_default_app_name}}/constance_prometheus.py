@@ -1,4 +1,5 @@
 import os
+import re
 
 from constance import config, settings as constance_settings
 from constance.signals import config_updated
@@ -23,6 +24,9 @@ def gets_monitored(key, value):
     return not is_blacklisted(key) and (
         isinstance(value, (int, float, bool)) or is_whitelisted(key)
     )
+
+
+METRIC_NAME_FILTER = re.compile(r"\W", re.ASCII)
 
 
 class Metric:
@@ -52,7 +56,8 @@ class Metric:
     def _get_name(self, value=None):
         n = f"{self.prefix:s}_{self.config_key:s}"
         if value is not None:
-            n = f"{n}_{value}"
+            v = METRIC_NAME_FILTER.sub('_', value)
+            n = f"{n}_{v}"
         return n
 
     def _unregister(self):
