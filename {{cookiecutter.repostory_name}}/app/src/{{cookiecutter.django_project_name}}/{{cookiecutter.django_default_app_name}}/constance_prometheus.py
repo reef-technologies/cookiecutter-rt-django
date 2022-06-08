@@ -23,7 +23,7 @@ from constance.signals import config_updated
 from decimal import Decimal
 from django.conf import settings
 from django.dispatch import receiver
-from prometheus_client import REGISTRY, CollectorRegistry, Enum, Gauge
+from prometheus_client import REGISTRY, CollectorRegistry, Gauge
 
 from . import metrics
 
