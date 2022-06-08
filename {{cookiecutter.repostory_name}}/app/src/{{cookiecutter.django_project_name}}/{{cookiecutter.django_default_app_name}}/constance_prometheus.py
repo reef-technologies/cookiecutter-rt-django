@@ -3,6 +3,7 @@ import re
 
 from constance import config, settings as constance_settings
 from constance.signals import config_updated
+from decimal import Decimal
 from django.conf import settings
 from django.dispatch import receiver
 from prometheus_client import REGISTRY, CollectorRegistry, Enum, Gauge, multiprocess
@@ -22,7 +23,7 @@ def is_whitelisted(key):
 
 def gets_monitored(key, value):
     return not is_blacklisted(key) and (
-        isinstance(value, (int, float, bool)) or is_whitelisted(key)
+        isinstance(value, (int, float, bool, Decimal)) or is_whitelisted(key)
     )
 
 
@@ -42,7 +43,7 @@ class Metric:
             self._metric = Enum(self.name, self.description, states=["true", "false"])
             self.store = lambda v: self._metric.state("true" if v else "false")
             return
-        elif isinstance(value, (int, float)):
+        elif isinstance(value, (int, float, Decimal)):
             self._metric = Gauge(self.name, self.description)
             self.store = self._metric.set
             return
