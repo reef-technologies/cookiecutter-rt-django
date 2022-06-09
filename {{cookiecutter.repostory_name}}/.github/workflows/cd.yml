@@ -23,3 +23,6 @@ jobs:
           export TAG=deployed-${ENVIRONMENT}-`date -u +"%Y-%m-%dT%H.%M.%S"`
           git tag $TAG
           git push origin $TAG
+        env:
+          commit_msg : {% raw %} ${{ github.event.head_commit.message }} {% endraw %}
+          sender : {% raw %} ${{ github.event.sender.login }} {% endraw %}

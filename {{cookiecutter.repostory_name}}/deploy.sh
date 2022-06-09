@@ -27,6 +27,11 @@ docker-compose run --rm app sh -c "python manage.py wait_for_database --timeout 
 # start everything
 docker-compose up -d
 
+{% if cookiecutter.use_slack_notification %}
+# Send slack notification about deploy
+docker-compose run --rm app sh -c "python bin/notify.py"
+{% endif %}
+
 # Clean all dangling images
 docker images --quiet --filter=dangling=true \
     | xargs --no-run-if-empty docker rmi \
