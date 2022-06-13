@@ -160,6 +160,9 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      {% if cookiecutter.monitor_tcpstat == 'y' %}
+      - '--collector.tcpstat'
+      {% endif %}
     logging:
       <<: *logging
 
