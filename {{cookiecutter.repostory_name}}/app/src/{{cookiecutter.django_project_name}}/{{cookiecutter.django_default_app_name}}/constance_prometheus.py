@@ -24,23 +24,24 @@ from decimal import Decimal
 from django.conf import settings
 from django.dispatch import receiver
 from prometheus_client import REGISTRY, CollectorRegistry, Gauge
+from typing import Any
 
 from . import metrics
 
 
-def is_blacklisted(key):
+def is_blacklisted(key: str) -> bool:
     return key in getattr(settings, "CONSTANCE_PROMETHEUS_BLACKLIST", [])
 
 
-def is_whitelisted(key):
+def is_whitelisted(key: str) -> bool:
     return key in getattr(settings, "CONSTANCE_PROMETHEUS_WHITELIST", [])
 
 
-def is_of_automatically_monitored_type(value):
+def is_of_automatically_monitored_type(value: Any) -> bool:
     return isinstance(value, (int, float, bool, Decimal))
 
 
-def gets_monitored(key, value):
+def gets_monitored(key: str, value: Any) -> bool:
     return not is_blacklisted(key) and (
         is_of_automatically_monitored_type(value) or is_whitelisted(key)
     )
@@ -52,7 +53,7 @@ METRIC_NAME_FILTER = re.compile(r"\W", re.ASCII)
 class Metric:
     PREFIX = "constance_config"
 
-    def __init__(self, config_key):
+    def __init__(self, config_key: str):
         self.config_key = config_key
         self.name = self._get_name()
         self.description = constance_settings.CONFIG[self.config_key][1]
@@ -67,7 +68,7 @@ class Metric:
             self._metric = Gauge(self.name, self.description)
             self.store = self._store_str
 
-    def _get_name(self, value=None):
+    def _get_name(self, value: Any = None) -> str:
         name_candidate = f"{self.PREFIX:s}_{self.config_key:s}"
         if value is not None:
             alnum_value = METRIC_NAME_FILTER.sub("_", value)
@@ -89,7 +90,7 @@ class Metric:
             # returning to previous setting may cause duplicates to appear.
             pass
 
-    def _store_str(self, value):
+    def _store_str(self, value: Any):
         value = str(value)
         name = self._get_name(value)
         if name == self.name:
@@ -105,7 +106,7 @@ class Metric:
         self._metric.set(1)
 
 
-def store_monitored_metric(key, new_value):
+def store_monitored_metric(key: str, new_value: Any):
     """
     Stores a single ``key = value`` pair, if among monitored variables.
     """
