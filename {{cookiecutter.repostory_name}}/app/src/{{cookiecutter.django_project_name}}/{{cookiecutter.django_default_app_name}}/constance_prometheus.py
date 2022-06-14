@@ -105,22 +105,28 @@ class Metric:
         self._metric.set(1)
 
 
-def _update_metric_if_needed(key, new_value):
+def store_monitored_metric(key, new_value):
+    """
+    Stores a single ``key = value`` pair, if among monitored variables.
+    """
     if gets_monitored(key, new_value):
         if key not in METRICS:
             METRICS[key] = Metric(key)
         METRICS[key].store(new_value)
 
 
-@receiver(config_updated)
-def on_constance_config_updated(sender, key, old_value, new_value, **kwargs):
-    _update_metric_if_needed(key, new_value)
-
-
-def export_config():
+def store_monitored():
+    """
+    Stores all monitored config variables into metrics.
+    """
     for key in dir(config):
         value = getattr(config, key)
-        _update_metric_if_needed(key, value)
+        store_monitored_metric(key, value)
 
 
 METRICS = {}
+
+
+@receiver(config_updated)
+def on_constance_config_updated(sender, key, old_value, new_value, **kwargs):
+    store_monitored_metric(key, new_value)

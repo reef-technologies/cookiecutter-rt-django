@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 {% if cookiecutter.monitoring == "y" and cookiecutter.use_constance == "y" %}
-from .constance_prometheus import export_config
+from .constance_prometheus import store_monitored
 {% endif %}
 
 
@@ -9,5 +9,5 @@ class {{cookiecutter.django_default_app_name|title}}Config(AppConfig):
 
 {% if cookiecutter.monitoring == "y" and cookiecutter.use_constance == "y" %}
     def ready(self):
-        export_config()
+        store_monitored()
 {% endif %}
