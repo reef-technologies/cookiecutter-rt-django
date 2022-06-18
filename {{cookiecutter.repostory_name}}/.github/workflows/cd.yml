@@ -24,5 +24,5 @@ jobs:
           git tag $TAG
           git push origin $TAG
         env:
-          commit_msg : {% raw %} ${{ github.event.head_commit.message }} {% endraw %}
           sender : {% raw %} ${{ github.event.sender.login }} {% endraw %}
+          before : {% raw %} ${{ github.event.before }} {% endraw %}
