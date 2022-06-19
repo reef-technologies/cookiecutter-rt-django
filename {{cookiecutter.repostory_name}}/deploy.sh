@@ -29,8 +29,9 @@ docker-compose up -d
 
 {% if cookiecutter.use_slack_notification %}
 # Send slack notification about deploy
-output=`git log --format=format:%H,%s`
-docker-compose run --rm app sh -c "python /root/src/bin/notify.py --parse -m \"$output\""
+commits=`git log --format=format:%H,%s`
+commits=${commits//\`/\'}
+docker-compose run --rm app sh -c "python /root/src/bin/notify.py --parse -m \"$commits\""
 {% endif %}
 
 # Clean all dangling images
