@@ -31,7 +31,7 @@ docker-compose up -d
 # Send slack notification about deploy
 commits=`git log --format=format:%H,%s`
 commits=${commits//\`/\'}
-docker-compose run --rm app sh -c "python /root/src/bin/notify.py --parse -m \"$commits\""
+docker-compose run --rm app sh -c "python notify.py --parse -m \"$commits\""
 {% endif %}
 
 # Clean all dangling images

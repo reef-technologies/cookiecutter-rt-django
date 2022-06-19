@@ -11,6 +11,6 @@ docker push ${APP_OWNER}.dkr.ecr.${APP_REGION}.amazonaws.com/${APP_NAME}:latest
 echo "Sending slack notification"
 commits=`git log --format=format:%H,%s`
 commits=${commits//\`/\'}
-docker run --rm ${APP_NAME} sh -c "python bin/notify.py --parse -m \"$commits\""
+docker run --rm ${APP_NAME} sh -c "python notify.py --parse -m \"$commits\""
 
 aws autoscaling start-instance-refresh --region ${APP_REGION} --auto-scaling-group-name ${APP_NAME}
