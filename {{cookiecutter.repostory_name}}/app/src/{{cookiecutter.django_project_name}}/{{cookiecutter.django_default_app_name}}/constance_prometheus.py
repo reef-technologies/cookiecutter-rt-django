@@ -76,19 +76,9 @@ class Metric:
         return name_candidate
 
     def _unregister(self):
-        if os.environ.get(metrics.ENV_VAR_NAME):
-            registry = CollectorRegistry()
-            metrics.RecursiveMultiProcessCollector(registry)
-        else:
-            registry = REGISTRY
-        try:
-            # NOTE: This will fail in multiprocess mode
-            registry.unregister(self._metric)
-        except KeyError:
-            # FIXME: Once unregistering fails, the metric remains in the registry.
-            # As the value of string variables is converted to the metric name,
-            # returning to previous setting may cause duplicates to appear.
-            pass
+        if not os.environ.get(metrics.ENV_VAR_NAME):
+            REGISTRY.unregister(self._metric)
+        # NOTE: in multiprocess mode there's no way to unregister a metric
 
     def _store_str(self, value: Any):
         value = str(value)
