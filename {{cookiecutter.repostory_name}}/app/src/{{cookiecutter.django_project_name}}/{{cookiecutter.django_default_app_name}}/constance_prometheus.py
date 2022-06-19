@@ -19,6 +19,7 @@ import re
 
 from constance import config, settings as constance_settings
 from constance.signals import config_updated
+from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 from django.conf import settings
 from django.dispatch import receiver
@@ -35,7 +36,9 @@ def is_whitelisted(key: str) -> bool:
 
 
 def is_of_automatically_monitored_type(value: Any) -> bool:
-    return isinstance(value, (int, float, bool, Decimal))
+    return isinstance(
+        value, (int, float, bool, Decimal, datetime, date, time, timedelta)
+    )
 
 
 def gets_monitored(key: str, value: Any) -> bool:
@@ -57,7 +60,16 @@ class Metric:
         value = getattr(config, self.config_key)
         if is_of_automatically_monitored_type(value):
             self._metric = Gauge(self.name, self.description)
-            self.store = self._metric.set
+            if isinstance(value, datetime):
+                self.store = self._store_datetime
+            elif isinstance(value, date):
+                self.store = self._store_date
+            elif isinstance(value, time):
+                self.store = self._store_time
+            elif isinstance(value, timedelta):
+                self.store = self._store_timedelta
+            else:
+                self.store = self._metric.set
         else:
             # a str or custom type; cast everything to str
             value = str(value)
@@ -78,6 +90,21 @@ class Metric:
         except KeyError:
             pass
         return Gauge(self.name, self.description)
+
+    def _store_datetime(self, value: datetime):
+        if value.tzinfo:
+            # convert to UTC and make TZ-naive
+            value = (value - value.utcoffset()).replace(tzinfo=None)
+        self._metric.set(int(value.timestamp()))
+
+    def _store_date(self, value: date):
+        self._store_datetime(datetime(value.year, value.month, value.day))
+
+    def _store_time(self, value: time):
+        self._metric.set(value.hour * 60 * 60 + value.minute * 60 + value.second)
+
+    def _store_timedelta(self, value: timedelta):
+        self._metric.set(int(value.total_seconds()))
 
     def _store_str(self, value: Any):
         value = str(value)
