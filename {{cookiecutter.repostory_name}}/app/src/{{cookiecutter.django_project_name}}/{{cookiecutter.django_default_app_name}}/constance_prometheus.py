@@ -65,7 +65,7 @@ class Metric:
             # a str or custom type; cast everything to str
             value = str(value)
             self.name = self._get_name(value)
-            self._metric = Gauge(self.name, self.description)
+            self._metric = self._recycle_str()
             self.store = self._store_str
 
     def _get_name(self, value: Any = None) -> str:
@@ -75,10 +75,12 @@ class Metric:
             name_candidate = f"{name_candidate}_{alnum_value}"
         return name_candidate
 
-    def _unregister(self):
-        if not os.environ.get(metrics.ENV_VAR_NAME):
-            REGISTRY.unregister(self._metric)
-        # NOTE: in multiprocess mode there's no way to unregister a metric
+    def _recycle_str(self):
+        try:
+            return REGISTRY._names_to_collectors[self.name]
+        except KeyError:
+            pass
+        return Gauge(self.name, self.description)
 
     def _store_str(self, value: Any):
         value = str(value)
@@ -88,11 +90,8 @@ class Metric:
             return
         else:
             self._metric.set(0)
-        # the value has changed, so we change the name
-        # first, unregister the old metric to avoid duplicating when old value is set
-        self._unregister()
         self.name = name
-        self._metric = Gauge(self.name, self.description)
+        self._metric = self._recycle_str()
         self._metric.set(1)
 
 
