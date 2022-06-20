@@ -15,7 +15,6 @@ get 1.0 value. Once changed, the old metric becomes 0.0 and new one will appear,
 allowing to present different values on a graph.
 
 """
-import os
 import re
 
 from constance import config, settings as constance_settings
@@ -25,8 +24,6 @@ from django.conf import settings
 from django.dispatch import receiver
 from prometheus_client import REGISTRY, Gauge
 from typing import Any
-
-from . import metrics
 
 
 def is_blacklisted(key: str) -> bool:
