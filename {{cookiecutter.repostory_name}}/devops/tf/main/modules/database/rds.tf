@@ -23,7 +23,7 @@ resource "aws_db_instance" "admin" {
   engine                 = "postgres"
   instance_class         = "db.t3.small"
   username               = "master"
-  name                   = "appdb"
+  db_name                = var.name
   password               = random_string.random.result
   skip_final_snapshot    = true
   availability_zone      = var.azs[0]

@@ -111,4 +111,6 @@ resource "aws_autoscaling_group" "admin" {
   target_group_arns = [
     aws_lb_target_group.admin.arn
   ]
+
+  health_check_type = var.health_check_type
 }

@@ -66,4 +66,6 @@ module "admin" {
 
   azs         = module.networking.azs
   subnets     = module.networking.subnets
+
+  health_check_type = var.autoscaling_health_check_type
 }
