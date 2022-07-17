@@ -21,3 +21,8 @@ domain_name      = "{{ cookiecutter.aws_staging_domain_name }}"
 
 # default ssh key
 ec2_ssh_key      = "{{ cookiecutter.aws_ec2_ssh_key }}"
+
+# defines if we use EC2-only healthcheck or ELB healthcheck
+# EC2 healthcheck reacts only on internal EC2 checks (i.e. if machine cannot be reached)
+# recommended for staging = EC@, for prod = ELB
+autoscaling_health_check_type = "EC2"

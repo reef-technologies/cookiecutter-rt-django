@@ -41,3 +41,8 @@ variable "domain_name" {
 variable "ec2_ssh_key" {
   type = string
 }
+
+variable "autoscaling_health_check_type" {
+  description = "either EC2 or ELB"
+  type = string
+}

@@ -15,3 +15,5 @@ variable "ec2_ssh_key" {}
 
 variable "ecr_base_url" {}
 variable "ecr_image" {}
+
+variable "health_check_type" {}
