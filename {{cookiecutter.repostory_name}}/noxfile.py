@@ -54,4 +54,8 @@ def test(session):
             '-W', 'ignore::DeprecationWarning', '-s', '-x', '-vv',
             'project',
             *session.posargs,
+            env={
+                'DJANGO_SETTINGS_MODULE': '{{cookiecutter.django_project_name}}.settings',
+                'DEBUG_TOOLBAR': '0',
+            },
         )
