@@ -46,12 +46,14 @@ def test(session):
             '-r', 'requirements.txt',
             'pytest',
             'pytest-django',
+            'pytest-xdist',
             'ipdb',
             'freezegun',
         )
         session.run(
             'pytest',
             '-W', 'ignore::DeprecationWarning', '-s', '-x', '-vv',
+            '-n', 'auto',
             'project',
             *session.posargs,
             env={
