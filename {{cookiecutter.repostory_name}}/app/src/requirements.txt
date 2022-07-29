@@ -21,3 +21,6 @@ ipython==7.26.0
 prometheus-client~=0.13.0
 django-prometheus==2.2.0
 {% endif %}
+{% if cookiecutter.use_slack_notification == "y" %}
+requests==2.27.0
+{% endif %}

@@ -191,3 +191,12 @@ Notations like `package-name>=x.x.x` or `package-name` (without version) are con
 3. See if everything works
 4. Set up backups on the new machine
 5. Make sure everything is filled up in .env, error reporting integration, email accounts etc
+
+# Slack notification
+`notify.py` allows sending notification on slack. By default it's executed during the deploy.
+To make it work:
+1. Create [new app](https://api.slack.com/apps)
+2. Add chat:write **bot** scope 
+3. Install it to get Bot User OAuth Token
+4. Use it as `SLACK_TOKEN` env variable
+5. /invite @app_name to proper #channel

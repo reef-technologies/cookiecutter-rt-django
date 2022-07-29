@@ -39,5 +39,7 @@
     "aws_base_domain_name": "fake-domain.com",
     "aws_domain_name": "api.{{ cookiecutter.aws_base_domain_name }}",
     "aws_staging_domain_name": "staging.{{ cookiecutter.aws_domain_name }}",
-    "aws_ec2_ssh_key": ""
+    "aws_ec2_ssh_key": "",
+    "use_slack_notification": "y",
+    "slack_channel": "{% if cookiecutter.use_slack_notification == 'y' %}#develop{% else %}{% endif %}"
 }
