@@ -29,5 +29,4 @@ def metrics_view(request):
         )
     else:
         return ExportToDjangoView(request)
-
 {% endif %}

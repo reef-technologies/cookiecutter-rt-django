@@ -9,9 +9,8 @@ import inspect
 
 import environ
 {% if cookiecutter.use_celery == "y" %}
-from celery.schedules import crontab
+# from celery.schedules import crontab
 {% endif %}
-
 
 root = environ.Path(__file__) - 2
 
@@ -180,7 +179,7 @@ MEDIA_ROOT = env('MEDIA_ROOT', default=root('media'))
 # redirect HTTP to HTTPS
 if env.bool('HTTPS_REDIRECT', default=False) and not DEBUG:
     SECURE_SSL_REDIRECT = True
-    SECURE_REDIRECT_EXEMPT = []
+    SECURE_REDIRECT_EXEMPT = []  # type: ignore
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 else:
@@ -193,7 +192,7 @@ CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until tas
 CELERY_COMPRESSION = 'gzip'  # task compression
 CELERY_MESSAGE_COMPRESSION = 'gzip'  # result compression
 CELERY_SEND_EVENTS = True  # needed for worker monitoring
-CELERY_BEAT_SCHEDULE = {
+CELERY_BEAT_SCHEDULE = {  # type: ignore
     # 'task_name': {
     #     'task': '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}.tasks.demo_task',
     #     'args': [2, 2],
@@ -256,7 +255,7 @@ if SENTRY_DSN := env('SENTRY_DSN', default=''):
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration
     from sentry_sdk.integrations.redis import RedisIntegration
-    sentry_sdk.init(
+    sentry_sdk.init(  # type: ignore
         dsn=SENTRY_DSN,
         environment=ENV,
         integrations=[

@@ -9,5 +9,4 @@ logger = get_task_logger(__name__)
 @app.task
 def demo_task(x, y):
     return x + y
-
 {% endif %}
