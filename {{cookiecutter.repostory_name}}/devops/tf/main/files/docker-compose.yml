@@ -1,14 +1,8 @@
-data "aws_partition" "self" {}
-
-resource "aws_ssm_parameter" "compose" {
-  name = "/application/${var.name}/${var.env}/docker-compose.yml"
-  type = "SecureString"
-  value = <<EOF
 version: '3.7'
 
 services:
   app:
-    image: ${var.ecr_base_url}/${var.ecr_image}
+    image: ${ecr_base_url}/${ecr_image}
     init: true
     restart: always
     env_file: ./.env
@@ -31,8 +25,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${var.region}
-        awslogs-group: /aws/ec2/${var.name}-${var.env}-app
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}-app
         awslogs-create-group: "true"
 
   {% if cookiecutter.monitoring == 'y' %}
@@ -52,7 +46,7 @@ services:
     logging: &exporter_logging
       driver: journald
       options:
-        tag: {% raw %}'{###{.Name}###}'{% endraw %}
+        tag: '{###{.Name}###}'
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.40.0
@@ -97,11 +91,9 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${var.region}
-        awslogs-group: /aws/ec2/${var.name}-${var.env}-nginx
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}-nginx
         awslogs-create-group: "true"
 
 volumes:
   backend-static:
-EOF
-}

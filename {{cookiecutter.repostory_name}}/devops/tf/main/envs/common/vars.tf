@@ -42,6 +42,16 @@ variable "ec2_ssh_key" {
   type = string
 }
 
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+}
+
+variable "rds_instance_type" {
+  description = "RDS instance type"
+  type        = string
+}
+
 variable "autoscaling_health_check_type" {
   description = "either EC2 or ELB"
   type = string
