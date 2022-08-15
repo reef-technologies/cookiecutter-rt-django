@@ -27,16 +27,29 @@ def type_check(session):
             'django-stubs[compatible-mypy]',
             'types-requests',
             'types-python-dateutil',
+            'types-freezegun',
             'djangorestframework-stubs[compatible-mypy]',
         )
-        session.run('mypy', '.')
+        session.run(
+            'mypy',
+            '--config-file', 'mypy.ini',
+            '.',
+            *session.posargs
+        )
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def security_check(session):
     session.install('bandit')
     with session.chdir(str(APP_ROOT)):
-        session.run('bandit', '--ini', 'bandit.ini', '-r', '.')
+        session.run(
+            'bandit',
+            '--ini', 'bandit.ini',
+            '-x', 'requirements_freeze.py',
+            '-r',
+            '.',
+            *session.posargs
+        )
 
 
 @nox.session(python=PYTHON_VERSIONS)
