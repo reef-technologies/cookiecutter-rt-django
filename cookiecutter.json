@@ -4,7 +4,6 @@
     "django_project_name": "project",
     "django_default_app_name": "core",
     "monitoring": "y",
-    "business_metrics": "n",
     "monitor_view_execution_time_in_djagno": "y",
     "monitor_tcpstat": "y",
     "postgres_user": "postgres",

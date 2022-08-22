@@ -22,6 +22,10 @@ server {
     location /metrics {
         return 404;
     }
+
+    location /business-metrics {
+        return 404;
+    }
     {% endif %}
 
     location / {
@@ -83,7 +87,6 @@ server {
         proxy_pass http://app:8000/metrics;
     }
 
-    {% if cookiecutter.business_metrics == 'y' %}
     location /application-business-metrics/ {
         proxy_pass_header Server;
         proxy_redirect off;
@@ -92,7 +95,6 @@ server {
         proxy_set_header X_SCHEME $scheme;
         proxy_pass http://app:8000/business-metrics;
     }
-    {% endif %}
 
 }
 {% endif %}
