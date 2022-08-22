@@ -4,7 +4,7 @@ resource "random_string" "random" {
   override_special = "$."
 }
 
-resource "aws_db_subnet_group" "admin" {
+resource "aws_db_subnet_group" "self" {
   name       = "${var.name}-${var.env}"
   subnet_ids = var.subnets
 
@@ -15,19 +15,19 @@ resource "aws_db_subnet_group" "admin" {
   }
 }
 
-resource "aws_db_instance" "admin" {
+resource "aws_db_instance" "self" {
   identifier             = "${var.name}-${var.env}-db"
   allocated_storage      = 5
   max_allocated_storage  = 20
   storage_encrypted      = true
   engine                 = "postgres"
-  instance_class         = "db.t3.small"
+  instance_class         = var.instance_type
   username               = "master"
-  db_name                = var.name
+  db_name                = "backend"
   password               = random_string.random.result
   skip_final_snapshot    = true
   availability_zone      = var.azs[0]
-  db_subnet_group_name   = aws_db_subnet_group.admin.name
+  db_subnet_group_name   = aws_db_subnet_group.self.name
   vpc_security_group_ids = [aws_security_group.db.id]
 
   tags = {

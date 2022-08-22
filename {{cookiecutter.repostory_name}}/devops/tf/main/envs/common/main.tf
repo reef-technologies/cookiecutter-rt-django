@@ -20,6 +20,11 @@ data "aws_ami" "base_ami" {
   owners = [var.base_ami_image_owner]
 }
 
+locals {
+  ecr_base_url = "${data.aws_caller_identity.env.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+  ecr_image    = "${var.name}-${var.env}:latest"
+}
+
 module "networking" {
   source = "../../modules/networking"
 
@@ -33,16 +38,17 @@ module "networking" {
 module "database" {
   source = "../../modules/database"
 
-  name        = var.name
-  env         = var.env
-  vpc_id      = module.networking.vpc_id
-  vpc_cidr    = module.networking.vpc_cidr_block
-  azs         = module.networking.azs
-  subnets     = module.networking.subnets
+  name          = var.name
+  env           = var.env
+  vpc_id        = module.networking.vpc_id
+  vpc_cidr      = module.networking.vpc_cidr_block
+  azs           = module.networking.azs
+  subnets       = module.networking.subnets
+  instance_type = var.rds_instance_type
 }
 
-module "admin" {
-  source = "../../modules/admin"
+module "backend" {
+  source = "../../modules/backend"
 
   depends_on = [
     module.database
@@ -67,5 +73,8 @@ module "admin" {
   azs         = module.networking.azs
   subnets     = module.networking.subnets
 
+  instance_type     = var.instance_type
   health_check_type = var.autoscaling_health_check_type
+  account_id        = data.aws_caller_identity.env.account_id
+  database          = module.database
 }
