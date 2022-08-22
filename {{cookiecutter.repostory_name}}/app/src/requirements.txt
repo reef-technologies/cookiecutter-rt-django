@@ -2,6 +2,9 @@ Django==3.2.12
 {% if cookiecutter.csp_enabled == "y" -%}
 django-csp==3.7
 {% endif -%}
+{% if cookiecutter.use_constance == "y" %}
+django-constance[{{ cookiecutter.constance_backend }}]==2.9.0
+{% endif %}
 django-cors-headers==3.7.0
 django-environ==0.4.5
 django-extensions==3.1.3
