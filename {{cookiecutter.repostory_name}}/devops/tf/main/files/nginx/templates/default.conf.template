@@ -22,6 +22,10 @@ server {
     location /metrics {
         return 404;
     }
+
+    location /business-metrics {
+        return 404;
+    }
     {% endif %}
 
     location / {
@@ -81,6 +85,15 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X_SCHEME $scheme;
         proxy_pass http://app:8000/metrics;
+    }
+
+    location /application-business-metrics/ {
+        proxy_pass_header Server;
+        proxy_redirect off;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X_SCHEME $scheme;
+        proxy_pass http://app:8000/business-metrics;
     }
 
 }
