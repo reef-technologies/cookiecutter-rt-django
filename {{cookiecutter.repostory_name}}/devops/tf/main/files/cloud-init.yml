@@ -43,6 +43,10 @@ write_files:
 
       source .envrc
 
+      export INSTANCE_ID_SUBST=`wget http://169.254.169.254/latest/meta-data/instance-id -O- --timeout=5 --tries=1`
+      [ -z "$INSTANCE_ID_SUBST" ] && export INSTANCE_ID_SUBST='{% raw %}{{.FullID}}{% endraw %}'
+      echo "INSTANCE_ID_SUBST=$INSTANCE_ID_SUBST" >> .env
+
       aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin "$AWS_ECR_BASE_URL"
       docker-compose up -d
 
