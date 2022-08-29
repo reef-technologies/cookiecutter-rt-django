@@ -65,7 +65,7 @@ services:
     image: {{cookiecutter.django_project_name}}/app
     init: true
     healthcheck:
-      test: celery -A {{cookiecutter.django_project_name}} status --quiet || exit 1
+      test: celery -A {{cookiecutter.django_project_name}} status > /dev/null || exit 1
     restart: unless-stopped
     env_file: ./.env
     environment:
