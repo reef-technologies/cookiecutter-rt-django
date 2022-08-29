@@ -15,4 +15,11 @@ nice celery multi start $WORKERS $OPTIONS \
     -Q:worker worker --autoscale:worker=$CELERY_WORKER_CONCURRENCY,0
 
 trap "celery multi stop $WORKERS $OPTIONS; exit 0" INT TERM
-tail -f /var/log/celery-*.log
+
+tail -f /var/log/celery-*.log &
+
+# check celery status periodically to exit if it crashed
+while true; do
+    sleep 30
+    celery -A {{cookiecutter.django_project_name}} status > /dev/null 2>&1 || exit 1
+done
