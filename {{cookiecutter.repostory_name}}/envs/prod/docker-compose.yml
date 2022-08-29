@@ -39,19 +39,21 @@ services:
     init: true
     restart: unless-stopped
     env_file: ./.env
-    {% if cookiecutter.monitoring == 'y' %}
-    environment:  # add this setting to any container that should dump prometheus metrics
+    {% if cookiecutter.monitoring == 'y' -%}
+    environment:
+      # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
+      # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
+      # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
+      # Don't forget to also mount the prometheus-metrics volume in other containers too.
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
-    {% endif %}
+    {%- endif %}
     volumes:
       - backend-static:/root/src/static
       - ./media:/root/src/media
-      {% if cookiecutter.monitoring == 'y' %}
-      # If another container is using prometheus metrics, it should dump it's metrics to a subdirectory of the host dir,
-      # e.g `- ./prometheus-multiproc-dir/other_container:/prometheus-multiproc-dir` - all containers should use
-      # separate subdirs
-      - ./prometheus-multiproc-dir:/prometheus-multiproc-dir
-      {% endif %}
+      {% if cookiecutter.monitoring == 'y' -%}
+      # Add this mount to each container that should dump Prometheus metrics.
+      - prometheus-metrics:/prometheus-multiproc-dir
+      {%- endif %}
     links:
       - redis:redis
     depends_on:
@@ -185,3 +187,4 @@ services:
 
 volumes:
   backend-static:
+  prometheus-metrics:

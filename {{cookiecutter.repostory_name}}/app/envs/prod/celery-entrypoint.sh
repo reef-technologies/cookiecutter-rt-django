@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+./prometheus-cleanup.sh
+
 # below we define two workers types (each may have any concurrency);
 # each worker may have its own settings
 WORKERS="master worker"
