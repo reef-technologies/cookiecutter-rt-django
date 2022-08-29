@@ -26,7 +26,8 @@ services:
       driver: awslogs
       options:
         awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}-app
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '${INSTANCE_ID_SUBST}-app'
         awslogs-create-group: "true"
 
   {% if cookiecutter.monitoring == 'y' %}
@@ -46,7 +47,7 @@ services:
     logging: &exporter_logging
       driver: journald
       options:
-        tag: '{###{.Name}###}'
+        tag: '{% raw %}{{.Name}}{% endraw %}'
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.40.0
@@ -92,7 +93,8 @@ services:
       driver: awslogs
       options:
         awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}-nginx
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-nginx'
         awslogs-create-group: "true"
 
 volumes:
