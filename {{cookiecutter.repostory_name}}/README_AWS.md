@@ -102,6 +102,21 @@ IMPORTANT! the env variables for the apps (`.env` file) and `docker-compose.yml`
 in terraform files, if you change any, you need to run `terraform apply` AND refresh 
 the ec2 instance. The same goes for AMI built by packer.
 
+Adding secrets to the projects
+------------------------------
+
+Cloud init is configured to provision EC2 machines spun up as part of this project's infrastructure. As part of this
+provisioning, SSM parameters following a specific name convention are read and saved as files in EC2's home directory
+(RDS access details are managed in another way). The naming convention is 
+`/application/{{ cookiecutter.aws_project_name }}/{env}/{path_of_the_file_to_be_created}`, for example 
+`/application/project/staging/.env`.  A few such parameters are managed by terraform in this project (e.g. `.env`, 
+`docker-compose.yml`) and more can be added. In case you need to add confidential files (like a GCP credentials file) 
+you can simply create appropriate SSM parameters. These will only be accessible to people that access to AWS or EC2 
+machines, not to people who have access to this repository. One such parameter, namely 
+`/application/{{ cookiecutter.aws_project_name }}/{env}/secret.env` is treated specially - if it exists 
+(it doesn't by default) its contents are appended to `.env` during EC2 machine provisioning - this is a convenient way
+of supplying pieces of confidential information, like external systems' access keys to `.env`.
+
 Deploying apps
 --------------
 

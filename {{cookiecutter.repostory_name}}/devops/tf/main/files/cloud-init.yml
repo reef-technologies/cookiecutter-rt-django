@@ -47,6 +47,9 @@ write_files:
       [ -z "$INSTANCE_ID_SUBST" ] && export INSTANCE_ID_SUBST='{% raw %}{{.FullID}}{% endraw %}'
       echo "INSTANCE_ID_SUBST=$INSTANCE_ID_SUBST" >> .env
 
+      [ -f secret.env ] && cat secret.env >> .env
+
+
       aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin "$AWS_ECR_BASE_URL"
       docker-compose up -d
 
