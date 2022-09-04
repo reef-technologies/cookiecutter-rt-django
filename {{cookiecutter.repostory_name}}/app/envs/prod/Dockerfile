@@ -36,6 +36,14 @@ RUN ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy python3 manage.py collec
 FROM $BASE_IMAGE AS secondary-image
 LABEL builder=false
 
+{% if cookiecutter.use_alpine_linux == "y" -%}
+RUN apk add wget
+{%- else -%}
+RUN apt-get update \
+  && apt-get install -y wget \
+  && rm -rf /var/lib/apt/lists/*
+{%- endif %}
+
 WORKDIR /root/src/
 ENV PYTHONUNBUFFERED=1
 ENV PATH=/root/.local/bin:$PATH
@@ -43,10 +51,9 @@ ENV PATH=/root/.local/bin:$PATH
 COPY --from=base-image /root/ /root/
 
 {% if cookiecutter.use_alpine_linux == "y" -%}
-RUN apk add wget
 RUN grep psycopg2 requirements.txt && apk add --no-cache libpq || true
 RUN grep Pillow requirements.txt && apk add --no-cache jpeg tiff zlib libwebp || true
-{% endif -%}
+{%- endif %}
 
 EXPOSE 8000
 
