@@ -72,7 +72,14 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
+      {% if cookiecutter.monitoring == 'y' -%}
+      - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/celery-worker
+      {%- endif %}
     command: ./celery-entrypoint.sh
+    {% if cookiecutter.monitoring == 'y' -%}
+    volumes:
+      - prometheus-metrics:/prometheus-multiproc-dir
+    {%- endif %}
     tmpfs: /run
     links:
       - redis:redis
