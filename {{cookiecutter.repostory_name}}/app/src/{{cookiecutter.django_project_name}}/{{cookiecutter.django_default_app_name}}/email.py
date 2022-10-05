@@ -26,21 +26,18 @@ def create_attachment(path: str, mime_type: MIMEType = MIMEImage) -> MIMEType:
 
 
 def send_mail(
+    template_name: str,
     subject: str,
     to: list[str],
     from_: str = f'<{settings.DEFAULT_FROM_EMAIL}>',
-    cc: Optional[list[str]] = None,
-    template_name: Optional[str] = None,
-    body: Optional[str] = None,
     context: Optional[dict] = None,
     attachments: Optional[list[str]] = None,
+    cc: Optional[list[str]] = None,
 ):
-    # Ensure that either body or template name is provided, not both.
-    assert (body is not None and template_name is None) or (body is None and template_name is not None)
     context = context or {}
     attachments = attachments or []
 
-    html = body or loader.render_to_string(template_name, context)
+    html = loader.render_to_string(template_name, context)
 
     message = EmailMessage(
         subject=subject,
