@@ -82,7 +82,6 @@ services:
       {% if cookiecutter.monitoring == 'y' %}
       - 10443:10443
       {% endif %}
-      - 8000:8000
     volumes:
       - ./nginx/templates:/etc/nginx/templates
       - ./nginx/config_helpers:/etc/nginx/config_helpers
