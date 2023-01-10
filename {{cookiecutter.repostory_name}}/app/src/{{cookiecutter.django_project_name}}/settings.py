@@ -2,9 +2,7 @@
 Django settings for {{cookiecutter.django_project_name}} project.
 """
 
-{% if cookiecutter.use_celery == "y" %}
 from datetime import timedelta
-{% endif %}
 import logging
 from functools import wraps
 import inspect
@@ -52,7 +50,7 @@ DEBUG = env('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
-    {%- if cookiecutter.monitoring == "y" -%}'django_prometheus',{%- endif -%}
+    {% if cookiecutter.monitoring == "y" %}'django_prometheus',{% endif %}
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -71,7 +69,7 @@ PROMETHEUS_LATENCY_BUCKETS = (.008, .016, .032, .062, .125, .25, .5, 1.0, 2.0, 4
 {% endif %}
 
 MIDDLEWARE = [
-    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" -%}'django_prometheus.middleware.PrometheusBeforeMiddleware',{%- endif -%}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}'django_prometheus.middleware.PrometheusBeforeMiddleware',{% endif %}
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -79,7 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" -%}'django_prometheus.middleware.PrometheusAfterMiddleware',{%- endif -%}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}'django_prometheus.middleware.PrometheusAfterMiddleware',{% endif %}
 ]
 
 if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
