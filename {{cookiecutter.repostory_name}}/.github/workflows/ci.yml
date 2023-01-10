@@ -1,4 +1,4 @@
-name: RT pull request test runner
+name: Run linter and tests on pull requests
 
 on:
   pull_request:
