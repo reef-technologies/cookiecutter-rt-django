@@ -2,7 +2,9 @@
 Django settings for {{cookiecutter.django_project_name}} project.
 """
 
+{% if cookiecutter.use_celery == "y" %}
 from datetime import timedelta
+{% endif %}
 import logging
 from functools import wraps
 import inspect
@@ -50,7 +52,9 @@ DEBUG = env('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
-    {% if cookiecutter.monitoring == "y" %}'django_prometheus',{% endif %}
+    {%- if cookiecutter.monitoring == "y" %}
+    'django_prometheus',
+    {%- endif %}
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,12 +68,15 @@ INSTALLED_APPS = [
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
 ]
 
-{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+{%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
 PROMETHEUS_LATENCY_BUCKETS = (.008, .016, .032, .062, .125, .25, .5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, float("inf"))
-{% endif %}
+{%- endif %}
+
 
 MIDDLEWARE = [
-    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}'django_prometheus.middleware.PrometheusBeforeMiddleware',{% endif %}
+    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    {%- endif %}
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,8 +84,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}'django_prometheus.middleware.PrometheusAfterMiddleware',{% endif %}
+    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+    {%- endif %}
 ]
+
 
 if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
     DEBUG_TOOLBAR_CONFIG = {
@@ -185,7 +195,8 @@ if env.bool('HTTPS_REDIRECT', default=False) and not DEBUG:
 else:
     SECURE_SSL_REDIRECT = False
 
-{% if cookiecutter.use_celery == "y" %}
+{%- if cookiecutter.use_celery == "y" %}
+
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')  # store results in Redis
 CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until task result deletion
@@ -209,7 +220,7 @@ CELERY_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_WORKER_PREFETCH_MULTIPLIER = env.int('CELERY_WORKER_PREFETCH_MULTIPLIER', default=10)
 CELERY_BROKER_POOL_LIMIT = env.int('CELERY_BROKER_POOL_LIMIT', default=50)
-{% endif %}
+{%- endif %}
 
 EMAIL_BACKEND = env('EMAIL_BACKEND')
 EMAIL_FILE_PATH = env('EMAIL_FILE_PATH')

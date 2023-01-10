@@ -1,4 +1,4 @@
-{% if cookiecutter.use_celery == 'y' %}
+{%- if cookiecutter.use_celery == 'y' -%}
 import os
 
 from celery import Celery
@@ -23,8 +23,8 @@ def route_task(name, args, kwargs, options, task=None, **kw):
 @worker_process_shutdown.connect
 def child_exit(pid, **kw):
     multiprocess.mark_process_dead(pid)
-{% endif %}
+{% endif -%}
 {% else %}
 # Use this as a starting point for your project with celery.
 # If you are not using celery, you can remove this app
-{% endif %}
+{% endif -%}
