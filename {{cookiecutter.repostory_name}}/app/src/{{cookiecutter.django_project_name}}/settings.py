@@ -71,7 +71,7 @@ PROMETHEUS_LATENCY_BUCKETS = (.008, .016, .032, .062, .125, .25, .5, 1.0, 2.0, 4
 {% endif %}
 
 MIDDLEWARE = [
-    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" -%}'django_prometheus.middleware.PrometheusBeforeMiddleware',{%- endif -%}
+{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}    'django_prometheus.middleware.PrometheusBeforeMiddleware',{%- endif -%}
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -79,7 +79,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" -%}'django_prometheus.middleware.PrometheusAfterMiddleware',{%- endif -%}
+    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" -%}'django_prometheus.middleware.PrometheusAfterMiddleware',{% endif %}
 ]
 
 if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
