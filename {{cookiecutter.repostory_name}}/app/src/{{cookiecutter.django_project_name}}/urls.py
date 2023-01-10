@@ -8,7 +8,6 @@ from .{{cookiecutter.django_default_app_name}}.business_metrics import metrics_m
 {%- endif %}
 
 
-
 urlpatterns = [
     path('admin/', site.urls),
     path('', include('django.contrib.auth.urls')),
