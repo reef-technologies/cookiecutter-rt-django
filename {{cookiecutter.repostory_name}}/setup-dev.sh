@@ -22,3 +22,6 @@ ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml
 cd app
 [[ -L "Dockerfile" ]] && unlink Dockerfile
 [[ -L "src/entrypoint.sh" ]] && unlink src/entrypoint.sh
+
+# Ensure that the script returns zero for the CI
+exit 0
