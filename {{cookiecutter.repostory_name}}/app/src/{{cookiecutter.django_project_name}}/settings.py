@@ -2,9 +2,9 @@
 Django settings for {{cookiecutter.django_project_name}} project.
 """
 
-{% if cookiecutter.use_celery == "y" %}
+{% if cookiecutter.use_celery == "y" -%}
 from datetime import timedelta
-{% endif %}
+{% endif -%}
 import logging
 from functools import wraps
 import inspect

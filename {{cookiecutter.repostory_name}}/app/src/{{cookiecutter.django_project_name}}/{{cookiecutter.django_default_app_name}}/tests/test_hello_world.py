@@ -5,4 +5,4 @@ It should always pass as long as all dependencies are properly installed.
 
 
 def test_hello_world():
-    print('Hello world')
+    assert True
