@@ -21,7 +21,7 @@ if CI:
 
 @nox.session(python=PYTHON_VERSIONS)
 def lint(session):
-    session.install('flake8')
+    session.run('pip', 'install', 'flake8')
     with session.chdir(str(APP_ROOT)):
         session.run('flake8', '--ignore', 'E501', '.')
 
@@ -29,8 +29,8 @@ def lint(session):
 @nox.session(python=PYTHON_VERSIONS)
 def type_check(session):
     with session.chdir(str(APP_ROOT)):
-        session.install(
-            '-r', 'requirements.txt',
+        session.run(
+            'pip', 'install', '-r', 'requirements.txt',
             'mypy',
             'django-stubs[compatible-mypy]',
             'types-requests',
@@ -48,7 +48,7 @@ def type_check(session):
 
 @nox.session(python=PYTHON_VERSIONS)
 def security_check(session):
-    session.install('bandit')
+    session.install('pip', 'install', 'bandit')
     with session.chdir(str(APP_ROOT)):
         session.run(
             'bandit',
@@ -63,8 +63,8 @@ def security_check(session):
 @nox.session(python=PYTHON_VERSIONS)
 def test(session):
     with session.chdir(str(APP_ROOT)):
-        session.install(
-            '-r', 'requirements.txt',
+        session.run(
+            'pip', 'install', '-r', 'requirements.txt',
             'pytest',
             'pytest-django',
             'pytest-xdist',
