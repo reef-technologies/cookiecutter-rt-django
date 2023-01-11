@@ -1,6 +1,10 @@
-import nox
+import os
 from pathlib import Path
 
+import nox
+
+
+CI = os.environ.get('CI') is not None
 
 ROOT = Path('.')
 PYTHON_VERSIONS = ['3.9']
@@ -9,6 +13,10 @@ APP_ROOT = ROOT / 'app' / 'src'
 nox.options.default_venv_backend = 'venv'
 nox.options.stop_on_first_error = True
 nox.options.reuse_existing_virtualenvs = True
+
+# In CI, use Python interpreter provided by GitHub Actions
+if CI:
+    nox.options.force_venv_backend = 'none'
 
 
 @nox.session(python=PYTHON_VERSIONS)
