@@ -1,6 +1,10 @@
-import nox
+import os
 from pathlib import Path
 
+import nox
+
+
+CI = os.environ.get('CI') is not None
 
 ROOT = Path('.')
 PYTHON_VERSIONS = ['3.9']
@@ -10,10 +14,14 @@ nox.options.default_venv_backend = 'venv'
 nox.options.stop_on_first_error = True
 nox.options.reuse_existing_virtualenvs = True
 
+# In CI, use Python interpreter provided by GitHub Actions
+if CI:
+    nox.options.force_venv_backend = 'none'
+
 
 @nox.session(python=PYTHON_VERSIONS)
 def lint(session):
-    session.install('flake8')
+    session.run('pip', 'install', 'flake8')
     with session.chdir(str(APP_ROOT)):
         session.run('flake8', '--ignore', 'E501', '.')
 
@@ -21,8 +29,8 @@ def lint(session):
 @nox.session(python=PYTHON_VERSIONS)
 def type_check(session):
     with session.chdir(str(APP_ROOT)):
-        session.install(
-            '-r', 'requirements.txt',
+        session.run(
+            'pip', 'install', '-r', 'requirements.txt',
             'mypy',
             'django-stubs[compatible-mypy]',
             'types-requests',
@@ -40,7 +48,7 @@ def type_check(session):
 
 @nox.session(python=PYTHON_VERSIONS)
 def security_check(session):
-    session.install('bandit')
+    session.install('pip', 'install', 'bandit')
     with session.chdir(str(APP_ROOT)):
         session.run(
             'bandit',
@@ -55,8 +63,8 @@ def security_check(session):
 @nox.session(python=PYTHON_VERSIONS)
 def test(session):
     with session.chdir(str(APP_ROOT)):
-        session.install(
-            '-r', 'requirements.txt',
+        session.run(
+            'pip', 'install', '-r', 'requirements.txt',
             'pytest',
             'pytest-django',
             'pytest-xdist',

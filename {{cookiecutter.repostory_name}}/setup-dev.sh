@@ -4,8 +4,8 @@
 PROJECT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`
 ENV_DIR="./envs/dev"
 
-# Check if we are inside virtualenv
-[[ ! -z $VIRTUAL_ENV ]] || { echo -e "\e[31mYou must run this script inside virtualenv!\e[0m"; exit 1; }
+# Check if we are inside virtualenv or CI
+[[ ! -z $VIRTUAL_ENV || ! -z $CI ]] || { echo -e "\e[31mYou must run this script inside virtualenv!\e[0m"; exit 1; }
 
 # Install pip packages
 [[ -z `pip freeze` ]] || echo -e "\e[33mVirtualenv is not clean, already installed packages may be upgraded\e[0m"
@@ -22,3 +22,6 @@ ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml
 cd app
 [[ -L "Dockerfile" ]] && unlink Dockerfile
 [[ -L "src/entrypoint.sh" ]] && unlink src/entrypoint.sh
+
+# Ensure that the script returns zero for the CI
+exit 0
