@@ -12,3 +12,4 @@ media/
 .envrc
 .terraform.lock.hcl
 .terraform/
+.nox/
