@@ -108,7 +108,7 @@ def freeze_requirements(main_packages, custom_packages):
     freezed_requirements.sort(key=str.lower)
 
     if len(main_set) > len(used_main_set):
-        raise RuntimeError('Main dependecies not installed: {}'.format(sorted(main_set - used_main_set)))
+        raise RuntimeError('Main dependencies not installed: {}'.format(sorted(main_set - used_main_set)))
 
     return main_requirements, custom_packages, freezed_requirements
 

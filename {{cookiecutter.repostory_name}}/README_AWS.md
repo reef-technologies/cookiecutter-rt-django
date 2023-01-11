@@ -23,7 +23,7 @@ AWS recommends using profiles, when dealing with multiple AWS accounts.
 To choose between environments, rather than switching access and secret keys, we just 
 switch our profiles. We can choose our profile name, which make it easier to recognize 
 in which environment we operate. To configure AWS environment, you need to have AWS CLI installed.
-It is recommended to use AWS v2, which can be downladed from: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+It is recommended to use AWS v2, which can be downloaded from: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 *Terraform*
 You will also need terraform version 1.0.x. It is recommended to use `tfenv` to install terraform with correct version. You can download an install it from https://github.com/tfutils/tfenv
@@ -45,7 +45,7 @@ And answer following questions:
     Default region name: us-east-1 (just an example)
     Default output format [None]: (can be left blank)
 
-Once, configured, you can swich your profile using `AWS_PROFILE=` env variable or by adding 
+Once, configured, you can switch your profile using `AWS_PROFILE=` env variable or by adding
 `--profile` option to your aws cli command. 
 
 It's handy to create .envrc file in the project rood directory (where deploy-to-aws.sh is created) with content:
