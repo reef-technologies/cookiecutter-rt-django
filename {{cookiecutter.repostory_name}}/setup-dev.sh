@@ -20,7 +20,11 @@ pip install --upgrade -r "${PROJECT_DIR}/app/src/requirements.txt"
 ln -sf "${ENV_DIR}/.env" .env
 ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml
 cd app
+{% if cookiecutter.use_celery == "y" -%}
+ln -sf "${ENV_DIR}/Dockerfile" Dockerfile
+{% else -%}
 [[ -L "Dockerfile" ]] && unlink Dockerfile
+{% endif -%}
 [[ -L "src/entrypoint.sh" ]] && unlink src/entrypoint.sh
 
 # Ensure that the script returns zero for the CI

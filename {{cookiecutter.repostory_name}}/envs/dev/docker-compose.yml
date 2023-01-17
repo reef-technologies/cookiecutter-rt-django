@@ -6,6 +6,8 @@ services:
     command: redis-server --appendonly yes
     healthcheck:
       test: redis-cli ping
+      interval: "3s"
+      retries: 99
     volumes:
       - ./redis/data:/data
     ports:
@@ -15,6 +17,8 @@ services:
     image: postgres:14.0-alpine
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
+      interval: "3s"
+      retries: 99
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -23,3 +27,75 @@ services:
       - ./db/data:/var/lib/postgresql/data
     ports:
       - ${POSTGRES_PORT}:5432
+
+  {% if cookiecutter.use_celery == "y" -%}
+  celery-worker:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: {{cookiecutter.django_project_name}}/app
+    init: true
+    healthcheck:
+      test: celery -A {{cookiecutter.django_project_name}} status > /dev/null || exit 1
+      interval: "3s"
+      retries: 99
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - DEBUG=on
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    command: ./celery-entrypoint.sh
+    tmpfs: /run
+    links:
+      - redis
+      - db
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  celery-beat:
+    image: {{cookiecutter.django_project_name}}/app
+    init: true
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - DEBUG=on
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    command: nice celery -A {{cookiecutter.django_project_name}} beat -l INFO --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
+    volumes:
+      - ./logs:/tmp/logs
+    links:
+      - redis
+      - db
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      celery-worker:
+        condition: service_started
+
+  {% if cookiecutter.use_flower == "y" -%}
+  celery-flower:
+    image: {{cookiecutter.django_project_name}}/app
+    healthcheck:
+      test: wget --user "${CELERY_FLOWER_USER}" --password "${CELERY_FLOWER_PASSWORD}" -qO- 127.0.0.1:5555 > /dev/null || exit 1
+      interval: "3s"
+      retries: 99
+    init: true
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - DEBUG=on
+    command: celery --app={{cookiecutter.django_project_name}} --broker="${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+    depends_on:
+      celery-worker:
+        condition: service_started
+    ports:
+      - 5555:5555
+  {% endif -%}
+  {% endif -%}

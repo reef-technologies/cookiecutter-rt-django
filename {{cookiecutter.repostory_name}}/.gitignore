@@ -13,3 +13,4 @@ media/
 .terraform.lock.hcl
 .terraform/
 .nox/
+/app/Dockerfile
