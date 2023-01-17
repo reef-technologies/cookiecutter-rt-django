@@ -75,7 +75,7 @@ def test(session):
             'pytest',
             '-W', 'ignore::DeprecationWarning', '-s', '-x', '-vv',
             '-n', 'auto',
-            'project',
+            '{{cookiecutter.django_project_name}}',
             *session.posargs,
             env={
                 'DJANGO_SETTINGS_MODULE': '{{cookiecutter.django_project_name}}.settings',
