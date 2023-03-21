@@ -1,4 +1,3 @@
-import debug_toolbar
 from django.conf import settings
 from django.contrib.admin.sites import site
 from django.urls import include, path
@@ -19,5 +18,5 @@ urlpatterns = [
 
 if settings.DEBUG_TOOLBAR:
     urlpatterns += [
-        path('__debug__/', include(debug_toolbar.urls)),
+        path('__debug__/', include('debug_toolbar.urls')),
     ]
