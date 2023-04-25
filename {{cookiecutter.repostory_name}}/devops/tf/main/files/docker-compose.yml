@@ -27,7 +27,7 @@ services:
       options:
         awslogs-region: ${region}
         awslogs-group: /aws/ec2/${name}-${env}
-        tag: '${INSTANCE_ID_SUBST}-app'
+        tag: '$${INSTANCE_ID_SUBST}-app'
         awslogs-create-group: "true"
 
   {% if cookiecutter.monitoring == 'y' %}
