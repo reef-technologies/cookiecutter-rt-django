@@ -35,14 +35,12 @@ services:
     image: ghcr.io/reef-technologies/node-exporter-aws-ec2:latest
     container_name: node-exporter
     restart: unless-stopped
+    network_mode: host
+    pid: host
     volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
+      - /:/host:ro,rslave
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     logging: &exporter_logging
       driver: journald
@@ -71,11 +69,11 @@ services:
     restart: unless-stopped
     healthcheck:
       test: wget -q --spider http://0.0.0.0/admin/login || exit 1
-    links:
-      - app:app
+    depends_on:
+      - app
       {% if cookiecutter.monitoring == 'y' %}
-      - cadvisor:cadvisor
-      - node-exporter:node-exporter
+      - cadvisor
+      - node-exporter
       {% endif %}
     command: nginx -g 'daemon off;'
     ports:
@@ -96,6 +94,10 @@ services:
         awslogs-group: /aws/ec2/${name}-${env}
         tag: '$${INSTANCE_ID_SUBST}-nginx'
         awslogs-create-group: "true"
+    {% if cookiecutter.monitoring == 'y' %}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    {% endif %}
 
 volumes:
   backend-static:

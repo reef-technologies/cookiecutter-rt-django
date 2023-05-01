@@ -39,6 +39,10 @@ server {
 }
 
 {% if cookiecutter.monitoring == 'y' %}
+upstream node_exporter {
+    server host.docker.internal:9100;
+}
+
 server {
     server_name monitoring;
     listen      10443           ssl http2;
@@ -61,7 +65,7 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X_SCHEME $scheme;
-        proxy_pass http://node-exporter:9100/metrics;
+        proxy_pass http://node_exporter/metrics;
     }
 
     location /cadvisor-metrics/ {
