@@ -34,7 +34,7 @@ server {
     return 444;
 }
 
-{% if cookiecutter.nginx_redirect_www_prefix == 'y' %}
+{% if cookiecutter.nginx_redirect_www_prefix == 'y' -%}
 server {
     listen 443 ssl;
     server_name www.${NGINX_HOST};
@@ -48,7 +48,7 @@ server {
 
     return 301 https://${NGINX_HOST}$request_uri;
 }
-{% endif %}
+{%- endif %}
 
 server {
     listen                    443 ssl http2;
@@ -89,16 +89,24 @@ server {
     {% endif %}
 
     location / {
+        {% if cookiecutter.nginx_early_data_enabled == 'y' -%}
+        if ($too_early) {
+            return 425;
+        }
+        {%- endif %}
         proxy_pass_header Server;
         proxy_redirect off;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
+        {% if cookiecutter.nginx_early_data_enabled == 'y' -%}
+        proxy_set_header Early-Data $ssl_early_data;
+        {%- endif %}
         proxy_pass http://app:8000/;
     }
 }
 
-{% if cookiecutter.monitoring == 'y' %}
+{% if cookiecutter.monitoring == 'y' -%}
 upstream node_exporter {
     server host.docker.internal:9100;
 }
@@ -153,4 +161,14 @@ server {
     }
 
 }
-{% endif %}
+{%- endif %}
+
+{% if cookiecutter.nginx_early_data_enabled == 'y' -%}
+ssl_early_data on;
+
+map "$request_method:$ssl_early_data" $too_early {
+    default   1;
+    "GET:1"   0;
+    "~^\S+:$" 0;
+}
+{%- endif %}

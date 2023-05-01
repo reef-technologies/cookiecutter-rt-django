@@ -29,6 +29,7 @@
     "csp_exclude_url_prefixes": "",
     "nginx_redirect_www_prefix": "y",
     "nginx_compression_enabled": "n",
+    "nginx_early_data_enabled": "n",
     "use_alpine_linux": "n",
     "aws_use_packer": "n",
     "aws_project_name": "{{ cookiecutter.repostory_name }}",
