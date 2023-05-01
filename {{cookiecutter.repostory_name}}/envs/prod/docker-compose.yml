@@ -54,8 +54,6 @@ services:
       # Add this mount to each container that should dump Prometheus metrics.
       - prometheus-metrics:/prometheus-multiproc-dir
       {%- endif %}
-    links:
-      - redis:redis
     depends_on:
       - redis
       - db
@@ -81,8 +79,6 @@ services:
       - prometheus-metrics:/prometheus-multiproc-dir
     {%- endif %}
     tmpfs: /run
-    links:
-      - redis:redis
     depends_on:
       - redis
     logging:
@@ -98,8 +94,6 @@ services:
     command: nice celery -A {{cookiecutter.django_project_name}} beat -l INFO --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
     volumes:
       - ./logs:/tmp/logs
-    links:
-      - redis:redis
     depends_on:
       - redis
     logging:
@@ -139,11 +133,11 @@ services:
       - ./media:/srv/media:ro
       - ./letsencrypt/etc:/etc/letsencrypt
       - ./nginx/monitoring_certs:/etc/monitoring_certs
-    links:
-      - app:app
+    depends_on:
+      - app
       {% if cookiecutter.monitoring == 'y' %}
-      - cadvisor:cadvisor
-      - node-exporter:node-exporter
+      - cadvisor
+      - node-exporter
       {% endif %}
     command: nginx -g 'daemon off;'
     ports:
@@ -154,20 +148,22 @@ services:
       {% endif %}
     logging:
       <<: *logging
+    {% if cookiecutter.monitoring == 'y' %}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    {% endif %}
 
   {% if cookiecutter.monitoring == 'y' %}
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
     restart: unless-stopped
+    network_mode: host
+    pid: host
     volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
+      - /:/host:ro,rslave
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
       {% if cookiecutter.monitor_tcpstat == 'y' %}
       - '--collector.tcpstat'
