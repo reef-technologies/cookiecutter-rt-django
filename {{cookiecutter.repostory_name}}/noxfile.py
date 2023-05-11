@@ -48,7 +48,7 @@ def type_check(session):
 
 @nox.session(python=PYTHON_VERSIONS)
 def security_check(session):
-    session.install('pip', 'install', 'bandit')
+    session.run('pip', 'install', 'bandit')
     with session.chdir(str(APP_ROOT)):
         session.run(
             'bandit',
