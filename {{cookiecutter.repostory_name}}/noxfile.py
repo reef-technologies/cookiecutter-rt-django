@@ -69,7 +69,7 @@ def readable(session):
         '-v', f'{ROOT.absolute()}:/data',
         '-w', '/data',
         '-u', f'{os.geteuid()}:{os.getegid()}',
-        'ghcr.io/bobheadxi/readable:v0.4.0',
+        'ghcr.io/bobheadxi/readable:v0.4.0@sha256:d26dccd39069ad6118376d4499d3cf3d74a1c599442e751fc0ca29acbcb044c4',
         'fmt', '**.md',
     )
 
