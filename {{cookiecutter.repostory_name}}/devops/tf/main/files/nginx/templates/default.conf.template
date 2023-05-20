@@ -3,6 +3,7 @@ server {
     server_name _;
     server_name_in_redirect off;
 
+    include /etc/nginx/config_helpers/brotli.conf;
     include /etc/nginx/config_helpers/gzip.conf;
 
     access_log                /dev/stdout;
@@ -47,6 +48,7 @@ server {
     server_name monitoring;
     listen      10443           ssl http2;
 
+    include /etc/nginx/config_helpers/brotli.conf;
     include /etc/nginx/config_helpers/gzip.conf;
 
     ssl_certificate /etc/monitoring_certs/monitoring.crt;
