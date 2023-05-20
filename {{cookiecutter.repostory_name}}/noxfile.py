@@ -8,6 +8,7 @@ CI = os.environ.get('CI') is not None
 
 ROOT = Path('.')
 PYTHON_VERSIONS = ['3.9']
+PYTHON_DEFAULT_VERSION = PYTHON_VERSIONS[-1]
 APP_ROOT = ROOT / 'app' / 'src'
 
 nox.options.default_venv_backend = 'venv'
@@ -19,14 +20,14 @@ if CI:
     nox.options.force_venv_backend = 'none'
 
 
-@nox.session(python=PYTHON_VERSIONS)
+@nox.session(python=PYTHON_DEFAULT_VERSION)
 def lint(session):
     session.run('pip', 'install', 'flake8')
     with session.chdir(str(APP_ROOT)):
         session.run('flake8', '--ignore', 'E501', '.')
 
 
-@nox.session(python=PYTHON_VERSIONS)
+@nox.session(python=PYTHON_DEFAULT_VERSION)
 def type_check(session):
     with session.chdir(str(APP_ROOT)):
         session.run(
@@ -46,7 +47,7 @@ def type_check(session):
         )
 
 
-@nox.session(python=PYTHON_VERSIONS)
+@nox.session(python=PYTHON_DEFAULT_VERSION)
 def security_check(session):
     session.run('pip', 'install', 'bandit')
     with session.chdir(str(APP_ROOT)):
@@ -58,6 +59,19 @@ def security_check(session):
             '.',
             *session.posargs
         )
+
+
+@nox.session(python=PYTHON_DEFAULT_VERSION)
+def readable(session):
+    session.run(
+        'docker',
+        'run',
+        '-v', f'{ROOT.absolute()}:/data',
+        '-w', '/data',
+        '-u', f'{os.geteuid()}:{os.getegid()}',
+        'ghcr.io/bobheadxi/readable:v0.4.0@sha256:d26dccd39069ad6118376d4499d3cf3d74a1c599442e751fc0ca29acbcb044c4',
+        'fmt', '**.md',
+    )
 
 
 @nox.session(python=PYTHON_VERSIONS)
