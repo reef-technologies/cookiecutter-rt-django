@@ -61,6 +61,19 @@ def security_check(session):
         )
 
 
+@nox.session(python=PYTHON_DEFAULT_VERSION)
+def readable(session):
+    session.run(
+        'docker',
+        'run',
+        '-v', f'{ROOT.absolute()}:/data',
+        '-w', '/data',
+        '-u', f'{os.geteuid()}:{os.getegid()}',
+        'ghcr.io/bobheadxi/readable:v0.4.0',
+        'fmt', '**.md',
+    )
+
+
 @nox.session(python=PYTHON_VERSIONS)
 def test(session):
     with session.chdir(str(APP_ROOT)):
