@@ -89,7 +89,7 @@ server {
     {% endif %}
 
     location / {
-        {% if cookiecutter.nginx_early_data_enabled == 'y' -%}
+        {% if cookiecutter.nginx_tls_early_data_enabled == 'y' -%}
         if ($too_early) {
             return 425;
         }
@@ -99,7 +99,7 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
-        {% if cookiecutter.nginx_early_data_enabled == 'y' -%}
+        {% if cookiecutter.nginx_tls_early_data_enabled == 'y' -%}
         proxy_set_header Early-Data $ssl_early_data;
         {%- endif %}
         proxy_pass http://app:8000/;
@@ -163,7 +163,7 @@ server {
 }
 {%- endif %}
 
-{% if cookiecutter.nginx_early_data_enabled == 'y' -%}
+{% if cookiecutter.nginx_tls_early_data_enabled == 'y' -%}
 ssl_early_data on;
 
 map "$request_method:$ssl_early_data" $too_early {
