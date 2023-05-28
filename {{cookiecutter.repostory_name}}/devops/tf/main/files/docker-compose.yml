@@ -65,7 +65,7 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.1.0'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.0'
     restart: unless-stopped
     healthcheck:
       test: wget -q --spider http://0.0.0.0/admin/login || exit 1
