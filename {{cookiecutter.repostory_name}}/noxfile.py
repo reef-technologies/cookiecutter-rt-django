@@ -61,8 +61,8 @@ def security_check(session):
         )
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
-def format(session):
+@nox.session(name='format', python=PYTHON_DEFAULT_VERSION)
+def format_(session):
     session.run(
         'docker',
         'run',
