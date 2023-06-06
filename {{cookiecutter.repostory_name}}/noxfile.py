@@ -61,16 +61,17 @@ def security_check(session):
         )
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
-def readable(session):
+@nox.session(name='format', python=PYTHON_DEFAULT_VERSION)
+def format_(session):
     session.run(
         'docker',
         'run',
+        '--rm',
         '-v', f'{ROOT.absolute()}:/data',
         '-w', '/data',
         '-u', f'{os.geteuid()}:{os.getegid()}',
-        'ghcr.io/bobheadxi/readable:v0.4.0@sha256:d26dccd39069ad6118376d4499d3cf3d74a1c599442e751fc0ca29acbcb044c4',
-        'fmt', '**.md',
+        'ghcr.io/bobheadxi/readable:v0.5.0@sha256:423c133e7e9ca0ac20b0ab298bd5dbfa3df09b515b34cbfbbe8944310cc8d9c9',
+        'fmt', '**/*.md',
     )
 
 
