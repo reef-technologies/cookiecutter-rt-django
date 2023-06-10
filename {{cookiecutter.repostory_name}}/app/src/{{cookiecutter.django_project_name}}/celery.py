@@ -2,12 +2,13 @@
 import os
 
 from celery import Celery
-{% if cookiecutter.monitoring == "y" %}
+{%- if cookiecutter.monitoring == "y" %}
 from celery.signals import worker_process_shutdown
+{% endif -%}
+from django.conf import settings
+{%- if cookiecutter.monitoring == "y" %}
 from prometheus_client import multiprocess
 {% endif %}
-from django.conf import settings
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', '{{cookiecutter.django_project_name}}.settings')
 
 app = Celery('{{cookiecutter.django_project_name}}')

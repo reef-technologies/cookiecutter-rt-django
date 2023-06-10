@@ -1,10 +1,10 @@
-{% if cookiecutter.monitoring == "y" %}
+{%- if cookiecutter.monitoring == "y" %}
 import glob
 import os
 
 import prometheus_client
-from django_prometheus.exports import ExportToDjangoView
 from django.http import HttpResponse
+from django_prometheus.exports import ExportToDjangoView
 from prometheus_client import multiprocess
 
 

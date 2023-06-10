@@ -6,7 +6,6 @@ import logging
 import os
 import subprocess
 
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -91,7 +90,7 @@ def freeze_requirements(main_packages, custom_packages):
     freezed_canditates = []
     for package, version in get_pip_freeze():
         if package in main_set:
-            main_requirements.append('{}=={}'.format(package, version))
+            main_requirements.append(f'{package}=={version}')
             required_packages.update(get_all_dependencies(package))
             used_main_set.add(package)
         elif match_custom_package(package, custom_packages):
@@ -101,14 +100,14 @@ def freeze_requirements(main_packages, custom_packages):
 
     for package, version in freezed_canditates:
         if package in required_packages:
-            freezed_requirements.append('{}=={}'.format(package, version))
+            freezed_requirements.append(f'{package}=={version}')
 
     main_requirements.sort(key=str.lower)
     custom_packages.sort(key=str.lower)
     freezed_requirements.sort(key=str.lower)
 
     if len(main_set) > len(used_main_set):
-        raise RuntimeError('Main dependencies not installed: {}'.format(sorted(main_set - used_main_set)))
+        raise RuntimeError(f'Main dependencies not installed: {sorted(main_set - used_main_set)}')
 
     return main_requirements, custom_packages, freezed_requirements
 
@@ -142,7 +141,7 @@ def main():
 
     requirements_path = os.path.abspath(args.requirements_path)
     if not os.path.exists(requirements_path):
-        raise RuntimeError('Not existent requirements path: {}'.format(requirements_path))
+        raise RuntimeError(f'Not existent requirements path: {requirements_path}')
 
     with open(requirements_path) as fp:
         main_packages, custom_packages, freezed_packages = parse_requirements(fp)

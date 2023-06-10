@@ -28,35 +28,28 @@ def run_readable(session, mode="fmt"):
         '-w', '/data',
         '-u', f'{os.geteuid()}:{os.getegid()}',
         'ghcr.io/bobheadxi/readable:v0.5.0@sha256:423c133e7e9ca0ac20b0ab298bd5dbfa3df09b515b34cbfbbe8944310cc8d9c9',
-        mode, '**/*.md',
+        mode, '![.]**/*.md',
     )
 
 
 @nox.session(name='format', python=PYTHON_DEFAULT_VERSION)
 def format_(session):
+    session.run('pip', 'install', '-e', '.[format]')
+    session.run('ruff', 'check', '--fix', '.')
     run_readable(session, mode="fmt")
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def lint(session):
-    session.run('pip', 'install', 'flake8')
-    with session.chdir(str(APP_ROOT)):
-        session.run('flake8', '--ignore', 'E501', '.')
+    session.run('pip', 'install', '-e', '.[lint]')
+    session.run('ruff', 'check', '--diff', '.')
     run_readable(session, mode="check")
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def type_check(session):
+    session.run('pip', 'install', '-e', '.[type_check]')
     with session.chdir(str(APP_ROOT)):
-        session.run(
-            'pip', 'install', '-r', 'requirements.txt',
-            'mypy',
-            'django-stubs[compatible-mypy]',
-            'types-requests',
-            'types-python-dateutil',
-            'types-freezegun',
-            'djangorestframework-stubs[compatible-mypy]',
-        )
         session.run(
             'mypy',
             '--config-file', 'mypy.ini',

@@ -1,11 +1,10 @@
 from django.conf import settings
 from django.contrib.admin.sites import site
 from django.urls import include, path
-{%- if cookiecutter.monitoring == "y" %}
-from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
+{% if cookiecutter.monitoring == "y" %}
 from .{{cookiecutter.django_default_app_name}}.business_metrics import metrics_manager
+from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 {%- endif %}
-
 
 urlpatterns = [
     path('admin/', site.urls),

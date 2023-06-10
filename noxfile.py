@@ -54,7 +54,7 @@ def format_(session):
 def lint(session):
     """Run linters in readonly mode."""
     session.run('pip', 'install', '-e', '.[lint]')
-    session.run('ruff', 'check', '.')
+    session.run('ruff', 'check', '--diff', '.')
     run_readable(session, mode="check")
 
 

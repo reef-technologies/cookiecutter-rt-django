@@ -10,6 +10,9 @@ dependencies = [
     "nox",
 ]
 
+[tool.setuptools]
+packages = []
+
 [project.optional-dependencies]
 format = ["ruff"]
 lint = ["ruff"]

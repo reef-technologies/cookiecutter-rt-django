@@ -2,12 +2,12 @@
 Django settings for {{cookiecutter.django_project_name}} project.
 """
 
+import inspect
+import logging
 {% if cookiecutter.use_celery == "y" -%}
 from datetime import timedelta
 {% endif -%}
-import logging
 from functools import wraps
-import inspect
 
 import environ
 {% if cookiecutter.use_celery == "y" %}

@@ -1,7 +1,24 @@
 [project]
 name = "{{cookiecutter.repostory_name}}"
 requires-python = ">=3.9"
-dependencies = { file = "app/src/requirements.txt" }
+version = "0"
+dynamic = ["dependencies"]
+[tool.setuptools.packages.find]
+where = ["app/src/"]
+[tool.setuptools.dynamic]
+dependencies = { file = ["app/src/requirements.txt"] }
+
+[project.optional-dependencies]
+format = ["ruff"]
+lint = ["ruff"]
+type_check = [
+    "django-stubs[compatible-mypy]",
+    "djangorestframework-stubs[compatible-mypy]",
+    "mypy",
+    "types-freezegun",
+    "types-python-dateutil",
+    "types-requests",
+]
 
 [tool.ruff]
 src = ["app/src"]
