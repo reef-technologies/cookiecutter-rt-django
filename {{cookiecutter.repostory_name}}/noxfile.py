@@ -3,7 +3,6 @@ from pathlib import Path
 
 import nox
 
-
 CI = os.environ.get('CI') is not None
 
 ROOT = Path('.')
@@ -20,11 +19,30 @@ if CI:
     nox.options.force_venv_backend = 'none'
 
 
+def run_readable(session, mode="fmt"):
+    session.run(
+        'docker',
+        'run',
+        '--rm',
+        '-v', f'{ROOT.absolute()}:/data',
+        '-w', '/data',
+        '-u', f'{os.geteuid()}:{os.getegid()}',
+        'ghcr.io/bobheadxi/readable:v0.5.0@sha256:423c133e7e9ca0ac20b0ab298bd5dbfa3df09b515b34cbfbbe8944310cc8d9c9',
+        mode, '**/*.md',
+    )
+
+
+@nox.session(name='format', python=PYTHON_DEFAULT_VERSION)
+def format_(session):
+    run_readable(session, mode="fmt")
+
+
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def lint(session):
     session.run('pip', 'install', 'flake8')
     with session.chdir(str(APP_ROOT)):
         session.run('flake8', '--ignore', 'E501', '.')
+    run_readable(session, mode="check")
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION)
@@ -59,20 +77,6 @@ def security_check(session):
             '.',
             *session.posargs
         )
-
-
-@nox.session(name='format', python=PYTHON_DEFAULT_VERSION)
-def format_(session):
-    session.run(
-        'docker',
-        'run',
-        '--rm',
-        '-v', f'{ROOT.absolute()}:/data',
-        '-w', '/data',
-        '-u', f'{os.geteuid()}:{os.getegid()}',
-        'ghcr.io/bobheadxi/readable:v0.5.0@sha256:423c133e7e9ca0ac20b0ab298bd5dbfa3df09b515b34cbfbbe8944310cc8d9c9',
-        'fmt', '**/*.md',
-    )
 
 
 @nox.session(python=PYTHON_VERSIONS)
