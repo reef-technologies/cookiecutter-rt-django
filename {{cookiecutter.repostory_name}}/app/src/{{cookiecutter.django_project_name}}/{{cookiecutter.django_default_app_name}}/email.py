@@ -1,5 +1,5 @@
 from email.mime.image import MIMEImage
-from functools import cache
+from functools import lru_cache
 from pathlib import Path
 from typing import (
     Optional,
@@ -14,7 +14,7 @@ from django.template import loader
 MIMEType = TypeVar('MIMEType')
 
 
-@cache
+@lru_cache(maxsize=10)
 def create_attachment(path: str, mime_type: MIMEType = MIMEImage) -> MIMEType:
     real_path = finders.find(path)
     content = Path(real_path).read_bytes()
