@@ -1,6 +1,7 @@
 """
 nox configuration for cookiecutter project template.
 """
+from __future__ import annotations
 
 import contextlib
 import os
@@ -23,8 +24,6 @@ nox.options.reuse_existing_virtualenvs = True
 if CI:
     nox.options.force_venv_backend = 'none'
 
-
-CRUFTED_PROJECT_TMPDIR = None
 
 MD_PATHS = ['*.md']
 
@@ -61,16 +60,18 @@ def lint(session):
 @contextlib.contextmanager
 def crufted_project(session):
     session.run("pip", "install", "-e", ".")
-    global CRUFTED_PROJECT_TMPDIR
-    if not CRUFTED_PROJECT_TMPDIR:
-        CRUFTED_PROJECT_TMPDIR = tempfile.TemporaryDirectory(prefix="rt-crufted_")
-        session.log("Creating project in %s", CRUFTED_PROJECT_TMPDIR.name)
-        session.run("cruft", "create", ".", "--output-dir", CRUFTED_PROJECT_TMPDIR.name, "--no-input")
+    tmpdir = crufted_project.tmpdir
+    if not tmpdir:
+        crufted_project.tmpdir = tmpdir = tempfile.TemporaryDirectory(prefix="rt-crufted_")
+        session.log("Creating project in %s", tmpdir.name)
+        session.run("cruft", "create", ".", "--output-dir", tmpdir.name, "--no-input")
         session.notify('cleanup_crufted_project')
-    project_path = Path(CRUFTED_PROJECT_TMPDIR.name) / "project"
-    session.chdir(project_path)
-    yield project_path
-    session.chdir(ROOT)
+    project_path = Path(tmpdir.name) / "project"
+    with session.chdir(project_path):
+        yield project_path
+
+
+crufted_project.tmpdir = None
 
 
 def rm_root_owned(session, dirpath):
@@ -101,10 +102,9 @@ def test_crufted_project(session):
 
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def cleanup_crufted_project(session):
-    global CRUFTED_PROJECT_TMPDIR
-    if CRUFTED_PROJECT_TMPDIR:
+    if crufted_project.tmpdir:
         # workaround for docker-compose creating root-owned files
-        rm_root_owned(session, CRUFTED_PROJECT_TMPDIR.name)
-        CRUFTED_PROJECT_TMPDIR.cleanup()
-        CRUFTED_PROJECT_TMPDIR = None
+        rm_root_owned(session, crufted_project.tmpdir.name)
+        crufted_project.tmpdir.cleanup()
+        crufted_project.tmpdir = None
 
