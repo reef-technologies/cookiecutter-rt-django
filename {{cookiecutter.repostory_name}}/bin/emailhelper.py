@@ -2,16 +2,16 @@
 
 # Copyright (c) 2018, Reef Technologies, BSD 3-Clause License
 
+import argparse
+import os
+import smtplib
+import sys
 from collections import namedtuple
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from urllib.parse import urlsplit
-import argparse
-import os
-import smtplib
-import sys
 
 
 class GmailSender(namedtuple('SmtpAuthData', 'server port user password')):
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     if '@' in email_creds.username:
         addr_from = email_creds.username
     else:
-        addr_from = '%s@%s' % (email_creds.username, email_creds.hostname)
+        addr_from = f'{email_creds.username}@{email_creds.hostname}'
 
     print("Enter/Paste the message for email. Ctrl-%s to save it." % (os.name == 'nt' and 'Z' or 'D'))
     message_lines = []

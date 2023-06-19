@@ -113,14 +113,11 @@ If one wants to deploy other branch, force may be used to push desired branch to
 ```sh
 git push --force production local-branch-to-deploy:master
 ```
-
 {% if cookiecutter.monitoring == 'y' %}
-
 # Monitoring
 
 Running the app requires proper certificates to be put into `nginx/monitoring_certs`, see `README` located there.
 {% endif %}
-
 ## Monitoring execution time of code blocks
 
 Somewhere, probably in `metrics.py`:

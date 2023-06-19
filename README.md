@@ -1,6 +1,6 @@
 # cookiecutter-rt-django
 
-CookieCutter template for Django application projects with docker-compose etc.
+Opinionated CookieCutter template for production-ready Django applications.
 
 ## Requirements
 

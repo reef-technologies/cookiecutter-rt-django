@@ -14,7 +14,7 @@ from django.template import loader
 MIMEType = TypeVar('MIMEType')
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=10)
 def create_attachment(path: str, mime_type: MIMEType = MIMEImage) -> MIMEType:
     real_path = finders.find(path)
     content = Path(real_path).read_bytes()

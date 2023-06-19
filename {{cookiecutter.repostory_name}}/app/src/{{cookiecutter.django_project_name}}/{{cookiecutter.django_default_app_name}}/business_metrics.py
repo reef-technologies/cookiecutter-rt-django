@@ -1,5 +1,5 @@
 {%- if cookiecutter.monitoring == "y" -%}
-from django_business_metrics.v0 import BusinessMetricsManager, users, active_users
+from django_business_metrics.v0 import BusinessMetricsManager, active_users, users
 
 metrics_manager = BusinessMetricsManager()
 
