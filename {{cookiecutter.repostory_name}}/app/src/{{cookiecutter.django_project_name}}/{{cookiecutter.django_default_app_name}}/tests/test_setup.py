@@ -3,10 +3,10 @@ This test file is here always to indicate that everything was installed and the 
 It should always pass as long as all dependencies are properly installed.
 """
 from datetime import timedelta
-from django.utils.timezone import now
-from freezegun import freeze_time
 
 import pytest
+from django.utils.timezone import now
+from freezegun import freeze_time
 
 
 def test__setup(db, some):
