@@ -68,6 +68,9 @@ INSTALLED_APPS = [
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
 ]
 
+{%- if cookiecutter.monitoring == "y" %}
+PROMETHEUS_EXPORT_MIGRATIONS = True
+{%- endif %}
 {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
 PROMETHEUS_LATENCY_BUCKETS = (.008, .016, .032, .062, .125, .25, .5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, float("inf"))
 {%- endif %}

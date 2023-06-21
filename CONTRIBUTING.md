@@ -20,3 +20,6 @@ nox
 ```
 
 to check if everything is OK.
+
+Denote any breaking changes in [CHANGELOG.md]({{cookiecutter.repostory_name}}/docs/3rd_party/cookiecutter-rt-django/CHANGELOG.md).
+When updating dependencies that has breaking changes add a link to the changelog of the dependency prepend the entry with `**BREAKING**` tag.

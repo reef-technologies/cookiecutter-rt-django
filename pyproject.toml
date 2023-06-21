@@ -10,6 +10,10 @@ dependencies = [
     "nox",
 ]
 
+[project.urls]
+homepage = "https://github.com/reef-technologies/cookiecutter-rt-django"
+changelog = "https://github.com/reef-technologies/cookiecutter-rt-django/{{cookiecutter.repostory_name}}/docs/3rd_party/cookiecutter-rt-django/CHANGELOG.md"
+
 [tool.setuptools]
 packages = []
 

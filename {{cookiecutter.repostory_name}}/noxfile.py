@@ -89,8 +89,4 @@ def test(session):
             '-n', 'auto',
             '{{cookiecutter.django_project_name}}',
             *session.posargs,
-            env={
-                'DJANGO_SETTINGS_MODULE': '{{cookiecutter.django_project_name}}.settings',
-                'DEBUG_TOOLBAR': '0',
-            },
         )
