@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/{{cookiecutter.repostory_name}}/app/src"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "docker"
+    directory: "/{{cookiecutter.repostory_name}}/app/envs/prod"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
