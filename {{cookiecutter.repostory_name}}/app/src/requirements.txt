@@ -5,7 +5,7 @@ django-csp==3.7
 django-cors-headers==4.0.0
 django-environ==0.4.5
 django-extensions==3.2.3
-django-probes==1.6.0
+django-probes==1.7.0
 django-debug-toolbar==4.1.0
 {% if cookiecutter.use_celery == "y" -%}
 celery==5.1.2
