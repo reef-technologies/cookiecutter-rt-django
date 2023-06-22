@@ -1,5 +1,5 @@
 output "connection_string" {
-  value     = "postgres://${aws_db_instance.self.username}:${aws_db_instance.self.password}@${aws_db_instance.self.endpoint}/${aws_db_instance.self.name}"
+  value     = "postgres://${aws_db_instance.self.username}:${aws_db_instance.self.password}@${aws_db_instance.self.endpoint}/${aws_db_instance.self.db_name}"
   sensitive = true
 }
 
@@ -21,5 +21,5 @@ output "port" {
 }
 
 output "name" {
-  value = aws_db_instance.self.name
+  value = aws_db_instance.self.db_name
 }
