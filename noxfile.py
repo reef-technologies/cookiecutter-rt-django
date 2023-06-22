@@ -62,11 +62,15 @@ def crufted_project(session):
     session.run("pip", "install", "-e", ".")
     tmpdir = crufted_project.tmpdir
     if not tmpdir:
+        session.notify('cleanup_crufted_project')
         crufted_project.tmpdir = tmpdir = tempfile.TemporaryDirectory(prefix="rt-crufted_")
         session.log("Creating project in %s", tmpdir.name)
         session.run("cruft", "create", ".", "--output-dir", tmpdir.name, "--no-input")
-        session.notify('cleanup_crufted_project')
-    project_path = Path(tmpdir.name) / "project"
+        project_path = Path(tmpdir.name) / "project"
+        with session.chdir(project_path):
+            session.run('./setup-dev.sh')
+    else:
+        project_path = Path(tmpdir.name) / "project"
     with session.chdir(project_path):
         yield project_path
 
@@ -95,7 +99,6 @@ def lint_crufted_project(session):
 @nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
 def test_crufted_project(session):
     with crufted_project(session):
-        session.run('./setup-dev.sh')
         with docker_up(session):
             session.run('nox', '-s', 'test')
 
