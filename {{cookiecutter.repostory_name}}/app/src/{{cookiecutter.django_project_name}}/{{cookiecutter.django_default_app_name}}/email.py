@@ -1,8 +1,11 @@
+from __future__ import annotations
+
+from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from functools import lru_cache
 from pathlib import Path
 from typing import (
-    Optional,
+    Callable,
     TypeVar,
 )
 
@@ -11,12 +14,17 @@ from django.contrib.staticfiles import finders
 from django.core.mail import EmailMessage
 from django.template import loader
 
-MIMEType = TypeVar('MIMEType')
+MIMEType = TypeVar('MIMEType', bound=MIMEBase)
 
 
 @lru_cache(maxsize=10)
-def create_attachment(path: str, mime_type: MIMEType = MIMEImage) -> MIMEType:
+def create_attachment(
+        path: str,
+        mime_type: Callable[[bytes], MIMEType] = MIMEImage,  # type: ignore[assignment] # https://github.com/python/mypy/issues/3737
+) -> MIMEType:
     real_path = finders.find(path)
+    if not real_path:
+        raise FileNotFoundError(f'File {path} not found')
     content = Path(real_path).read_bytes()
     attachment = mime_type(content)
 
@@ -30,9 +38,9 @@ def send_mail(
     subject: str,
     to: list[str],
     from_: str = f'<{settings.DEFAULT_FROM_EMAIL}>',
-    context: Optional[dict] = None,
-    attachments: Optional[list[str]] = None,
-    cc: Optional[list[str]] = None,
+    context: dict | None = None,
+    attachments: list[str] | None = None,
+    cc: list[str] | None = None,
 ):
     context = context or {}
     attachments = attachments or []
