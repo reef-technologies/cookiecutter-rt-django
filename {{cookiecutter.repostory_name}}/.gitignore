@@ -1,6 +1,7 @@
 *.pyc
 *.sqlite3
 *~
+*.egg-info/
 /docker-compose.yml
 /.idea/
 /redis/
