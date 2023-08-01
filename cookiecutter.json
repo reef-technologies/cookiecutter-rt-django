@@ -9,6 +9,7 @@
     "postgres_user": "postgres",
     "use_celery": "y",
     "use_flower": "n",
+    "use_fingerprinting": "n",
     "sentry_dsn": "",
     "csp_enabled": "n",
     "csp_report_only": "y",

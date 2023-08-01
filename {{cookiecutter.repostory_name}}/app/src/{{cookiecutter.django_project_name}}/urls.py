@@ -9,6 +9,9 @@ from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 urlpatterns = [
     path('admin/', site.urls),
     path('', include('django.contrib.auth.urls')),
+    {% if cookiecutter.use_fingerprinting == "y" -%}
+    path('redirect/', FingerprintView.as_view(), name='fingerprint'),
+    {% endif -%}
     {%- if cookiecutter.monitoring == "y" %}
     path('metrics', metrics_view, name="prometheus-django-metrics"),
     path('business-metrics', metrics_manager.view, name="prometheus-business-metrics"),

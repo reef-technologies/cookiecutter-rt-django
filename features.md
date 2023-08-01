@@ -47,6 +47,7 @@
 - Forward secrecy ciphers
 - Overall ssllabs security class:
   A+ 100/100/90/90 (to keep compatibility with some older clients)
+- Optional fingerprinting of users on backend and frontend sides
 
 ## Reliability
 

@@ -23,3 +23,6 @@ prometheus-client~=0.17.0
 django-prometheus==2.3.1
 django-business-metrics==1.0.0
 {% endif %}
+{% if cookiecutter.use_fingerprinting == "y" -%}
+django-fingerprint-rt @ git@github.com:reef-technologies/django-fingerprint-rt.git
+{% endif -%}

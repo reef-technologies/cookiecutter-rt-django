@@ -64,6 +64,9 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'django_probes',
+    {% if cookiecutter.use_fingerprinting == "y" -%}
+    'fingerprint',
+    {% endif -%}
 
     '{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}',
 ]
