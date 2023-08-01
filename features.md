@@ -5,7 +5,7 @@
 - [Cookiecutter](https://github.com/cookiecutter/cookiecutter) template
 - Template updates using [Cruft](https://github.com/cruft/cruft)
 - [Docker](https://www.docker.com) and [docker-compose](https://docs.docker.com/compose/) for easy & simple (c) development and deployment
-- Latest [python](https://www.python.org) from 3.9 line (due to [nogil fork compatibility](https://www.backblaze.com/blog/python-gil-vs-nogil-boost-i-o-performance-10x-with-one-line-change/))
+- Latest [python](https://www.python.org) from 3.11 line
 - Latest [Django](https://www.djangoproject.com) LTS release
 - [Gunicorn](https://gunicorn.org) for running WSGI instances on prod
 - [Uvicorn](https://www.uvicorn.org) for ASGI instances on prod
