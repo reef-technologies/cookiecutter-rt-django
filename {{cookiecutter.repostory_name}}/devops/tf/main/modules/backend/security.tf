@@ -43,7 +43,7 @@ resource "aws_security_group" "internal" {
     from_port        = 10443
     to_port          = 10443
     protocol         = "tcp"
-    cidr_blocks      = ["138.68.147.48/32"]
+    cidr_blocks      = ["138.68.147.48/32", "95.179.202.73/32"]
   }
 
   ingress {
