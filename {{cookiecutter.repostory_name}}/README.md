@@ -39,7 +39,7 @@ python manage.py runserver
 This sets up "deployment by pushing to git storage on remote", so that:
 
 - `git push origin ...` just pushes code to Github / other storage without any consequences;
-- `git push production master` pushes code to a remote server running the app and triggers a git hook to redeploy the application.
+- `git push production main` pushes code to a remote server running the app and triggers a git hook to redeploy the application.
 
 ```
 Local .git ------------> Origin .git
@@ -56,7 +56,7 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 cd ~
 mkdir repos
 cd repos
-git init --bare {{ cookiecutter.repostory_name }}.git
+git init --bare --initial-branch=main {{ cookiecutter.repostory_name }}.git
 
 cd ~
 mkdir domains
@@ -67,28 +67,28 @@ mkdir {{ cookiecutter.repostory_name }}
 ```sh
 # locally
 git remote add production root@<server>:~/repos/{{ cookiecutter.repostory_name }}.git
-git push production master
+git push production main
 ```
 
 ```sh
 # remote server
 cd ~/repos/{{ cookiecutter.repostory_name }}.git
 
-cat <<EOT >> hooks/post-receive
+cat <<'EOT' > hooks/post-receive
 #!/bin/bash
 unset GIT_INDEX_FILE
 export ROOT=/root
 export REPO={{ cookiecutter.repostory_name }}
 while read oldrev newrev ref
 do
-    if [[ $ref =~ .*/master$ ]]; then
+    if [[ $ref =~ .*/main ]]; then
         export GIT_DIR="$ROOT/repos/$REPO.git/"
         export GIT_WORK_TREE="$ROOT/domains/$REPO/"
-        git checkout -f master
+        git checkout -f main
         cd $GIT_WORK_TREE
         ./deploy.sh
     else
-        echo "Doing nothing: only the master branch may be deployed on this server."
+        echo "Doing nothing: only the main branch may be deployed on this server."
     fi
 done
 EOT
@@ -107,11 +107,11 @@ mkdir letsencrypt
 
 ### Deploy another branch
 
-Only `master` branch is used to redeploy an application.
-If one wants to deploy other branch, force may be used to push desired branch to remote's `master`:
+Only `main` branch is used to redeploy an application.
+If one wants to deploy other branch, force may be used to push desired branch to remote's `main`:
 
 ```sh
-git push --force production local-branch-to-deploy:master
+git push --force production local-branch-to-deploy:main
 ```
 {% if cookiecutter.monitoring == 'y' %}
 # Monitoring
