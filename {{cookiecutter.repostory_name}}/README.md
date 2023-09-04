@@ -56,7 +56,7 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 cd ~
 mkdir repos
 cd repos
-git init --bare {{ cookiecutter.repostory_name }}.git
+git init --bare --initial-branch=master {{ cookiecutter.repostory_name }}.git
 
 cd ~
 mkdir domains
@@ -74,7 +74,7 @@ git push production master
 # remote server
 cd ~/repos/{{ cookiecutter.repostory_name }}.git
 
-cat <<EOT >> hooks/post-receive
+cat <<'EOT' > hooks/post-receive
 #!/bin/bash
 unset GIT_INDEX_FILE
 export ROOT=/root
