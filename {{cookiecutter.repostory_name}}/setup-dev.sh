@@ -3,6 +3,7 @@
 
 PROJECT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`
 ENV_DIR="./envs/dev"
+cd ${PROJECT_DIR}
 
 # Check if we are inside virtualenv or CI
 [[ ! -z $VIRTUAL_ENV || ! -z $CI ]] || { echo -e "\e[31mYou must run this script inside virtualenv!\e[0m"; exit 1; }
@@ -19,7 +20,7 @@ pip install --upgrade -r "${PROJECT_DIR}/app/src/requirements.txt"
 # Set symlinks
 ln -sf "${ENV_DIR}/.env" .env
 ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml
-cd app
+cd "${PROJECT_DIR}/app/"
 [[ -L "Dockerfile" ]] && unlink Dockerfile
 [[ -L "src/entrypoint.sh" ]] && unlink src/entrypoint.sh
 
