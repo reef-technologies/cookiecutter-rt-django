@@ -56,7 +56,7 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 cd ~
 mkdir repos
 cd repos
-git init --bare --default-branch=master {{ cookiecutter.repostory_name }}.git
+git init --bare --initial-branch=master {{ cookiecutter.repostory_name }}.git
 
 cd ~
 mkdir domains
