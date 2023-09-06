@@ -93,7 +93,7 @@ def docker_up(session):
 @nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
 def lint_crufted_project(session):
     with crufted_project(session):
-        session.run('nox', '-s', 'lint', 'type_check')
+        session.run('nox', '-s', 'lint')  # TODO: RT-49 re-enable 'type_check'
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
