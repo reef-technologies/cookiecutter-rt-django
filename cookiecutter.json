@@ -13,7 +13,7 @@
     "sentry_dsn": "",
     "csp_enabled": "n",
     "csp_report_only": "y",
-    "csp_report_url": "{% if cookiecutter.csp_enabled == 'y' %}https://sentry.io/api/-1/security/?sentry_key=key{% endif %}",
+    "CSP_REPORT_TO": "{% if cookiecutter.csp_enabled == 'y' %}https://sentry.io/api/-1/security/?sentry_key=key{% endif %}",
     "csp_default_src": "'none'",
     "csp_script_src": "'self'",
     "csp_style_src": "'self'",

@@ -117,7 +117,7 @@ if CSP_ENABLED := env.bool('CSP_ENABLED'):
     MIDDLEWARE.append('csp.middleware.CSPMiddleware')
 
     CSP_REPORT_ONLY = env.bool('CSP_REPORT_ONLY', default=True)
-    CSP_REPORT_URL = env('CSP_REPORT_URL', default=None) or None
+    CSP_REPORT_TO = env('CSP_REPORT_TO', default=None) or None
 
     CSP_DEFAULT_SRC = env.tuple('CSP_DEFAULT_SRC')
     CSP_SCRIPT_SRC = env.tuple('CSP_SCRIPT_SRC')
