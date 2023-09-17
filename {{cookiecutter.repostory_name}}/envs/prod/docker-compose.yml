@@ -52,7 +52,7 @@ services:
       - ./media:/root/src/media
       {% if cookiecutter.monitoring == 'y' -%}
       # Add this mount to each container that should dump Prometheus metrics.
-      - prometheus-metrics:/prometheus-multiproc-dir
+      - ./prometheus-metrics:/prometheus-multiproc-dir
       {%- endif %}
     depends_on:
       - redis
@@ -190,4 +190,3 @@ services:
 
 volumes:
   backend-static:
-  prometheus-metrics:
