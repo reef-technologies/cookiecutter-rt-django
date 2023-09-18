@@ -142,7 +142,7 @@ with some_calculation_time.labels('blabla').time():
 
 # AWS
 
-Initiate the infrastructure with terraform:
+Initiate the infrastructure with Terraform:
 TODO
 
 To push a new version of the application to AWS, just push to a branch named `deploy-$(ENVIRONMENT_NAME)`.
@@ -154,6 +154,16 @@ For this to work, GitHub actions needs to be provided with credentials for an ac
 - AmazonS3FullAccess
 
 See `.github/workflows/cd.yml` to find out the secret names.
+
+# Vultr
+
+Initiate the infrastructure with Terraform and cloud-init:
+
+- see Terraform template in `<project>/devops/vultr_tf/core/`
+- see scripts for interacting with Vultr API in `<project>/devops/vultr_scripts/`
+  - note these scripts need `vultr-cli` installed
+
+- for more details see README_vultr.md
 
 # Setting up periodic backups
 
