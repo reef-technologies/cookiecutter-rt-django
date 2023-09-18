@@ -97,6 +97,10 @@ MIDDLEWARE = [
 
 
 if DEBUG_TOOLBAR := env.bool('DEBUG_TOOLBAR', default=False):
+    INTERNAL_IPS = [
+        "127.0.0.1",
+    ]
+
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda _request: True
     }
