@@ -7,7 +7,7 @@ from pathlib import Path
 pwd = Path(__file__).parent
 
 
-with open(pwd / "instances_ip.txt", "r") as f:
+with open(pwd / "instances_ip.txt") as f:
     ips = f.readlines()
 
 errs = []

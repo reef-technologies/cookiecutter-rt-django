@@ -12,7 +12,7 @@ pwd = Path(__file__).parent
 user_data = pwd / 'userdata.txt'
 assert user_data.exists()
 
-with open(pwd / 'instances_id.txt', 'r') as f:
+with open(pwd / 'instances_id.txt') as f:
     for instance_id in f.readlines():
         print('instance id', instance_id)
         # res = subprocess.check_output(['vultr-cli', 'instance', 'user-data', 'get', instance_id.strip()])
