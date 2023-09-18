@@ -20,7 +20,7 @@ for ip in ips:
                 "GIT_SSH_COMMAND": "ssh -o ConnectTimeout=10  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
             },
         ).communicate()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         errs.append(ip)
     else:
         print("res", res)
