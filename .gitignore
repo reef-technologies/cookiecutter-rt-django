@@ -1,1 +1,4 @@
 .idea
+.nox
+__pycache__
+*.egg-info/
