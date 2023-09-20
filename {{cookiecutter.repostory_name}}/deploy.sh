@@ -16,7 +16,7 @@ docker image tag ${BASE_IMAGE} {{cookiecutter.django_project_name}}/app-builder
 # docker-compose run --rm app sh -c "python manage.py collectstatic --no-input"
 
 SERVICES=$(docker-compose ps --services 2>&1 > /dev/stderr \
-           | grep -v -e 'is not set' -e nginx -e db -e redis)
+           | grep -v -e 'is not set' -e db -e redis)
 
 docker-compose stop $SERVICES
 
