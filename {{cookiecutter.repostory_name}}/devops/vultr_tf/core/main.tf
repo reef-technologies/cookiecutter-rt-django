@@ -47,5 +47,5 @@ resource "vultr_load_balancer" "loadbalancer" {
     healthy_threshold   = 4
   }
 
-  attached_instances = vultr_instance.worker.*.id
+  attached_instances = [for instance in vultr_instance.worker : instance.id]
 }
