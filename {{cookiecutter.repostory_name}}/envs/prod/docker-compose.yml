@@ -76,7 +76,7 @@ services:
     command: ./celery-entrypoint.sh
     {% if cookiecutter.monitoring == 'y' -%}
     volumes:
-      - prometheus-metrics:/prometheus-multiproc-dir
+      - ./prometheus-metrics:/prometheus-multiproc-dir
     {%- endif %}
     tmpfs: /run
     depends_on:

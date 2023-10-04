@@ -21,7 +21,7 @@ nox==2023.4.22
 {% if cookiecutter.monitoring == "y" %}
 prometheus-client~=0.17.0
 django-prometheus==2.3.1
-django-business-metrics==1.0.0
+django-business-metrics @ git+https://github.com/reef-technologies/django-business-metrics.git@7666285
 {% endif %}
 {% if cookiecutter.use_fingerprinting == "y" -%}
 django-fingerprint-rt @ git+https://github.com/reef-technologies/django-fingerprint-rt.git@220b659
