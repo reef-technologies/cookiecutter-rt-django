@@ -22,6 +22,12 @@ RUN grep Pillow requirements.txt && apk add --no-cache jpeg-dev tiff-dev zlib-de
 RUN grep git+ requirements.txt && apk add --no-cache git || true
 {% endif -%}
 
+{% if cookiecutter.use_alpine_linux == "y" -%}
+RUN apk add git
+{%- else -%}
+RUN apt-get update && apt-get install -y git
+{%- endif %}
+
 RUN pip3 install --user --no-cache-dir -r requirements.txt
 
 COPY ./src/ /root/src/
