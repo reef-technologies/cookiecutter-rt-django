@@ -26,3 +26,26 @@ resource "vultr_instance" "worker" {
     SENTRY_DSN           = var.DOTENV_SENTRY_DSN
   })
 }
+
+resource "vultr_load_balancer" "loadbalancer" {
+  region = var.region
+
+  forwarding_rules {
+    frontend_protocol = "https"
+    frontend_port     = 443
+    backend_protocol  = "https"
+    backend_port      = 443
+  }
+
+  health_check {
+    path                = "/admin/"
+    port                = "443"
+    protocol            = "https"
+    response_timeout    = 5
+    unhealthy_threshold = 2
+    check_interval      = 15
+    healthy_threshold   = 4
+  }
+
+  attached_instances = [for instance in vultr_instance.worker : instance.id]
+}
