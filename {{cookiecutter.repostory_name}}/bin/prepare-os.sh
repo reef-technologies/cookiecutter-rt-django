@@ -10,7 +10,7 @@ JQ_BIN="$(command -v jq || true)"
 
 if [ -x "${DOCKER_BIN}" ] && [ -x "${DOCKER_COMPOSE_BIN}" ] && [ -x "${SENTRY_CLI}" ] && [ -x "${B2_CLI}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
     echo "\e[31mEverything required is already installed!\e[0m";
-    exit 1;
+    exit 0;
 fi
 
 PLATFORM="$(uname -i)"
