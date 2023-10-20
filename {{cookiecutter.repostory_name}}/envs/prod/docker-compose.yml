@@ -185,7 +185,53 @@ services:
     restart: unless-stopped
     logging:
       <<: *logging
+  {% endif %}
 
+  {% if cookiecutter.log_aggregating == 'y' %}
+  promtail:
+    image: grafana/promtail:2.9.2
+    restart: unless-stopped
+    environment:
+      - LOKI_URL=${LOKI_URL}
+      - LOKI_USER=${LOKI_USER}
+      - LOKI_PASSWORD=${LOKI_PASSWORD}
+      - LOKI_CLIENT=${LOKI_CLIENT}
+      - LOKI_CLIENT_SERVER_GROUP=${LOKI_CLIENT_SERVER_GROUP}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        cat <<EOF > /etc/promtail/config.yml
+        server:
+          http_listen_port: 9080
+          grpc_listen_port: 0
+        positions:
+          filename: /tmp/positions.yaml
+        clients:
+          - url: "${LOKI_URL}/api/prom/push"
+            basic_auth:
+              username: "${LOKI_USER}"
+              password: "${LOKI_PASSWORD}"
+            external_labels:
+              client: "${LOKI_CLIENT}"
+              client_server_group: "${LOKI_CLIENT_SERVER_GROUP}"
+        scrape_configs:
+          - job_name: containerlogs
+            docker_sd_configs:
+              - host: unix:///var/run/docker.sock
+                refresh_interval: 5s
+            relabel_configs:
+              - source_labels: ["__meta_docker_container_name"]
+                regex: "/(.*)"
+                target_label: "container"
+              - source_labels: ["__meta_docker_container_log_stream"]
+                target_label: "logstream"
+        EOF
+        /usr/bin/promtail -config.file=/etc/promtail/config.yml
+    logging:
+      <<: *logging
   {% endif %}
 
 volumes:
