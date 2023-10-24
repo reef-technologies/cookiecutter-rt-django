@@ -185,7 +185,27 @@ services:
     restart: unless-stopped
     logging:
       <<: *logging
+  {% endif %}
 
+  {% if cookiecutter.log_aggregating == 'y' %}
+  promtail:
+    image: grafana/promtail:2.9.2
+    restart: unless-stopped
+    environment:
+      - LOKI_URL=${LOKI_URL}
+      - LOKI_REFRESH_INTERVAL=${LOKI_REFRESH_INTERVAL}
+      - LOKI_USER=${LOKI_USER}
+      - LOKI_PASSWORD=${LOKI_PASSWORD}
+      - LOKI_CLIENT=${LOKI_CLIENT}
+      - LOKI_CLIENT_SERVER_GROUP=${LOKI_CLIENT_SERVER_GROUP}
+    volumes:
+      - ./promtail:/etc/promtail
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - -config.file=/etc/promtail/config.yml
+      - -config.expand-env=true
+    logging:
+      <<: *logging
   {% endif %}
 
 volumes:
