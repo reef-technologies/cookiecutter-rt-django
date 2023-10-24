@@ -52,6 +52,7 @@ DEBUG = env('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+    "django_dbconn_retry",
     {%- if cookiecutter.monitoring == "y" %}
     'django_prometheus',
     {%- endif %}
