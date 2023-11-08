@@ -24,7 +24,7 @@ pip install cruft
   ```sh
   cruft update
   ```
-  Before commiting make sure to review changes listed in `docs/3rd_party/cookiecutter-rt-django/CHANGELOG.md`.
+  Before committing make sure to review changes listed in `docs/3rd_party/cookiecutter-rt-django/CHANGELOG.md`.
 
 - If you have a repo which was initialized without cruft (i.e. with `cookiecutter` command), you can still link the project:
   ```sh
