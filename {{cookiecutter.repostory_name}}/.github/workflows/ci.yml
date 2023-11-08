@@ -1,6 +1,8 @@
 name: Run linter and tests on pull requests
 
 on:
+  push:
+    branches: [master, main]
   pull_request:
     branches: [master, main]
 
