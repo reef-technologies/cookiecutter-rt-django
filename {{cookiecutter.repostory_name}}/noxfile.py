@@ -43,6 +43,9 @@ def format_(session):
 def lint(session):
     session.run('pip', 'install', '-e', '.[lint]')
     session.run('ruff', 'check', '--diff', '.')
+{%- if cookiecutter.ci_use_spellchecker == "y" %}
+    session.run('codespell', '.')
+{%- endif %}
     run_readable(session, mode="check")
 
 

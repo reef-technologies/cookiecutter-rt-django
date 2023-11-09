@@ -54,6 +54,7 @@ def lint(session):
     """Run linters in readonly mode."""
     session.run('pip', 'install', '-e', '.[lint]')
     session.run('ruff', 'check', '--diff', '.')
+    session.run('codespell', '.')
     run_readable(session, mode="check")
 
 

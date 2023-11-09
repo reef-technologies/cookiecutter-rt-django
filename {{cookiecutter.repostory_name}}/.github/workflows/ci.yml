@@ -1,6 +1,8 @@
-name: Run linter and tests on pull requests
+name: Run linter and tests
 
 on:
+  push:
+    branches: [master, main]
   pull_request:
     branches: [master, main]
 
@@ -8,18 +10,6 @@ env:
   PYTHON_DEFAULT_VERSION: "3.11"
 
 jobs:
-{%- if cookiecutter.ci_use_spellchecker == "y" %}
-  spellchecker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Check spelling
-        uses: codespell-project/actions-codespell@2391250ab05295bddd51e36a8c6295edb6343b0e
-        with:
-          ignore_words_list: datas
-{%- endif %}
 {%- if cookiecutter.ci_use_linter == "y" %}
   linter:
     runs-on: ubuntu-latest
