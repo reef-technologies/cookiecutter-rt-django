@@ -1,46 +1,29 @@
 #!/bin/bash -eu
-
 set -o pipefail
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source "${SCRIPT_DIR}/common.sh"
 
-# Update PATH in case docker-compose is installed via PIP
-# and this script was invoked from e.g. cron
-PATH=/usr/local/sbin:/usr/local/bin:$PATH
+check_env_vars DATABASE_URL
 
-if [ "$(basename "$0")" == 'bin' ]; then
-  cd ..
-fi
+TARGET_FILENAME="db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
+DOCKER_NETWORK=$(get_db_docker_network)
 
-. .env
-
-if [ -n "${SENTRY_DSN}" ]; then
-  export SENTRY_DSN
-  eval "$(sentry-cli bash-hook)"
-fi
-
-mkdir -p .backups
-TARGET=".backups/db_dump_$(date +%Y-%m-%d_%H%M%S).sql.gz"
-
-if [[ "$DATABASE_URL" =~ "@db:" ]]; then
-  DOCKER_NETWORK={{cookiecutter.repostory_name}}_default
-else
-  DOCKER_NETWORK=host
-fi
-
-docker run --rm --network $DOCKER_NETWORK postgres:14.0-alpine pg_dump -Z 9 -c --if-exists "$DATABASE_URL" > "$TARGET"
-echo "${TARGET}"
+DUMP_DB_TO_STDOUT="docker run --rm --network $DOCKER_NETWORK postgres:14.0-alpine pg_dump -Z 9 -c --if-exists $DATABASE_URL"
 
 if [ -n "${BACKUP_B2_BUCKET}" ]; then
-  bin/backup-db-to-b2.sh "${TARGET}"
-fi
+  $DUMP_DB_TO_STDOUT | bin/backup-file-to-b2.sh - "${TARGET_FILENAME}"
+else
+  LOCAL_BACKUP_DIR=".backups"
+  mkdir -p "$LOCAL_BACKUP_DIR"
+  TARGET="$LOCAL_BACKUP_DIR/$TARGET_FILENAME"
+  $DUMP_DB_TO_STDOUT > "$TARGET"
 
-if [ -n "${EMAIL_HOST:-}" ] && [ -n "${EMAIL_TARGET:-}" ]; then
-  bin/backup-db-to-email.sh "${TARGET}"
+  if [ -n "${EMAIL_HOST:-}" ] && [ -n "${EMAIL_TARGET:-}" ]; then
+    ${SCRIPT_DIR}/backup-db-to-email.sh "${TARGET}"
+  fi
 fi
-
 
 if [ -n "${BACKUP_LOCAL_ROTATE_KEEP_LAST:-}" ]; then
   echo "Rotating backup files - keeping ${BACKUP_LOCAL_ROTATE_KEEP_LAST} last ones"
   bin/rotate-local-backups.py "${BACKUP_LOCAL_ROTATE_KEEP_LAST}"
 fi
-
-

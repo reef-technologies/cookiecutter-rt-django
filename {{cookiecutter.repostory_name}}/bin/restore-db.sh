@@ -1,20 +1,11 @@
-#!/bin/bash -eux
-
+#!/bin/bash -eu
 set -o pipefail
-
-if [ "$(basename "$0")" == 'bin' ]; then
-  cd ..
-fi
-
-. .env
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source "${SCRIPT_DIR}/common.sh"
 
 target="$1"
 
-if [[ "$DATABASE_URL" =~ "@db:" ]]; then
-  DOCKER_NETWORK={{cookiecutter.repostory_name}}_default
-else
-  DOCKER_NETWORK=host
-fi
+DOCKER_NETWORK=$(get_db_docker_network)
 
 zcat "$target" | docker run -i --rm --network $DOCKER_NETWORK postgres:14.0-alpine psql "$DATABASE_URL"
 
