@@ -29,6 +29,7 @@ def run_readable(session, mode="fmt"):
         '-w', '/data',
         'ghcr.io/bobheadxi/readable:v0.5.0@sha256:423c133e7e9ca0ac20b0ab298bd5dbfa3df09b515b34cbfbbe8944310cc8d9c9',
         mode, '![.]**/*.md',
+        external=True,
     )
 
 
