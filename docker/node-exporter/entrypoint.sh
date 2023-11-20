@@ -2,7 +2,7 @@
 
 set -x
 
-INSTANCE_TYPE=`wget http://169.254.169.254/latest/meta-data/instance-type -O- --timeout=5`
+INSTANCE_TYPE=$(wget http://169.254.169.254/latest/meta-data/instance-type -O- --timeout=5)
 [ -z "$INSTANCE_TYPE" ] && INSTANCE_TYPE='UNKNOWN'
 
 cat << EOF > /home/nobody/textfile_collector_metrics/instance_type.prom

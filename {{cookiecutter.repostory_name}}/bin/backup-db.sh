@@ -19,7 +19,7 @@ else
   $DUMP_DB_TO_STDOUT > "$TARGET"
 
   if [ -n "${EMAIL_HOST:-}" ] && [ -n "${EMAIL_TARGET:-}" ]; then
-    ${SCRIPT_DIR}/backup-db-to-email.sh "${TARGET}"
+    "${SCRIPT_DIR}"/backup-db-to-email.sh "${TARGET}"
   fi
 fi
 

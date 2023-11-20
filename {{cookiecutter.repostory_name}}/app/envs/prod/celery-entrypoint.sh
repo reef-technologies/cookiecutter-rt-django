@@ -13,10 +13,12 @@ OPTIONS="-A {{cookiecutter.django_project_name}} -E -l ERROR --pidfile=/var/run/
 # will go to "master" workers, and events from "worker" queue go to "worker" workers;
 # by default there are no workers, but each type of worker may scale up to 4 processes
 # Since celery runs in root of the docker, we also need to allow it to.
+# shellcheck disable=2086
 C_FORCE_ROOT=1 nice celery multi start $WORKERS $OPTIONS \
     -Q:master celery --autoscale:master=$CELERY_MASTER_CONCURRENCY,0 \
     -Q:worker worker --autoscale:worker=$CELERY_WORKER_CONCURRENCY,0
 
+# shellcheck disable=2064
 trap "celery multi stop $WORKERS $OPTIONS; exit 0" INT TERM
 
 tail -f /var/log/celery-*.log &
