@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Copyright 2017, Reef Technologies (reef.pl), All rights reserved.
 
-PROJECT_DIR=`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`
+PROJECT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ENV_DIR="./envs/dev"
-cd ${PROJECT_DIR}
+# shellcheck disable=SC2164
+cd "${PROJECT_DIR}"
 
 # Check if we are inside virtualenv or CI
-[[ ! -z $VIRTUAL_ENV || ! -z $CI ]] || { echo -e "\e[31mYou must run this script inside virtualenv!\e[0m"; exit 1; }
+[[ -n $VIRTUAL_ENV || -n $CI ]] || { echo -e "\e[31mYou must run this script inside virtualenv!\e[0m"; exit 1; }
 
 # Install pip packages
-[[ -z `pip freeze` ]] || echo -e "\e[33mVirtualenv is not clean, already installed packages may be upgraded\e[0m"
+[[ -z $(pip freeze) ]] || echo -e "\e[33mVirtualenv is not clean, already installed packages may be upgraded\e[0m"
 echo "Installing pip development requirements"
 pip install --upgrade pip
 pip install --upgrade -r "${PROJECT_DIR}/app/src/requirements.txt"
@@ -20,6 +21,7 @@ pip install --upgrade -r "${PROJECT_DIR}/app/src/requirements.txt"
 # Set symlinks
 ln -sf "${ENV_DIR}/.env" .env
 ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml
+# shellcheck disable=SC2164
 cd "${PROJECT_DIR}/app/"
 [[ -L "Dockerfile" ]] && unlink Dockerfile
 [[ -L "src/entrypoint.sh" ]] && unlink src/entrypoint.sh
