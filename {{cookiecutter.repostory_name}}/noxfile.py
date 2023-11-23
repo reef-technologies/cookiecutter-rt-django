@@ -70,6 +70,7 @@ def run_shellcheck(session, mode="check"):
         f"{ROOT.absolute()}:/mnt",
         "-w",
         "/mnt",
+        "-q",
         "koalaman/shellcheck:0.9.0@sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c",
     ]
 
