@@ -160,11 +160,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = '{{cookiecutter.django_project_name}}.wsgi.application'
 
-
-if env('DATABASE_URL'):
-    DATABASES = {
-        'default': env.db(),
+DATABASES = {}
+if env('DATABASE_POOL_URL'):  # DB transaction-based connection pool, such as one provided PgBouncer
+    DATABASES['default'] = {
+        **env.db_url('DATABASE_POOL_URL'),
+        'DISABLE_SERVER_SIDE_CURSORS': True,  # prevents random cursor errors with transaction-based connection pool
     }
+elif env('DATABASE_URL'):
+    DATABASES['default'] = env.db_url('DATABASE_URL')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_PASSWORD_VALIDATORS = [
