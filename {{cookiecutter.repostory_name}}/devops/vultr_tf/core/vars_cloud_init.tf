@@ -25,6 +25,11 @@ variable "DOTENV_POSTGRES_PASSWORD" {
   sensitive = true
 }
 
+variable "DOTENV_DATABASE_POOL_URL" {
+  type      = string
+  sensitive = true
+}
+
 variable "DOTENV_DATABASE_URL" {
   type      = string
   sensitive = true

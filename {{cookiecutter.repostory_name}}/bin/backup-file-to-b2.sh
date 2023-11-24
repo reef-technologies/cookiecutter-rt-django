@@ -15,5 +15,5 @@ else
   BACKUP_B2_FILENAME"$(basename "$1")"
 fi
 
-docker run --rm -i -e B2_APPLICATION_KEY="$BACKUP_B2_KEY_SECRET" -e B2_APPLICATION_KEY_ID="$BACKUP_B2_KEY_ID" \
-  backblazeit/b2:3.13.0 upload-file "$BACKUP_B2_BUCKET" "$1" "$BACKUP_B2_FILENAME"
+docker run --rm -iq -e B2_APPLICATION_KEY="$BACKUP_B2_KEY_SECRET" -e B2_APPLICATION_KEY_ID="$BACKUP_B2_KEY_ID" \
+  backblazeit/b2:3.13.1 upload-file "$BACKUP_B2_BUCKET" "$1" "$BACKUP_B2_FILENAME"

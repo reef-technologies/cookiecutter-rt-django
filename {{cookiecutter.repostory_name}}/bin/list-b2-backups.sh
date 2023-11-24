@@ -1,14 +1,11 @@
 #!/bin/bash -eu
+set -o pipefail
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source "${SCRIPT_DIR}/common.sh"
 
-if [ "$(basename "$0")" == 'bin' ]; then
-  cd ..
-fi
+BACKUP_B2_KEY_ID="${1-$BACKUP_B2_KEY_ID}"
+BACKUP_B2_KEY_SECRET="${2-$BACKUP_B2_KEY_SECRET}"
+BACKUP_B2_BUCKET="${3-$BACKUP_B2_BUCKET}"
 
-if [[ $# -ne 3 ]]; then
-    echo "Usage: bin/list-b2-backups-b2.sh <B2_KEY_ID> <B2_KEY_SECRET> <B2_BUCKET_NAME>"
-    echo "All arguments are required"
-    exit 2
-fi
-
-b2 authorize-account "$1" "$2"
-b2 ls --long "$3"
+docker run --rm -iq -e B2_APPLICATION_KEY="$BACKUP_B2_KEY_SECRET" -e B2_APPLICATION_KEY_ID="$BACKUP_B2_KEY_ID" \
+  backblazeit/b2:3.13.1 ls --long "$BACKUP_B2_BUCKET"
