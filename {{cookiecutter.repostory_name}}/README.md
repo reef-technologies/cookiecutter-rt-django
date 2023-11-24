@@ -53,15 +53,11 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 
 ```sh
 # remote server
-cd ~
-mkdir repos
-cd repos
+mkdir -p ~/repos
+cd ~/repos
 git init --bare --initial-branch=master {{ cookiecutter.repostory_name }}.git
 
-cd ~
-mkdir domains
-cd domains
-mkdir {{ cookiecutter.repostory_name }}
+mkdir -p ~/domains/{{ cookiecutter.repostory_name }}
 ```
 
 ```sh
