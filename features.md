@@ -30,6 +30,13 @@
 - [ipython](https://ipython.org) included for nice interactive django shell
 - [django-extensions](https://django-extensions.readthedocs.io/en/latest/) for drawing graph of models and more
 
+## Continuous integration
+
+- Github Actions for CI/CD
+- [nox](https://nox.thea.codes) for workflow automation
+- [ruff](https://github.com/astral-sh/ruff) for linting
+- [pytest](https://docs.pytest.org) with xdist for efficient parallel testing
+
 ## Deployment
 
 - [2-stage docker image build](https://docs.docker.com/develop/develop-images/multistage-build/) for clean app image
