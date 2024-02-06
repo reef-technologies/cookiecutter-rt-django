@@ -16,8 +16,8 @@ Skeleton of this project was generated with `cookiecutter-rt-django`, which some
 
 ```sh
 # 1st tab
-$ python -m venv {{ cookiecutter.django_project_name }}
-$ source {{ cookiecutter.django_project_name }}
+$ python3.11 -m venv .venv
+$ source .venv/bin/activate
 $ ./setup-dev.sh
 ```
 
