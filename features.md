@@ -18,9 +18,10 @@
 - Persistent [redis](https://redis.io) for task management backend
 - Celery task monitoring via [flower](https://flower.readthedocs.io/en/latest/)
 
-## Cloud configuration
+## Cloud configuration options
 
 - AWS terraform to deploy RDS, SQS, ELB etc
+- terraform deployment to Vultr
 
 ## Configuration
 
@@ -51,7 +52,7 @@
 
 ## Reliability
 
-- Backups to:
+- Automatic backups to:
   - Host system
   - [B2](https://www.backblaze.com/b2/cloud-storage.html) using a `writeFiles`-only key
   - Email
