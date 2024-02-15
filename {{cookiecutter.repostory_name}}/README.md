@@ -8,8 +8,7 @@ Skeleton of this project was generated with `cookiecutter-rt-django`, which some
 
 # Base requirements
 
-- docker
-- docker-compose
+- docker with [compose plugin](https://docs.docker.com/compose/install/linux/)
 - python 3.11
 - [pdm](https://pdm-project.org)
 - [nox](https://nox.thea.codes)
@@ -17,17 +16,8 @@ Skeleton of this project was generated with `cookiecutter-rt-django`, which some
 # Setup development environment
 
 ```sh
-# 1st tab
 $ ./setup-dev.sh
-```
-
-```sh
-# 2nd tab
-docker-compose up
-```
-
-```sh
-# 1st tab
+docker compose up -d
 cd app/src
 pdm run manage.py wait_for_database --timeout 10
 pdm run manage.py migrate

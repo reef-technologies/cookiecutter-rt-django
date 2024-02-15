@@ -2,8 +2,6 @@
 set -o pipefail
 
 if [ -z "${_COMMON_SH_LOADED:-}" ]; then
-  # Update PATH in case docker-compose is installed via PIP
-  # and this script was invoked from e.g. cron
   PATH=/usr/local/sbin:/usr/local/bin:$PATH
 
   check_env_vars() {

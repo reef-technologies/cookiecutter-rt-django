@@ -160,9 +160,9 @@ def rm_root_owned(session, dirpath):
 
 @contextlib.contextmanager
 def docker_up(session):
-    session.run("docker-compose", "up", "-d")
+    session.run("docker", "compose", "up", "-d")
     yield
-    session.run("docker-compose", "down", "-v", "--remove-orphans")
+    session.run("docker", "compose", "down", "-v", "--remove-orphans")
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
@@ -181,7 +181,7 @@ def test_crufted_project(session):
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:
-        # workaround for docker-compose creating root-owned files
+        # workaround for docker compose creating root-owned files
         rm_root_owned(session, crufted_project.tmpdir.name)
         crufted_project.tmpdir.cleanup()
         crufted_project.tmpdir = None

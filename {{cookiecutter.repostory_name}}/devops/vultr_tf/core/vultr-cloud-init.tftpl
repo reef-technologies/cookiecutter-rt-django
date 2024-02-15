@@ -40,5 +40,5 @@ SECRET_KEY=${SECRET_KEY}
 
 EOF
 
-cd $${DEPLOY_DIR} && docker-compose up --build --detach
+cd $${DEPLOY_DIR} && docker compose up --build --detach
 echo "finishing custom cloud-init"
