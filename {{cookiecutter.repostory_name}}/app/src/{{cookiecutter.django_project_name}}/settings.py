@@ -64,6 +64,7 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'django_probes',
+    'constance',
     {% if cookiecutter.use_fingerprinting == "y" -%}
     'fingerprint',
     {% endif -%}
@@ -210,6 +211,12 @@ else:
     SECURE_SSL_REDIRECT = False
 
 {%- if cookiecutter.use_celery == "y" %}
+
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+CONSTANCE_CONFIG = {
+    # 'PARAMETER': (default-value, 'Help text', type),
+}
+
 
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='')  # store results in Redis
