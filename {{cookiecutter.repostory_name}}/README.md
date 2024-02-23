@@ -11,13 +11,12 @@ Skeleton of this project was generated with `cookiecutter-rt-django`, which some
 - docker
 - docker-compose
 - python 3.11
+- [pdm](https://pdm-project.org)
 
 # Setup development environment
 
 ```sh
 # 1st tab
-$ python3.11 -m venv .venv
-$ source .venv/bin/activate
 $ ./setup-dev.sh
 ```
 
@@ -29,9 +28,9 @@ docker-compose up
 ```sh
 # 1st tab
 cd app/src
-python manage.py wait_for_database --timeout 10
-python manage.py migrate
-python manage.py runserver
+pdm run manage.py wait_for_database --timeout 10
+pdm run manage.py migrate
+pdm run manage.py runserver
 ```
 
 # Setup production environment (git deployment)
