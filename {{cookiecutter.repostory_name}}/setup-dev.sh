@@ -6,7 +6,8 @@ ENV_DIR="./envs/dev"
 # shellcheck disable=SC2164
 cd "${PROJECT_DIR}"
 
-# Install Python dependencies
+# Create a lock file, install Python dependencies
+[ -f pdm.lock ] || pdm lock --group :all
 pdm sync --group :all
 
 # Create .env from the template if doesn't exist
