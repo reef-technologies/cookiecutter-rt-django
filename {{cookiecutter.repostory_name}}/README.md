@@ -12,6 +12,7 @@ Skeleton of this project was generated with `cookiecutter-rt-django`, which some
 - docker-compose
 - python 3.11
 - [pdm](https://pdm-project.org)
+- [nox](https://nox.thea.codes)
 
 # Setup development environment
 

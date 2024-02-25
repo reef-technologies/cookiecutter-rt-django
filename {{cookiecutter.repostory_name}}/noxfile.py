@@ -116,7 +116,6 @@ def format_(session):
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def lint(session):
     """Run linters in readonly mode."""
-    # Check if lockfile is synchronized with pyproject.toml
     install(session, 'lint')
     session.run('ruff', 'check', '--diff', '.')
 {%- if cookiecutter.ci_use_spellchecker == "y" %}
