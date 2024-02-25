@@ -16,7 +16,7 @@ RUN pdm lock --check
 
 {% if cookiecutter.use_alpine_linux == "y" -%}
 RUN grep uvicorn pdm.lock && apk add --no-cache build-base || true
-RUN grep psycopg2 pdm.lock && apk add --no-cache postgresql-dev gcc python3-dev musl-dev libffi-dev || true
+RUN grep psycopg pdm.lock && apk add --no-cache postgresql-dev gcc python3-dev musl-dev libffi-dev || true
 RUN grep Pillow pdm.lock && apk add --no-cache jpeg-dev tiff-dev zlib-dev libwebp-dev gcc python3-dev musl-dev || true
 {% endif -%}
 
