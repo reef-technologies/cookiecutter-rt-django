@@ -62,7 +62,7 @@ COPY --from=base-image /root/src/ /root/src/
 COPY --from=base-image /opt/pypackages/ /opt/pypackages/
 
 {% if cookiecutter.use_alpine_linux == "y" -%}
-RUN grep psycopg2 pdm.lock && apk add --no-cache libpq || true
+RUN grep psycopg pdm.lock && apk add --no-cache libpq || true
 RUN grep Pillow pdm.lock && apk add --no-cache jpeg tiff zlib libwebp || true
 {%- endif %}
 
