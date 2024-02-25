@@ -26,8 +26,7 @@ def install(session: nox.Session, *args):
     groups = []
     for group in args:
         groups.extend(['--group', group])
-    session.run('pdm', 'lock', '--check', external=True)
-    session.run('pdm', 'sync', *groups, external=True)
+    session.run('pdm', 'install', '--check', *groups, external=True)
 
 
 @functools.lru_cache
