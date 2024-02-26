@@ -135,8 +135,8 @@ def crufted_project(session):
         session.run("cruft", "create", ".", "--output-dir", tmpdir.name, "--no-input")
         project_path = Path(tmpdir.name) / "project"
         with session.chdir(project_path):
-            session.run("git", "init")
-            session.run('./setup-dev.sh')
+            session.run("git", "init", external=True)
+            session.run('./setup-dev.sh', external=True)
     else:
         project_path = Path(tmpdir.name) / "project"
     with session.chdir(project_path):

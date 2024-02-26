@@ -2,3 +2,4 @@
 .nox
 __pycache__
 *.egg-info/
+.pdm-python
