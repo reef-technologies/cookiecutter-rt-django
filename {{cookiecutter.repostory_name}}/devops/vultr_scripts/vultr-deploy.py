@@ -12,7 +12,7 @@ with open(pwd / "instances_ip.txt") as f:
 
 errs = []
 for ip in ips:
-    print('deploying to', ip)
+    print("deploying to", ip)
     try:
         res = subprocess.Popen(
             ["git", "push", f"root@{ip.strip()}:~/repos/{{ cookiecutter.django_project_name }}-central.git"],
@@ -26,4 +26,4 @@ for ip in ips:
         print("res", res)
 
 for err_ip in errs:
-    print('error deploying to', err_ip)
+    print("error deploying to", err_ip)

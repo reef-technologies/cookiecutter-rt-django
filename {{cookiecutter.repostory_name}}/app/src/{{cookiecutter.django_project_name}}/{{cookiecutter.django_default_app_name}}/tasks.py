@@ -1,4 +1,4 @@
-{%- if cookiecutter.use_celery == 'y' %}
+{%- if cookiecutter.use_celery == 'y' -%}
 from celery.utils.log import get_task_logger
 
 from {{cookiecutter.django_project_name}}.celery import app

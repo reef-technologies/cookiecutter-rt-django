@@ -9,16 +9,16 @@ from django.conf import settings
 {%- if cookiecutter.monitoring == "y" %}
 from prometheus_client import multiprocess
 {% endif %}
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', '{{cookiecutter.django_project_name}}.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "{{cookiecutter.django_project_name}}.settings")
 
-app = Celery('{{cookiecutter.django_project_name}}')
+app = Celery("{{cookiecutter.django_project_name}}")
 
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 
 def route_task(name, args, kwargs, options, task=None, **kw):
-    return {'queue': 'celery'}
+    return {"queue": "celery"}
 {% if cookiecutter.monitoring == "y" %}
 
 @worker_process_shutdown.connect
