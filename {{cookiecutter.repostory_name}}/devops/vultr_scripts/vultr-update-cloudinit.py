@@ -9,16 +9,22 @@ pwd = Path(__file__).parent
 
 # cloud-init script
 # use `vultr-cli instance user-data get <instanceID>` to get existing data
-user_data = pwd / 'userdata.txt'
+user_data = pwd / "userdata.txt"
 assert user_data.exists()
 
-with open(pwd / 'instances_id.txt') as f:
+with open(pwd / "instances_id.txt") as f:
     for instance_id in f.readlines():
-        print('instance id', instance_id)
+        print("instance id", instance_id)
         # res = subprocess.check_output(['vultr-cli', 'instance', 'user-data', 'get', instance_id.strip()])
-        res = subprocess.check_output([
-            'vultr-cli', 'instance', 'user-data', 'set',
-            instance_id.strip(),
-            '-d', str(user_data),
-        ])
-        print('res', res, type(res))
+        res = subprocess.check_output(
+            [
+                "vultr-cli",
+                "instance",
+                "user-data",
+                "set",
+                instance_id.strip(),
+                "-d",
+                str(user_data),
+            ]
+        )
+        print("res", res, type(res))
