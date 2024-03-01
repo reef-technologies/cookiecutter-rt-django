@@ -4,9 +4,9 @@
 
 PROJECT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../
 
-[ "$1" != "prod" ] && APP_SUFFIX="-$1"
+APP_SUFFIX="-$1"
 
-APP_OWNER=$(aws sts get-caller-identity --query "Account" --output text)
+APP_OWNER=$(aws sts get-caller-identity --region us-east-1 --query "Account" --output text)
 APP_REGION="{{ cookiecutter.aws_region }}"
 APP_NAME="{{ cookiecutter.aws_project_name }}${APP_SUFFIX}"
 CLOUDFRONT_BUCKET="${APP_NAME}-spa${APP_SUFFIX}"
