@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_ecr_repository" "app" {
-  name                 = var.name
+  name                 = "${var.name}-prod"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
