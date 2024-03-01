@@ -45,7 +45,7 @@ services:
     logging: &exporter_logging
       driver: journald
       options:
-        tag: '{% raw %}{{.Name}}{% endraw %}'
+        tag: '{% raw %}{###{.Name}###}{% endraw %}'
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.40.0
