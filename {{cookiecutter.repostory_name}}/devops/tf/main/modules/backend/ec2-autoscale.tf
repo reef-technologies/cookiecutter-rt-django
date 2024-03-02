@@ -1,5 +1,5 @@
 locals {
-  name_env    = var.env == "prod" ? var.name : "${var.name}-${var.env}"
+  name_env    = "${var.name}-${var.env}"
   cloudinit   = templatefile("../../files/cloud-init.yml", {
     name      = var.name
     env       = var.env
