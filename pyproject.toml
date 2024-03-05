@@ -22,7 +22,7 @@ format = ["ruff"]
 lint = ["ruff", "codespell[toml]"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 exclude = [
     "\\{\\{cookiecutter.repostory_name\\}\\}",
 ]
