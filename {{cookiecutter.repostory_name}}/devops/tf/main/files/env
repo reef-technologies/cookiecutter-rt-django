@@ -1,6 +1,6 @@
 ENV=prod
 NGINX_HOST=localhost
-DEBUG=on
+DEBUG=0
 SECRET_KEY=${secret_key}
 POSTGRES_DB=${database_name}
 POSTGRES_USER=${database_user}
