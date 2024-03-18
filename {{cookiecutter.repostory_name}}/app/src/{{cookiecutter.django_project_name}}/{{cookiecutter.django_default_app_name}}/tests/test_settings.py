@@ -4,7 +4,7 @@ import pytest
 
 
 def test__settings__celery_beat_schedule(settings):
-    """ Ensure that CELERY_BEAT_SCHEDULE points to existing tasks """
+    """Ensure that CELERY_BEAT_SCHEDULE points to existing tasks"""
 
     if not hasattr(settings, "CELERY_BEAT_SCHEDULE"):
         pytest.skip("CELERY_BEAT_SCHEDULE is not defined")
