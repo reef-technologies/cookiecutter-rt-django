@@ -33,6 +33,7 @@
     "nginx_redirect_www_prefix": "y",
     "nginx_compression_enabled": "n",
     "nginx_tls_early_data_enabled": "n",
+    "nginx_filter_bad_host_headers": "y",
     "use_alpine_linux": "n",
     "aws_use_packer": "n",
     "aws_project_name": "{{ cookiecutter.repostory_name }}",
