@@ -98,6 +98,11 @@ server {
             return 425;
         }
         {%- endif %}
+
+        {% if cookiecutter.nginx_filter_bad_host_headers == 'y' -%}
+        include /etc/nginx/config_helpers/ignore_bad_host.conf;
+        {%- endif %}
+
         proxy_pass_header Server;
         proxy_redirect off;
         proxy_set_header Host $http_host;
@@ -131,6 +136,10 @@ server {
 
     access_log                /dev/stdout;
     error_log                 /dev/stderr info;
+
+    {% if cookiecutter.nginx_filter_bad_host_headers == 'y' -%}
+    include /etc/nginx/config_helpers/ignore_bad_host_allow_ip.conf;
+    {%- endif %}
 
     location /node-exporter-metrics/ {
         proxy_pass_header Server;
