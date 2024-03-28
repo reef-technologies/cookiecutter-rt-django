@@ -34,3 +34,23 @@ resource "aws_db_instance" "self" {
     Project = var.name
   }
 }
+
+resource "aws_db_instance" "read_replica" {
+  count = var.create_readreplica ? 1 : 0
+
+  identifier             = "${var.name}-${var.env}-db-readreplica"
+  allocated_storage      = 5
+  max_allocated_storage  = 20
+  storage_encrypted      = true
+  engine                 = "postgres"
+  instance_class         = var.instance_type_read_replica
+  replicate_source_db    = aws_db_instance.self.identifier
+  skip_final_snapshot    = true
+  availability_zone      = var.azs[0]
+  db_subnet_group_name   = aws_db_subnet_group.self.name
+  vpc_security_group_ids = [aws_security_group.db.id]
+
+  tags = {
+    Project = var.name
+  }
+}
