@@ -85,7 +85,11 @@ def run_shellcheck(session, mode="check"):
         "koalaman/shellcheck:0.9.0@sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c",
     ]
 
-    shellcheck_cmd.extend(list_files(suffix=".sh"))
+    files = list_files(suffix=".sh")
+    if not files:
+        session.log("No shell files found")
+        return
+    shellcheck_cmd.extend(files)
 
     if mode == "fmt":
         with tempfile.NamedTemporaryFile(mode="w+") as diff_file:
