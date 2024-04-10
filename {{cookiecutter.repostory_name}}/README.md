@@ -44,20 +44,11 @@ Use `ssh-keygen` to generate a key pair for the server, then add read-only acces
 ```sh
 # remote server
 mkdir -p ~/repos
+mkdir -p ~/domains/{{ cookiecutter.repostory_name }}
+
 cd ~/repos
 git init --bare --initial-branch=master {{ cookiecutter.repostory_name }}.git
 
-mkdir -p ~/domains/{{ cookiecutter.repostory_name }}
-```
-
-```sh
-# locally
-git remote add production root@<server>:~/repos/{{ cookiecutter.repostory_name }}.git
-git push production master
-```
-
-```sh
-# remote server
 cd ~/repos/{{ cookiecutter.repostory_name }}.git
 
 cat <<'EOT' > hooks/post-receive
@@ -80,14 +71,25 @@ done
 EOT
 
 chmod +x hooks/post-receive
-./hooks/post-receive
+```
+
+```sh
+# locally
+git remote add production root@<server>:~/repos/{{ cookiecutter.repostory_name }}.git
+git push production master
+```
+
+```sh
+# remote server
 cd ~/domains/{{ cookiecutter.repostory_name }}
+bin/prepare-os.sh
 ./setup-prod.sh
 
 # adjust the `.env` file
 
 mkdir letsencrypt
 ./letsencrypt_setup.sh
+
 ./deploy.sh
 ```
 
