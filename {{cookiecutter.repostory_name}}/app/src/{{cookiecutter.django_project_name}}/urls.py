@@ -6,6 +6,7 @@ from fingerprint.views import FingerprintView
 {% endif -%}
 {% if cookiecutter.monitoring == "y" %}
 from .{{cookiecutter.django_default_app_name}}.business_metrics import metrics_manager
+from .{{cookiecutter.django_default_app_name}}.healthcheck import healthcheck_view
 from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 {%- endif %}
 
@@ -18,6 +19,7 @@ urlpatterns = [
     {%- if cookiecutter.monitoring == "y" %}
     path("metrics", metrics_view, name="prometheus-django-metrics"),
     path("business-metrics", metrics_manager.view, name="prometheus-business-metrics"),
+    path("healthcheck", healthcheck_view, name="healthcheck"),
     {%- endif %}
 ]
 
