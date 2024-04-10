@@ -56,6 +56,13 @@ git remote add production root@<server>:~/repos/{{ cookiecutter.repostory_name }
 git push production master
 ```
 
+Create a `post-receive` git hook. The one shown below assumes we will be using the
+root user to host the git repository (see the `export ROOT=/root` line).
+
+**If that is not the case please remove or comment the `bin/prepare-os.sh` call inside
+the hook (since it requires sudo) and don't forget to manually call `bin/prepare-os.sh`
+whenever it changes**
+
 ```sh
 # remote server
 cd ~/repos/{{ cookiecutter.repostory_name }}.git
@@ -72,6 +79,8 @@ do
         export GIT_WORK_TREE="$ROOT/domains/$REPO/"
         git checkout -f master
         cd $GIT_WORK_TREE
+        # comment next line if not running under root
+        bin/prepare-os.sh
         ./deploy.sh
     else
         echo "Doing nothing: only the master branch may be deployed on this server."
@@ -82,6 +91,7 @@ EOT
 chmod +x hooks/post-receive
 ./hooks/post-receive
 cd ~/domains/{{ cookiecutter.repostory_name }}
+sudo bin/prepare-os.sh
 ./setup-prod.sh
 
 # adjust the `.env` file
