@@ -31,13 +31,15 @@ def check_orm(status: dict[str, Any]) -> bool:
 
 def check_redis(status: dict[str, Any]) -> bool:
     try:
-        redis_host = os.environ["REDIS_HOST"]
-        redis_port = int(os.environ["REDIS_PORT"])
-        redis = Redis(redis_host, redis_port, socket_connect_timeout=1)
+        redis = Redis(
+            host=os.environ["REDIS_HOST"],
+            port=int(os.environ["REDIS_PORT"]),
+            socket_connect_timeout=1,
+        )
 
         # echo test
         echo_test = str(datetime.now(tz=UTC)).encode("utf8")
-        assert redis.echo(echo_test) == echo_test
+        assert redis.echo(echo_test) == echo_test, "incorrect redis response"
 
         status["redis_ok"] = True
         return True
