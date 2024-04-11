@@ -48,7 +48,10 @@ def check_redis(status: dict[str, Any]) -> bool:
 
 
 def healthcheck_view(_request: HttpRequest) -> HttpResponse:
-    status = {}
+    status: dict[str, Any] = {
+        # include time so we can easily check if we receive a cached response
+        "time": str(datetime.now(tz=UTC)),
+    }
 
     all_ok = True
     all_ok &= check_database(status)
