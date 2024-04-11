@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
+import psycopg2
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from redis import Redis
 
@@ -49,6 +50,27 @@ def check_redis(status: dict[str, Any]) -> bool:
         return False
 
 
+def check_postgres(status: dict[str, Any]) -> bool:
+    try:
+        with psycopg2.connect(
+            dbname=os.environ["POSTGRES_DB"],
+            host=os.environ["POSTGRES_HOST"],
+            port=os.environ["POSTGRES_PORT"],
+            user=os.environ["POSTGRES_USER"],
+            password=os.environ["POSTGRES_PASSWORD"],
+        ) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 123")
+                assert cur.fetchone()[0] == 123, "incorrect postgres response"
+
+        status["postgres_ok"] = True
+        return True
+    except Exception as e:
+        status["postgres_ok"] = False
+        status["postgres_error"] = repr(e)
+        return False
+
+
 def healthcheck_view(_request: HttpRequest) -> HttpResponse:
     status: dict[str, Any] = {
         # include time so we can easily check if we receive a cached response
@@ -56,8 +78,9 @@ def healthcheck_view(_request: HttpRequest) -> HttpResponse:
     }
 
     all_ok = True
-    all_ok &= check_orm(status)
+    all_ok &= check_postgres(status)
     all_ok &= check_redis(status)
+    all_ok &= check_orm(status)
     status["all_ok"] = all_ok
 
     response = JsonResponse(status)
