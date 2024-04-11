@@ -10,7 +10,7 @@ from redis import Redis
 from .models import HealthcheckModel
 
 
-def check_database(status: dict[str, Any]) -> bool:
+def check_orm(status: dict[str, Any]) -> bool:
     try:
         # delete all existing healthcheck records to prevent table bloat
         HealthcheckModel.objects.all().delete()
@@ -21,11 +21,11 @@ def check_database(status: dict[str, Any]) -> bool:
         )
         obj.save()
 
-        status["database_ok"] = True
+        status["orm_ok"] = True
         return True
     except Exception as e:
-        status["database_ok"] = False
-        status["database_error"] = repr(e)
+        status["orm_ok"] = False
+        status["orm_error"] = repr(e)
         return False
 
 
@@ -54,7 +54,7 @@ def healthcheck_view(_request: HttpRequest) -> HttpResponse:
     }
 
     all_ok = True
-    all_ok &= check_database(status)
+    all_ok &= check_orm(status)
     all_ok &= check_redis(status)
     status["all_ok"] = all_ok
 
