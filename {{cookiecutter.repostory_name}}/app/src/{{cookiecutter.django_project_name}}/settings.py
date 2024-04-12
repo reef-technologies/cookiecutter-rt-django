@@ -10,9 +10,11 @@ from datetime import timedelta
 from functools import wraps
 
 import environ
-{% if cookiecutter.use_celery == "y" %}
+
+{% if cookiecutter.use_celery == "y" -%}
 # from celery.schedules import crontab
-{% endif %}
+{% endif -%}
+import structlog
 
 root = environ.Path(__file__) - 2
 
@@ -69,6 +71,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "django_probes",
+    "django_structlog",
     "constance",
     {% if cookiecutter.use_fingerprinting == "y" -%}
     "fingerprint",
@@ -113,6 +116,7 @@ MIDDLEWARE = [
     {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {%- endif %}
+    "django_structlog.middlewares.RequestMiddleware",
 ]
 
 
@@ -274,8 +278,8 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "main": {
-            "format": "{levelname} {asctime} {name} {message}",
-            "style": "{",
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.dev.ConsoleRenderer(),
         },
     },
     "handlers": {
@@ -296,6 +300,29 @@ LOGGING = {
         },
     },
 }
+DJANGO_STRUCTLOG_CELERY_ENABLED = True
+
+
+def configure_structlog():
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.filter_by_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+
+
+configure_structlog()
 
 # Sentry
 if SENTRY_DSN := env("SENTRY_DSN", default=""):
