@@ -1,5 +1,5 @@
-#!/bin/bash -eux
-
+#!/bin/bash
+set -eux
 RELPATH="$(dirname "$0")"
 ABSPATH="$(realpath "$RELPATH")"
 
