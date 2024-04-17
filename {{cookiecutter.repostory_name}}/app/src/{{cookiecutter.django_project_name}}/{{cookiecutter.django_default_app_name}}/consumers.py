@@ -23,10 +23,8 @@ class DefaultConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data: str | None = None, bytes_data: bytes | None = None) -> None:
         with bound_contextvars(text_data=text_data, bytes_data=bytes_data):
             log.debug("message received")
-
-            adapter = TypeAdapter(Annotated[Union[*self.MESSAGE_HANDLERS.keys()], Field(discriminator="type")])
             try:
-                message: BaseModel = adapter.validate_json(text_data)
+                message: BaseModel = self.MESSAGE_MODEL.validate_json(text_data)
             except ValidationError as exc:
                 errors = exc.errors()
                 log.debug("message parsing failed", errors=errors)
@@ -42,4 +40,5 @@ class DefaultConsumer(AsyncWebsocketConsumer):
     MESSAGE_HANDLERS: ClassVar[dict[BaseModel, Callable]] = {
         Heartbeat: handle_heartbeat,
     }
+    MESSAGE_MODEL = TypeAdapter(Annotated[Union[*MESSAGE_HANDLERS.keys()], Field(discriminator="type")])
 {% endif %}
