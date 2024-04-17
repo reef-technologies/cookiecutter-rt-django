@@ -1,5 +1,6 @@
-#!/bin/sh -eux
+#!/bin/sh
 # Copyright 2024, Reef Technologies (reef.pl), All rights reserved.
+set -eux
 
 if [ ! -f ".env" ]; then
     echo "\e[31mPlease setup the environment first!\e[0m";

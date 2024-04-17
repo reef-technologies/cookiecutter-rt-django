@@ -1,5 +1,5 @@
-#!/bin/bash -eu
-set -o pipefail
+#!/bin/bash
+set -euo pipefail
 
 if [ -z "${_COMMON_SH_LOADED:-}" ]; then
   PATH=/usr/local/sbin:/usr/local/bin:$PATH
