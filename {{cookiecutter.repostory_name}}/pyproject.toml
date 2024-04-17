@@ -13,6 +13,7 @@ dependencies = [
     "django-extensions==3.2.3",
     "django-probes==1.7.0",
     "django-debug-toolbar==4.1.0",
+    "django-structlog{% if cookiecutter.use_celery == "y" %}[celery]{% endif %}==8.0.0",
     {% if cookiecutter.use_celery == "y" -%}
     "celery~=5.3.1",
     {% if cookiecutter.use_flower == 'y' -%}
