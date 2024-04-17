@@ -60,6 +60,9 @@ DEBUG = env("DEBUG")
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
+    {%- if cookiecutter.use_channels == "y" %}
+    "daphne",
+    {%- endif %}
     {%- if cookiecutter.monitoring == "y" %}
     "django_prometheus",
     {%- endif %}
@@ -181,6 +184,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "{{cookiecutter.django_project_name}}.wsgi.application"
+{%- if cookiecutter.use_channels == "y" %}
+ASGI_APPLICATION = "{{cookiecutter.django_project_name}}.asgi.application"
+{%- endif %}
 
 DATABASES = {}
 if env("DATABASE_POOL_URL"):  # DB transaction-based connection pool, such as one provided PgBouncer
@@ -230,6 +236,18 @@ if env.bool("HTTPS_REDIRECT", default=False) and not DEBUG:
     CSRF_COOKIE_SECURE = True
 else:
     SECURE_SSL_REDIRECT = False
+
+{%- if cookiecutter.use_channels == "y" %}
+CHANNELS_BACKEND_URL = env("CHANNELS_BACKEND_URL")
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [{"address": CHANNELS_BACKEND_URL}],
+        },
+    },
+}
+{%- endif %}
 
 {%- if cookiecutter.use_celery == "y" %}
 

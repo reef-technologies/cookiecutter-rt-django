@@ -12,6 +12,7 @@
     "use_celery": "y",
     "use_flower": "n",
     "use_fingerprinting": "n",
+    "use_channels": "y",
     "sentry_dsn": "",
     "csp_enabled": "n",
     "csp_report_only": "y",

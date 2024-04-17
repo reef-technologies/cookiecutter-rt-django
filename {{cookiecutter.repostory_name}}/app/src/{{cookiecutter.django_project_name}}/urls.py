@@ -6,6 +6,11 @@ from fingerprint.views import FingerprintView
 {% endif -%}
 {% if cookiecutter.monitoring == "y" %}
 from .{{cookiecutter.django_default_app_name}}.business_metrics import metrics_manager
+{%- endif %}
+{%- if cookiecutter.use_channels == "y" %}
+from .{{cookiecutter.django_default_app_name}}.consumers import DefaultConsumer
+{%- endif %}
+{%- if cookiecutter.monitoring == "y" %}
 from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 {%- endif %}
 
@@ -20,6 +25,12 @@ urlpatterns = [
     path("business-metrics", metrics_manager.view, name="prometheus-business-metrics"),
     {%- endif %}
 ]
+
+{%- if cookiecutter.use_channels == "y" %}
+ws_urlpatterns = [
+    path("ws/v0/", DefaultConsumer.as_asgi()),
+]
+{%- endif %}
 
 if settings.DEBUG_TOOLBAR:
     urlpatterns += [
