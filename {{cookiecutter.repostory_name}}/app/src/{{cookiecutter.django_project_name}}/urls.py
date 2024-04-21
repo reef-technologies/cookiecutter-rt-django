@@ -23,6 +23,7 @@ urlpatterns = [
     {%- if cookiecutter.monitoring == "y" %}
     path("metrics", metrics_view, name="prometheus-django-metrics"),
     path("business-metrics", metrics_manager.view, name="prometheus-business-metrics"),
+    path("healthcheck/", include("health_check.urls")),
     {%- endif %}
 ]
 
