@@ -82,6 +82,7 @@ EOT
 chmod +x hooks/post-receive
 ./hooks/post-receive
 cd ~/domains/{{ cookiecutter.repostory_name }}
+sudo bin/prepare-os.sh
 ./setup-prod.sh
 
 # adjust the `.env` file
