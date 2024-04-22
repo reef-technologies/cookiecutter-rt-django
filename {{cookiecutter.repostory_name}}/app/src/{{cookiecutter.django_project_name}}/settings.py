@@ -260,6 +260,10 @@ CHANNEL_LAYERS = {
 }
 {%- endif %}
 
+{%- if cookiecutter.monitoring == "y" %}
+REDIS_URL = env("REDIS_URL", default="")
+{%- endif %}
+
 {%- if cookiecutter.use_celery == "y" %}
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
