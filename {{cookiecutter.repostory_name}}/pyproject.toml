@@ -34,6 +34,12 @@ dependencies = [
     {% if cookiecutter.use_fingerprinting == "y" -%}
     "django-fingerprint-rt @ git+https://github.com/reef-technologies/django-fingerprint-rt.git@cb3ca19d06755c86dd59ebb33462960b574923fc",
     {% endif -%}
+    {% if cookiecutter.use_channels == "y" -%}
+    "channels[daphne]~=4.0",
+    "channels-redis~=4.2.0",
+    "uvicorn[standard]==0.29",
+    "pydantic~=2.0",
+    {% endif -%}
 ]
 
 [build-system]
@@ -48,6 +54,9 @@ test = [
     'pytest',
     'pytest-django',
     'pytest-xdist',
+    {%- if cookiecutter.use_channels == "y" %}
+    'pytest-asyncio',
+    {%- endif %}
     'ipdb',
     'freezegun',
 ]
