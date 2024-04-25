@@ -16,7 +16,7 @@ docker run -it --rm \
 docker run -it --rm \
       -v "$ABSPATH/letsencrypt/etc:/etc/letsencrypt" \
       -p 80:80\
-      deliverous/certbot \
+      certbot/certbot \
       certonly \
       --standalone --preferred-challenges http\
       -d "$NGINX_HOST" -d "www.$NGINX_HOST"
