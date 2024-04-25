@@ -13,10 +13,10 @@ docker run -it --rm \
       alpine/openssl \
       dhparam -out /etc/letsencrypt/dhparams/dhparam.pem 2048
 
-docker run -it --rm \
+docker run --entrypoint certbot -it --rm \
       -v "$ABSPATH/letsencrypt/etc:/etc/letsencrypt" \
       -p 80:80\
-      certbot/certbot \
+      ghcr.io/reef-technologies/nginx-rt:v1.2.2 \
       certonly \
       --standalone --preferred-challenges http\
       -d "$NGINX_HOST" -d "www.$NGINX_HOST"
