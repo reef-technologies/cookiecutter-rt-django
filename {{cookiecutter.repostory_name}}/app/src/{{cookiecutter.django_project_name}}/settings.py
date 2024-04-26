@@ -261,7 +261,9 @@ CHANNEL_LAYERS = {
 {%- endif %}
 
 {%- if cookiecutter.monitoring == "y" %}
-REDIS_URL = env("REDIS_URL")
+REDIS_HOST = env("REDIS_HOST")
+REDIS_PORT = env.int("REDIS_PORT")
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 {%- endif %}
 
 {%- if cookiecutter.use_celery == "y" %}
