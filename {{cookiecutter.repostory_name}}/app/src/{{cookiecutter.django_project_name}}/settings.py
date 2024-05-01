@@ -65,6 +65,17 @@ INSTALLED_APPS = [
     {%- endif %}
     {%- if cookiecutter.monitoring == "y" %}
     "django_prometheus",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "health_check.contrib.migrations",
+    "health_check.contrib.psutil",
+    "health_check.contrib.redis",
+    {%- endif %}
+    {%- if cookiecutter.monitoring == "y" and cookiecutter.use_celery == "y" %}
+    "health_check.contrib.celery",
+    "health_check.contrib.celery_ping",
     {%- endif %}
     "django.contrib.admin",
     "django.contrib.auth",
@@ -247,6 +258,12 @@ CHANNEL_LAYERS = {
         },
     },
 }
+{%- endif %}
+
+{%- if cookiecutter.monitoring == "y" %}
+REDIS_HOST = env("REDIS_HOST")
+REDIS_PORT = env.int("REDIS_PORT")
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 {%- endif %}
 
 {%- if cookiecutter.use_celery == "y" %}

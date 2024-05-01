@@ -27,9 +27,11 @@ dependencies = [
     "ipython~=8.14.0",
     "nox==2023.4.22",
     {% if cookiecutter.monitoring == "y" -%}
+    "psutil>=5.9.8",
     "prometheus-client~=0.17.0",
     "django-prometheus==2.3.1",
     "django-business-metrics>=1.0.1,<2",
+    "django-health-check>=3.18.1,<4",
     {% endif -%}
     {% if cookiecutter.use_fingerprinting == "y" -%}
     "django-fingerprint-rt @ git+https://github.com/reef-technologies/django-fingerprint-rt.git@cb3ca19d06755c86dd59ebb33462960b574923fc",
