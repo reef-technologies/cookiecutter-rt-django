@@ -297,6 +297,8 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_WORKER_PREFETCH_MULTIPLIER = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER", default=10)
 CELERY_BROKER_POOL_LIMIT = env.int("CELERY_BROKER_POOL_LIMIT", default=50)
+
+DJANGO_STRUCTLOG_CELERY_ENABLED = True
 {%- endif %}
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
@@ -335,7 +337,6 @@ LOGGING = {
         },
     },
 }
-DJANGO_STRUCTLOG_CELERY_ENABLED = True
 
 
 def configure_structlog():
@@ -362,7 +363,9 @@ configure_structlog()
 # Sentry
 if SENTRY_DSN := env("SENTRY_DSN", default=""):
     import sentry_sdk
+    {% if cookiecutter.use_celery == "y" -%}
     from sentry_sdk.integrations.celery import CeleryIntegration
+    {% endif -%}
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
     from sentry_sdk.integrations.redis import RedisIntegration
@@ -372,7 +375,9 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         environment=ENV,
         integrations=[
             DjangoIntegration(),
+            {% if cookiecutter.use_celery == "y" -%}
             CeleryIntegration(),
+            {% endif -%}
             RedisIntegration(),
             LoggingIntegration(
                 level=logging.INFO,  # Capture info and above as breadcrumbs
