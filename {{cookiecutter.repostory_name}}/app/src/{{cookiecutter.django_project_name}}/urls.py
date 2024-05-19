@@ -25,6 +25,9 @@ urlpatterns = [
     path("business-metrics", metrics_manager.view, name="prometheus-business-metrics"),
     path("healthcheck/", include("health_check.urls")),
     {%- endif %}
+    {%- if cookiecutter.use_allauth == "y" %}
+    path('accounts/', include('allauth.urls')),
+    {%- endif %}
 ]
 
 {%- if cookiecutter.use_channels == "y" %}

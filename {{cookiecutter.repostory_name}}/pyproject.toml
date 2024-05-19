@@ -42,6 +42,9 @@ dependencies = [
     "uvicorn[standard]==0.29",
     "pydantic~=2.0",
     {% endif -%}
+    {% if cookiecutter.use_allauth == "y" -%}
+    "django-allauth[socialaccount]==0.63.1",
+    {% endif -%}
 ]
 
 [build-system]
