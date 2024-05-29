@@ -63,7 +63,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     {% if cookiecutter.use_allauth == "y" -%}
     "allauth.account.auth_backends.AuthenticationBackend",
-    {% endif -%}
+    {%- endif %}
 ]
 
 INSTALLED_APPS = [
@@ -147,7 +147,7 @@ MIDDLEWARE = [
     "django_structlog.middlewares.RequestMiddleware",
     {% if cookiecutter.use_allauth == "y" -%}
     "allauth.account.middleware.AccountMiddleware",
-    {% endif -%}
+    {%- endif %}
 ]
 
 
@@ -208,7 +208,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 {% if cookiecutter.use_allauth == "y" -%}
                 "django.template.context_processors.request",
-                {% endif -%}
+                {%- endif %}
             ],
         },
     },
