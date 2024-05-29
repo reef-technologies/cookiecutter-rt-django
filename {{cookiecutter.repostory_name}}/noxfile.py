@@ -126,7 +126,7 @@ def format_(session):
 def lint(session):
     """Run linters in readonly mode."""
     install(session, "lint")
-    session.run("ruff", "check", "--diff", ".")
+    session.run("ruff", "check", "--diff", "--unsafe-fixes", ".")
     session.run("codespell", ".")
     run_shellcheck(session, mode="check")
     run_readable(session, mode="check")

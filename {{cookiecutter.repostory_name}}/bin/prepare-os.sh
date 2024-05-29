@@ -10,7 +10,7 @@ AWS_CLI="$(command -v aws || true)"
 JQ_BIN="$(command -v jq || true)"
 
 if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SENTRY_CLI}" ] && [ -x "${B2_CLI}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
-    echo "\e[31mEverything required is already installed!\e[0m";
+    echo "\e[32mEverything required is already installed\e[0m";
     exit 0;
 fi
 
@@ -45,15 +45,12 @@ if [ ! -x "${B2_CLI}" ]; then
   chmod a+x /usr/local/bin/b2
 fi
 
-if [ ! -x "${DOCKER_BIN}" ]; then
+if [ ! -x "${DOCKER_BIN}" ] || [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-    apt-get -y install docker-ce
-    usermod -aG docker "$USER"
-fi
-
-if [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
+    add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    apt-get update
     apt-get -y install docker-ce docker-compose-plugin
+    usermod -aG docker "$USER"
 fi
 
 if [ ! -x "${AWS_CLI}" ]; then
