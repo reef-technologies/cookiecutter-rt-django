@@ -111,19 +111,26 @@ To enable an external authentication mechanism, first determine that the service
 ## Setting up a specific service
 1. Include the provider for the service in `INSTALLED_APPS` (check out https://docs.allauth.org/en/latest/installation/quickstart.html)
 2. Follow the guide for your provider (e.g. https://docs.allauth.org/en/latest/socialaccount/providers/google.html)
+   - keep in mind the provided config can be created in django admin instead of settings.py
 
 ## Setting up a generic OpenID Connect service
 1. Include the `allauth.socialaccount.providers.openid_connect` provider for the service in `INSTALLED_APPS` (should be enabled by default)
-2. Register the app with the provider
-3. You should get a `client_id`, a `secret` and the URL for the openid config (e.g. https://gitlab.com/.well-known/openid-configuration)
-4. Create a new `openid_connect` provider (django admin / settings.py)
-   - `provider_id` is arbitrary, but must not collide with the name of an installed provider type - so don't use `gitlab`, `google` or similar
+2. Come up with a new `provider_id`
+   - it's just an arbitrary alphanumerical string to identify the provider in the app
+   - it must be unique in the scope of the app
+   - it should not collide with the name of an installed provider type - so don't use `gitlab`, `google` or similar
+   - something like `rt_keycloak` would be OK
+3. Register the app with the provider to acquire a `client_id`, a `secret` and the URL for the openid config (e.g. https://gitlab.com/.well-known/openid-configuration)
+   - When asked for callback / redirect url, use `https://{domain}/accounts/oidc/{provider_id}/login/callback/`
+5. In the app, create a new `openid_connect` provider (django admin / settings.py) 
    - `name` is just a human-readable name, it will be later shown on login form (Log in with {name}...)
-   - the `settings` object must contain a `server_url` key. This is the config URL **before** the .well-known part, so for https://gitlab.com/.well-known/openid-configuration this is just https://gitlab.com
+   - the `settings` object must contain a `server_url` key
+     - This is the config URL **before** the .well-known part, so for https://gitlab.com/.well-known/openid-configuration this is just https://gitlab.com
 
 ## Allauth users in django
-1. Allauth does not disable django's authentication. It lives next to it as an alternative.
+1. Allauth does not disable django's authentication. It lives next to it as an alternative. You can still access django admin login.
 2. Allauth "social users" are just an extension to regular django users. When someone logs in via allauth, a django user model will also be created for them.
+3. A "profile" page is available at `/accounts`
 
 {% endif %}
 {% if cookiecutter.monitoring == 'y' %}
