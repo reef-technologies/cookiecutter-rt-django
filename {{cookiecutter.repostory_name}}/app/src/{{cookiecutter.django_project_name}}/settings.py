@@ -61,7 +61,7 @@ ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    {% if cookiecutter.use_allauth == "y" -%}
+    {%- if cookiecutter.use_allauth == "y" %}
     "allauth.account.auth_backends.AuthenticationBackend",
     {%- endif %}
 ]
@@ -94,16 +94,16 @@ INSTALLED_APPS = [
     "django_probes",
     "django_structlog",
     "constance",
-    {% if cookiecutter.use_fingerprinting == "y" -%}
+    {%- if cookiecutter.use_fingerprinting == "y" %}
     "fingerprint",
-    {% endif -%}
-    {% if cookiecutter.use_allauth == "y" -%}
+    {%- endif %}
+    {%- if cookiecutter.use_allauth == "y" %}
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.openid_connect",
     # Specific auth providers can be added, see https://docs.allauth.org/en/latest/socialaccount/providers/index.html
-    {% endif -%}
+    {%- endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
 
@@ -145,7 +145,7 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {%- endif %}
     "django_structlog.middlewares.RequestMiddleware",
-    {% if cookiecutter.use_allauth == "y" -%}
+    {%- if cookiecutter.use_allauth == "y" -%}
     "allauth.account.middleware.AccountMiddleware",
     {%- endif %}
 ]
@@ -206,7 +206,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                {% if cookiecutter.use_allauth == "y" -%}
+                {%- if cookiecutter.use_allauth == "y" %}
                 "django.template.context_processors.request",
                 {%- endif %}
             ],
