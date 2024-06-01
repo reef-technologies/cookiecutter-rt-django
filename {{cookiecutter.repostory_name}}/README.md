@@ -100,6 +100,32 @@ If one wants to deploy other branch, force may be used to push desired branch to
 ```sh
 git push --force production local-branch-to-deploy:master
 ```
+{% if cookiecutter.use_allauth == 'y' %}
+# External auth (OAuth, OpenID connect etc.)
+To enable an external authentication mechanism, first determine that the service you want to use is either:
+- available as a provider in allauth: https://docs.allauth.org/en/latest/socialaccount/providers/index.html
+- supports OpenID Connect
+
+> Note: this can be configured either statically in settings.py or dynamically via django admin.
+
+## Setting up a specific service
+1. Include the provider for the service in `INSTALLED_APPS` (check out https://docs.allauth.org/en/latest/installation/quickstart.html)
+2. Follow the guide for your provider (e.g. https://docs.allauth.org/en/latest/socialaccount/providers/google.html)
+
+## Setting up a generic OpenID Connect service
+1. Include the `allauth.socialaccount.providers.openid_connect` provider for the service in `INSTALLED_APPS` (should be enabled by default)
+2. Register the app with the provider
+3. You should get a `client_id`, a `secret` and the URL for the openid config (e.g. https://gitlab.com/.well-known/openid-configuration)
+4. Create a new `openid_connect` provider (django admin / settings.py)
+   - `provider_id` is arbitrary, but must not collide with the name of an installed provider type - so don't use `gitlab`, `google` or similar
+   - `name` is just a human-readable name, it will be later shown on login form (Log in with {name}...)
+   - the `settings` object must contain a `server_url` key. This is the config URL **before** the .well-known part, so for https://gitlab.com/.well-known/openid-configuration this is just https://gitlab.com
+
+## Allauth users in django
+1. Allauth does not disable django's authentication. It lives next to it as an alternative.
+2. Allauth "social users" are just an extension to regular django users. When someone logs in via allauth, a django user model will also be created for them.
+
+{% endif %}
 {% if cookiecutter.monitoring == 'y' %}
 # Monitoring
 
