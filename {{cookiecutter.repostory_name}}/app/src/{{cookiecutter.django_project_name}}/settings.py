@@ -101,6 +101,36 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    {%- if cookiecutter.use_allauth_apple == "y" %}
+    "allauth.socialaccount.providers.apple",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_discord == "y" %}
+    "allauth.socialaccount.providers.discord",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_facebook == "y" %}
+    "allauth.socialaccount.providers.facebook",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_github == "y" %}
+    "allauth.socialaccount.providers.github",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_gitlab == "y" %}
+    "allauth.socialaccount.providers.gitlab",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_google == "y" %}
+    "allauth.socialaccount.providers.google",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_microsoft == "y" %}
+    "allauth.socialaccount.providers.microsoft",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_openid_connect == "y" %}
+    "allauth.socialaccount.providers.openid_connect",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_twitter == "y" %}
+    "allauth.socialaccount.providers.twitter",
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_atlassian == "y" %}
+    "allauth.socialaccount.providers.atlassian",
+    {%- endif %}
     {%- endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
@@ -401,3 +431,86 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         ],
     )
     ignore_logger("django.security.DisallowedHost")
+
+{%- if cookiecutter.use_allauth == "y" %}
+SOCIALACCOUNT_PROVIDERS = {
+    {%- if cookiecutter.use_allauth_apple == "y" %}
+    "apple": {
+        "APP": {
+            "client_id": env("APPLE_LOGIN_CLIENT_ID"),
+            "secret": env("APPLE_LOGIN_SECRET"),
+            "key": env("APPLE_LOGIN_KEY"),
+            "settings": {
+                "certificate_key": env("APPLE_LOGIN_CERTIFICATE_PRIVATE_KEY"),
+            },
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_discord == "y" %}
+    "discord": {
+        "APP": {
+            "client_id": env("DISCORD_LOGIN_CLIENT_ID"),
+            "secret": env("DISCORD_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_facebook == "y" %}
+    "facebook": {
+        "APP": {
+            "client_id": env("FACEBOOK_LOGIN_CLIENT_ID"),
+            "secret": env("FACEBOOK_LOGIN_SECRET"),
+        },
+    },
+    {%- if cookiecutter.use_allauth_github == "y" %}
+    "github": {
+        "APP": {
+            "client_id": env("GITHUB_LOGIN_CLIENT_ID"),
+            "secret": env("GITHUB_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_gitlab == "y" %}
+    "gitlab": {
+        "APP": {
+            "client_id": env("GITLAB_LOGIN_CLIENT_ID"),
+            "secret": env("GITLAB_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_google == "y" %}
+    "google": {
+        "APP": {
+            "client_id": env("GOOGLE_LOGIN_CLIENT_ID"),
+            "secret": env("GOOGLE_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_microsoft == "y" %}
+    "microsoft": {
+        "APP": {
+            "client_id": env("MICROSOFT_LOGIN_CLIENT_ID"),
+            "secret": env("MICROSOFT_LOGIN_SECRET"),
+            "settings": {
+                "tenant": "organizations",
+            },
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_twitter == "y" %}
+    "twitter": {
+        "APP": {
+            "client_id": env("TWITTER_LOGIN_CLIENT_ID"),
+            "secret": env("TWITTER_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if cookiecutter.use_allauth_atlassian == "y" %}
+    "atlassian": {
+        "APP": {
+            "client_id": env("ATLASSIAN_LOGIN_CLIENT_ID"),
+            "secret": env("ATLASSIAN_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+}
+{%- endif %}
