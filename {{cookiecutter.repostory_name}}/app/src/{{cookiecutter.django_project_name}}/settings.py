@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.openid_connect",
-    # Specific auth providers can be added, see https://docs.allauth.org/en/latest/socialaccount/providers/index.html
     {%- endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
@@ -206,9 +205,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                {%- if cookiecutter.use_allauth == "y" %}
-                "django.template.context_processors.request",
-                {%- endif %}
             ],
         },
     },

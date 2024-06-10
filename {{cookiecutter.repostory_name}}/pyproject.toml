@@ -43,7 +43,7 @@ dependencies = [
     "pydantic~=2.0",
     {% endif -%}
     {% if cookiecutter.use_allauth == "y" -%}
-    "django-allauth[socialaccount]==0.63.1",
+    "django-allauth[socialaccount]~=0.63.1",
     {% endif -%}
 ]
 
