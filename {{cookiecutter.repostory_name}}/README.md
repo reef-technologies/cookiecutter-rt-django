@@ -114,7 +114,7 @@ To enable an external authentication mechanism, first determine that the service
    - keep in mind the provided config can be created in django admin instead of settings.py
 
 ## Setting up a generic OpenID Connect service
-1. Include the `allauth.socialaccount.providers.openid_connect` provider for the service in `INSTALLED_APPS` (should be enabled by default)
+1. Include the `allauth.socialaccount.providers.openid_connect` provider for the service in `INSTALLED_APPS`
 2. Come up with a new `provider_id`
    - it's just an arbitrary alphanumerical string to identify the provider in the app
    - it must be unique in the scope of the app
