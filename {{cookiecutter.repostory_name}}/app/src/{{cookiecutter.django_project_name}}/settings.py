@@ -333,6 +333,22 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
+        "django_structlog.*": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "celery": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "celery.task": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "celery.redirected": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
     },
 }
 DJANGO_STRUCTLOG_CELERY_ENABLED = True
