@@ -24,7 +24,12 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 @setup_logging.connect
 def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pragma: no cover
-    logging.config.dictConfig(settings.LOGGING)
+    config = settings.LOGGING
+    # worker and master have a logfile, beat does not
+    if logfile:
+        config["handlers"]["console"]["class"] = "logging.FileHandler"
+        config["handlers"]["console"]["filename"] = logfile
+    logging.config.dictConfig(config)
     configure_structlog()
 
 

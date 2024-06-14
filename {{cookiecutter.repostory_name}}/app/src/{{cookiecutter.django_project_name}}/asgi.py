@@ -14,6 +14,7 @@ from .urls import ws_urlpatterns  # noqa
 {%- endif %}
 
 {%- if cookiecutter.use_channels == "y" %}
+
 application = ProtocolTypeRouter(
     {
         "http": http_app,
