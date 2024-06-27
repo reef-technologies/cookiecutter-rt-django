@@ -12,6 +12,7 @@ Currently, `cookiecutter-rt-django` has no explicit versioning amd we purely rel
 
 ## [Unreleased]
 
+* **BREAKING** Update psycopg from 2.9 to 3.1 (https://www.psycopg.org/psycopg3/docs/basic/from_pg2.html)
 * **BREAKING** Switched from `docker-compose` v1 script to `docker compose` v2 plugin (https://docs.docker.com/compose/cli-command/)
 * **BREAKING** Added formatting with ruff.
 * **BREAKING** Started using [pdm](https://github.com/pdm-project/pdm) for managing Python dependencies.
