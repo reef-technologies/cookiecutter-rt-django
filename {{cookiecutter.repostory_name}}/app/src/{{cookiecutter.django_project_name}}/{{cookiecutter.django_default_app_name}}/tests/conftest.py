@@ -1,12 +1,16 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_postgresql import factories
 {%- if cookiecutter.use_channels == "y" %}
 import pytest_asyncio
 from channels.testing import WebsocketCommunicator
 
 from ...asgi import application
 {%- endif %}
+
+postgresql_in_docker = factories.postgresql_noproc()
+postgresql = factories.postgresql("postgresql_in_docker", dbname="test")
 
 
 @pytest.fixture
