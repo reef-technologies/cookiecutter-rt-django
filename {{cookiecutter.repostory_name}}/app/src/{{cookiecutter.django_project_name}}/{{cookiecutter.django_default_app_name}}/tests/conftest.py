@@ -1,10 +1,12 @@
 from collections.abc import Generator
 
 import pytest
-from pytest_postgresql import factories
 {%- if cookiecutter.use_channels == "y" %}
 import pytest_asyncio
 from channels.testing import WebsocketCommunicator
+{%- endif %}
+from pytest_postgresql import factories
+{%- if cookiecutter.use_channels == "y" %}
 
 from ...asgi import application
 {%- endif %}
