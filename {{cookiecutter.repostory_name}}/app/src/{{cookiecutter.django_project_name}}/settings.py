@@ -433,6 +433,13 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
     ignore_logger("django.security.DisallowedHost")
 
 {% if cookiecutter.use_allauth == "y" -%}
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_CHANGE_EMAIL = False
+ACCOUNT_MAX_EMAIL_ADDRESSES = 1
 SOCIALACCOUNT_PROVIDERS = {
     {%- if cookiecutter.use_allauth_apple == "y" %}
     "apple": {
