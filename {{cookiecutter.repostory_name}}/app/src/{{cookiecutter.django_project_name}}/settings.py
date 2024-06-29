@@ -432,7 +432,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
     )
     ignore_logger("django.security.DisallowedHost")
 
-{%- if cookiecutter.use_allauth == "y" %}
+{% if cookiecutter.use_allauth == "y" -%}
 SOCIALACCOUNT_PROVIDERS = {
     {%- if cookiecutter.use_allauth_apple == "y" %}
     "apple": {
@@ -461,6 +461,7 @@ SOCIALACCOUNT_PROVIDERS = {
             "secret": env("FACEBOOK_LOGIN_SECRET"),
         },
     },
+    {%- endif %}
     {%- if cookiecutter.use_allauth_github == "y" %}
     "github": {
         "APP": {
