@@ -56,7 +56,6 @@ test = [
     'pytest',
     'pytest-django',
     'pytest-xdist',
-    'pytest-postgresql',
     {%- if cookiecutter.use_channels == "y" %}
     'pytest-asyncio',
     {%- endif %}
