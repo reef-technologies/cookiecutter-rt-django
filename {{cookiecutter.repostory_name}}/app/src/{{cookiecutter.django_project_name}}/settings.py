@@ -126,7 +126,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.openid_connect",
     {%- endif %}
     {%- if cookiecutter.use_allauth_twitter == "y" %}
-    "allauth.socialaccount.providers.twitter",
+    "allauth.socialaccount.providers.twitter_oauth2",
     {%- endif %}
     {%- if cookiecutter.use_allauth_atlassian == "y" %}
     "allauth.socialaccount.providers.atlassian",
@@ -498,7 +498,7 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     {%- endif %}
     {%- if cookiecutter.use_allauth_twitter == "y" %}
-    "twitter": {
+    "twitter_oauth2": {
         "APP": {
             "client_id": env("TWITTER_LOGIN_CLIENT_ID"),
             "secret": env("TWITTER_LOGIN_SECRET"),
