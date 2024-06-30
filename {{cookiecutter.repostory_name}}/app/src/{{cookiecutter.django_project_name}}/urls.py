@@ -16,7 +16,9 @@ from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 
 urlpatterns = [
     path("admin/", site.urls),
+    {%- if cookiecutter.use_allauth != "y" %}
     path("", include("django.contrib.auth.urls")),
+    {%- endif %}
     {%- if cookiecutter.use_fingerprinting == "y" %}
     path("redirect/", FingerprintView.as_view(), name="fingerprint"),
     {%- endif %}
