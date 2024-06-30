@@ -15,6 +15,9 @@ import environ
 # from celery.schedules import crontab
 {% endif -%}
 import structlog
+{% if cookiecutter.use_allauth == "y" -%}
+from django.urls import reverse_lazy
+{% endif -%}
 
 root = environ.Path(__file__) - 2
 
@@ -448,6 +451,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
     )
     ignore_logger("django.security.DisallowedHost")
 {% if cookiecutter.use_allauth == "y" -%}
+LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
