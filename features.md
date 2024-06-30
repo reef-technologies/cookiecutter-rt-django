@@ -72,6 +72,7 @@
   - Prometheus for data collection
   - Grafana Loki for log aggregation with Promtail for log shipping
   - Generic host dashboard section optimized for both VM and physical machines
+  - [Integration of framework allowing easy addition of new application-level metrics](https://github.com/reef-technologies/django-business-metrics)
   - nginx-level dashboard section for http/ws statistics
   - Active monitoring dashboard (http ping)
   - Alert history dashboard
