@@ -460,6 +460,11 @@ ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_CHANGE_EMAIL = False
 ACCOUNT_MAX_EMAIL_ADDRESSES = 1
+{%- if cookiecutter.allauth_trust_external_emails == "y" %}
+# Trust, that the configured SSO providers verify that the users own the addresses that we get from the SSO flow.
+# This allows users to log in to any existing account with any configured provider if the email addresses match.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION: True
+{%- endif %}
 SOCIALACCOUNT_PROVIDERS = {
     {%- if cookiecutter.use_allauth_apple == "y" %}
     "apple": {

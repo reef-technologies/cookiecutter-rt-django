@@ -109,7 +109,13 @@ specific provider to see how to do that:
 [https://docs.allauth.org/en/latest/socialaccount/providers/index.html](https://docs.allauth.org/en/latest/socialaccount/providers/index.html)
 
 After acquiring the id and secret, simply fill in the env vars for the provider.
+{% if cookiecutter.allauth_trust_external_emails == "y" %}
 
+> ⚠️ Caution: the SSO provider is trusted to have verified the ownership of user's email address.
+> This will allow a user to log in to any account that matches the email address returned by the
+> SSO provider, whether the account is connected with the provider or not.
+
+{% endif %}
 {% if cookiecutter.use_allauth_openid_connect == "y" %}
 ## Setting up a generic OpenID Connect service
 If an SSO provider supports the OIDC protocol, it can be set up as a generic OIDC provider here: 
