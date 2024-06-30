@@ -13,7 +13,7 @@ import environ
 
 {% if cookiecutter.use_celery == "y" -%}
 # from celery.schedules import crontab
-{% endif -%}
+{% endif %}
 import structlog
 {% if cookiecutter.use_allauth == "y" -%}
 from django.urls import reverse_lazy
