@@ -540,5 +540,17 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
+    {%- if cookiecutter.use_allauth_openid_connect == "y" %}
+    "openid_connect": {
+        "APP": {
+            "client_id": "oidc",
+            "name": env("OPENID_CONNECT_NICE_NAME"),
+            "secret": env("OPENID_CONNECT_LOGIN_SECRET"),
+            "settings": {
+                "server_url": env("OPENID_CONNECT_SERVER_URL")
+            }
+        },
+    },
+    {%- endif %}
 }
 {%- endif %}
