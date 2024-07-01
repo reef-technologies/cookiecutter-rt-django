@@ -1,13 +1,9 @@
 import pytest
-from django.db import models
+from django.contrib.auth.models import User
 
 pytestmark = pytest.mark.django_db
 
 
-class DummyValue(models.Model):
-    value = models.IntegerField()
-
-
 def test__database__save_object():
-    DummyValue(value=42).save()
-    assert DummyValue.objects.get().value == 42
+    User(username='dummy', password='unhashed').save()
+    assert User.objects.all().last().username == 'dummy'
