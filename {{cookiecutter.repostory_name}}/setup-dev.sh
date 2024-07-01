@@ -8,12 +8,6 @@ ENV_DIR="./envs/dev"
 # shellcheck disable=SC2164
 cd "${PROJECT_DIR}"
 
-# Workaround for PDM which sometimes creates a 3.10 venv
-# https://github.com/pdm-project/pdm/issues/2789
-if [[ ! -d ".venv" ]]; then
-    python3.11 -m venv .venv
-fi
-
 # Create a lock file if doesn't exist
 if [[ ! -f "pdm.lock" ]]; then
     pdm lock --group :all
