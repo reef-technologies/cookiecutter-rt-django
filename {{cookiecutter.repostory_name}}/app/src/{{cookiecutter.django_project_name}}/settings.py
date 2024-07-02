@@ -399,6 +399,10 @@ LOGGING = {
             "handlers": ["console"],
             "level": "INFO",
         },
+        "psycopg.pq": {
+            # only logs unavailable libs during psycopg initialization
+            "propagate": False,
+        },
     },
 }
 

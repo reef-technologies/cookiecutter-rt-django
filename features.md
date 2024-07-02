@@ -9,7 +9,7 @@
 - [Gunicorn](https://gunicorn.org) for running WSGI instances on prod
 - [Uvicorn](https://www.uvicorn.org) for ASGI instances on prod
 - [Nginx](https://www.nginx.com) as high-performance reverse proxy with automatic SSL certificate renewal
-- [Postgres](https://www.postgresql.org) for database
+- [Postgres](https://www.postgresql.org) with [psycopg3](https://www.psycopg.org/psycopg3) for database
 - Task management via [celery](https://docs.celeryproject.org) with scheduled tasks support (using celery-beat)
 - Multiple workers & queues supported (if you need to divide / prioritize tasks and apply different levels of concurrency)
 
@@ -72,6 +72,7 @@
   - Prometheus for data collection
   - Grafana Loki for log aggregation with Promtail for log shipping
   - Generic host dashboard section optimized for both VM and physical machines
+  - [Integration of framework allowing easy addition of new application-level metrics](https://github.com/reef-technologies/django-business-metrics)
   - nginx-level dashboard section for http/ws statistics
   - Active monitoring dashboard (http ping)
   - Alert history dashboard

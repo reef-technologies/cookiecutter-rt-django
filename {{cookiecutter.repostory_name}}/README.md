@@ -4,8 +4,6 @@
 
 - - -
 
-Skeleton of this project was generated with `cookiecutter-rt-django`, which sometimes gets upgrades that are easy to retrofit into already older projects.
-
 # Base requirements
 
 - docker with [compose plugin](https://docs.docker.com/compose/install/linux/)
@@ -16,7 +14,7 @@ Skeleton of this project was generated with `cookiecutter-rt-django`, which some
 # Setup development environment
 
 ```sh
-$ ./setup-dev.sh
+./setup-dev.sh
 docker compose up -d
 cd app/src
 pdm run manage.py wait_for_database --timeout 10
@@ -25,6 +23,8 @@ pdm run manage.py runserver
 ```
 
 # Setup production environment (git deployment)
+
+<details>
 
 This sets up "deployment by pushing to git storage on remote", so that:
 
@@ -100,6 +100,9 @@ If one wants to deploy other branch, force may be used to push desired branch to
 ```sh
 git push --force production local-branch-to-deploy:master
 ```
+
+</details>
+
 {% if cookiecutter.use_allauth == 'y' %}
 # External auth (OAuth, OpenID connect etc.)
 To configure an external authentication mechanism, usually you must acquire a "client ID" and a "client secret".
@@ -145,32 +148,15 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 {% if cookiecutter.monitoring == 'y' %}
 # Monitoring
 
-Running the app requires proper certificates to be put into `nginx/monitoring_certs`, see `README` located there.
+Running the app requires proper certificates to be put into `nginx/monitoring_certs`,
+see [nginx/monitoring_certs/README.md](nginx/monitoring_certs/README.md) for more details.
 {% endif %}
-## Monitoring execution time of code blocks
 
-Somewhere, probably in `metrics.py`:
+# Cloud deployment
 
-```python
-some_calculation_time = prometheus_client.Histogram(
-    'some_calculation_time',
-    'How Long it took to calculate something',
-    namespace='django',
-    unit='seconds',
-    labelnames=['task_type_for_example'],
-    buckets=[0.5, 1, *range(2, 30, 2), *range(30, 75, 5), *range(75, 135, 15)]
-)
-```
+## AWS
 
-Somewhere else:
-
-```python
-with some_calculation_time.labels('blabla').time():
-    do_some_work()
-```
-
-# AWS
-
+<details>
 Initiate the infrastructure with Terraform:
 TODO
 
@@ -184,17 +170,27 @@ For this to work, GitHub actions needs to be provided with credentials for an ac
 
 See `.github/workflows/cd.yml` to find out the secret names.
 
-# Vultr
+For more details see [README_AWS.md](README_AWS.md)
+</details>
 
+## Vultr
+
+<details>
 Initiate the infrastructure with Terraform and cloud-init:
 
 - see Terraform template in `<project>/devops/vultr_tf/core/`
 - see scripts for interacting with Vultr API in `<project>/devops/vultr_scripts/`
   - note these scripts need `vultr-cli` installed
 
-- for more details see README_vultr.md
+For more details see [README_vultr.md](README_vultr.md).
+</details>
 
-# Setting up periodic backups
+# Backups
+
+<details>
+<summary>Click to for backup setup & recovery information</summary>
+
+## Setting up periodic backups
 
 Add to crontab:
 
@@ -227,10 +223,17 @@ Set in `.env` file:
 - `EMAIL_HOST_PASSWORD`
 - `EMAIL_TARGET`
 
-# Restoring system from backup after a catastrophical failure
+## Restoring system from backup after a catastrophical failure
 
 1. Follow the instructions above to set up a new production environment
 2. Restore the database using bin/restore-db.sh
 3. See if everything works
 4. Set up backups on the new machine
 5. Make sure everything is filled up in .env, error reporting integration, email accounts etc
+
+</details>
+
+# cookiecutter-rt-django
+
+Skeleton of this project was generated using [cookiecutter-rt-django](https://github.com/reef-technologies/cookiecutter-rt-django).
+Use `cruft update` to update the project to the latest version of the template with all current bugfixes and [features](https://github.com/reef-technologies/cookiecutter-rt-django/blob/master/features.md).
