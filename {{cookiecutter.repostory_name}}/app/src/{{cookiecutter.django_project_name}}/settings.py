@@ -13,6 +13,9 @@ import environ
 
 {% if cookiecutter.use_celery == "y" -%}
 # from celery.schedules import crontab
+{% endif %}
+{%- if cookiecutter.use_allauth == "y" -%}
+from django.urls import reverse_lazy
 {% endif -%}
 import structlog
 
@@ -59,6 +62,13 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = ["*"]
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    {%- if cookiecutter.use_allauth == "y" %}
+    "allauth.account.auth_backends.AuthenticationBackend",
+    {%- endif %}
+]
+
 INSTALLED_APPS = [
     {%- if cookiecutter.use_channels == "y" %}
     "daphne",
@@ -87,9 +97,44 @@ INSTALLED_APPS = [
     "django_probes",
     "django_structlog",
     "constance",
-    {% if cookiecutter.use_fingerprinting == "y" -%}
+    {%- if cookiecutter.use_fingerprinting == "y" %}
     "fingerprint",
-    {% endif -%}
+    {%- endif %}
+    {%- if cookiecutter.use_allauth == "y" %}
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    {%- if 'apple' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.apple",
+    {%- endif %}
+    {%- if 'atlassian' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.atlassian",
+    {%- endif %}
+    {%- if 'discord' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.discord",
+    {%- endif %}
+    {%- if 'facebook' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.facebook",
+    {%- endif %}
+    {%- if 'github' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.github",
+    {%- endif %}
+    {%- if 'gitlab' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.gitlab",
+    {%- endif %}
+    {%- if 'google' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.google",
+    {%- endif %}
+    {%- if 'microsoft' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.microsoft",
+    {%- endif %}
+    {%- if 'openid_connect' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.openid_connect",
+    {%- endif %}
+    {%- if 'twitter' in cookiecutter.allauth_providers -%}
+    "allauth.socialaccount.providers.twitter_oauth2",
+    {%- endif %}
+    {%- endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
 
@@ -131,6 +176,9 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {%- endif %}
     "django_structlog.middlewares.RequestMiddleware",
+    {%- if cookiecutter.use_allauth == "y" -%}
+    "allauth.account.middleware.AccountMiddleware",
+    {%- endif %}
 ]
 
 
@@ -297,6 +345,8 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_WORKER_PREFETCH_MULTIPLIER = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER", default=10)
 CELERY_BROKER_POOL_LIMIT = env.int("CELERY_BROKER_POOL_LIMIT", default=50)
+
+DJANGO_STRUCTLOG_CELERY_ENABLED = True
 {%- endif %}
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
@@ -355,7 +405,6 @@ LOGGING = {
         },
     },
 }
-DJANGO_STRUCTLOG_CELERY_ENABLED = True
 
 
 def configure_structlog():
@@ -382,7 +431,9 @@ configure_structlog()
 # Sentry
 if SENTRY_DSN := env("SENTRY_DSN", default=""):
     import sentry_sdk
+    {% if cookiecutter.use_celery == "y" -%}
     from sentry_sdk.integrations.celery import CeleryIntegration
+    {% endif -%}
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
     from sentry_sdk.integrations.redis import RedisIntegration
@@ -392,7 +443,9 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         environment=ENV,
         integrations=[
             DjangoIntegration(),
+            {% if cookiecutter.use_celery == "y" -%}
             CeleryIntegration(),
+            {% endif -%}
             RedisIntegration(),
             LoggingIntegration(
                 level=logging.INFO,  # Capture info and above as breadcrumbs
@@ -401,3 +454,112 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         ],
     )
     ignore_logger("django.security.DisallowedHost")
+{% if cookiecutter.use_allauth == "y" -%}
+LOGIN_URL = reverse_lazy("account_login")
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_CHANGE_EMAIL = False
+ACCOUNT_MAX_EMAIL_ADDRESSES = 1
+{%- if cookiecutter.allauth_trust_external_emails == "y" %}
+# Trust, that the configured SSO providers verify that the users own the addresses that we get from the SSO flow.
+# This allows users to log in to any existing account with any configured provider if the email addresses match.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION: True
+{%- endif %}
+SOCIALACCOUNT_PROVIDERS = {
+    {%- if 'apple' in cookiecutter.allauth_providers %}
+    "apple": {
+        "APP": {
+            "client_id": env("APPLE_LOGIN_CLIENT_ID"),
+            "secret": env("APPLE_LOGIN_SECRET"),
+            "key": env("APPLE_LOGIN_KEY"),
+            "settings": {
+                "certificate_key": env("APPLE_LOGIN_CERTIFICATE_PRIVATE_KEY"),
+            },
+        },
+    },
+    {%- endif %}
+    {%- if 'atlassian' in cookiecutter.allauth_providers %}
+    "atlassian": {
+        "APP": {
+            "client_id": env("ATLASSIAN_LOGIN_CLIENT_ID"),
+            "secret": env("ATLASSIAN_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'discord' in cookiecutter.allauth_providers %}
+    "discord": {
+        "APP": {
+            "client_id": env("DISCORD_LOGIN_CLIENT_ID"),
+            "secret": env("DISCORD_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'facebook' in cookiecutter.allauth_providers %}
+    "facebook": {
+        "APP": {
+            "client_id": env("FACEBOOK_LOGIN_CLIENT_ID"),
+            "secret": env("FACEBOOK_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'github' in cookiecutter.allauth_providers %}
+    "github": {
+        "APP": {
+            "client_id": env("GITHUB_LOGIN_CLIENT_ID"),
+            "secret": env("GITHUB_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'gitlab' in cookiecutter.allauth_providers %}
+    "gitlab": {
+        "APP": {
+            "client_id": env("GITLAB_LOGIN_CLIENT_ID"),
+            "secret": env("GITLAB_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'google' in cookiecutter.allauth_providers %}
+    "google": {
+        "APP": {
+            "client_id": env("GOOGLE_LOGIN_CLIENT_ID"),
+            "secret": env("GOOGLE_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'microsoft' in cookiecutter.allauth_providers %}
+    "microsoft": {
+        "APP": {
+            "client_id": env("MICROSOFT_LOGIN_CLIENT_ID"),
+            "secret": env("MICROSOFT_LOGIN_SECRET"),
+            "settings": {
+                "tenant": "organizations",
+            },
+        },
+    },
+    {%- endif %}
+    {%- if 'twitter' in cookiecutter.allauth_providers %}
+    "twitter_oauth2": {
+        "APP": {
+            "client_id": env("TWITTER_LOGIN_CLIENT_ID"),
+            "secret": env("TWITTER_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'openid_connect' in cookiecutter.allauth_providers %}
+    "openid_connect": {
+        "APP": {
+            "client_id": "oidc",
+            "name": env("OPENID_CONNECT_NICE_NAME"),
+            "secret": env("OPENID_CONNECT_LOGIN_SECRET"),
+            "settings": {
+                "server_url": env("OPENID_CONNECT_SERVER_URL")
+            }
+        },
+    },
+    {%- endif %}
+}
+{%- endif %}
