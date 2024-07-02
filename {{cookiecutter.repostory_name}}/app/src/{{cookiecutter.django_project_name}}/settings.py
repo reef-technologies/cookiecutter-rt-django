@@ -104,35 +104,35 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    {%- if cookiecutter.use_allauth_apple == "y" %}
+    {%- if 'apple' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.apple",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_discord == "y" %}
+    {%- if 'atlassian' in cookiecutter.allauth_providers == "y" -%}
+    "allauth.socialaccount.providers.atlassian",
+    {%- endif %}
+    {%- if 'discord' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.discord",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_facebook == "y" %}
+    {%- if 'facebook' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.facebook",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_github == "y" %}
+    {%- if 'github' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.github",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_gitlab == "y" %}
+    {%- if 'gitlab' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.gitlab",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_google == "y" %}
+    {%- if 'google' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.google",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_microsoft == "y" %}
+    {%- if 'microsoft' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.microsoft",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_openid_connect == "y" %}
+    {%- if 'openid_connect' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.openid_connect",
     {%- endif %}
-    {%- if cookiecutter.use_allauth_twitter == "y" %}
+    {%- if 'twitter' in cookiecutter.allauth_providers == "y" -%}
     "allauth.socialaccount.providers.twitter_oauth2",
-    {%- endif %}
-    {%- if cookiecutter.use_allauth_atlassian == "y" %}
-    "allauth.socialaccount.providers.atlassian",
     {%- endif %}
     {%- endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
@@ -466,7 +466,7 @@ ACCOUNT_MAX_EMAIL_ADDRESSES = 1
 SOCIALACCOUNT_EMAIL_AUTHENTICATION: True
 {%- endif %}
 SOCIALACCOUNT_PROVIDERS = {
-    {%- if cookiecutter.use_allauth_apple == "y" %}
+    {%- if 'apple' in cookiecutter.allauth_providers == "y" %}
     "apple": {
         "APP": {
             "client_id": env("APPLE_LOGIN_CLIENT_ID"),
@@ -478,7 +478,15 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_discord == "y" %}
+    {%- if 'atlassian' in cookiecutter.allauth_providers == "y" %}
+    "atlassian": {
+        "APP": {
+            "client_id": env("ATLASSIAN_LOGIN_CLIENT_ID"),
+            "secret": env("ATLASSIAN_LOGIN_SECRET"),
+        },
+    },
+    {%- endif %}
+    {%- if 'discord' in cookiecutter.allauth_providers == "y" %}
     "discord": {
         "APP": {
             "client_id": env("DISCORD_LOGIN_CLIENT_ID"),
@@ -486,7 +494,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_facebook == "y" %}
+    {%- if 'facebook' in cookiecutter.allauth_providers == "y" %}
     "facebook": {
         "APP": {
             "client_id": env("FACEBOOK_LOGIN_CLIENT_ID"),
@@ -494,7 +502,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_github == "y" %}
+    {%- if 'github' in cookiecutter.allauth_providers == "y" %}
     "github": {
         "APP": {
             "client_id": env("GITHUB_LOGIN_CLIENT_ID"),
@@ -502,7 +510,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_gitlab == "y" %}
+    {%- if 'gitlab' in cookiecutter.allauth_providers == "y" %}
     "gitlab": {
         "APP": {
             "client_id": env("GITLAB_LOGIN_CLIENT_ID"),
@@ -510,7 +518,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_google == "y" %}
+    {%- if 'google' in cookiecutter.allauth_providers == "y" %}
     "google": {
         "APP": {
             "client_id": env("GOOGLE_LOGIN_CLIENT_ID"),
@@ -518,7 +526,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_microsoft == "y" %}
+    {%- if 'microsoft' in cookiecutter.allauth_providers == "y" %}
     "microsoft": {
         "APP": {
             "client_id": env("MICROSOFT_LOGIN_CLIENT_ID"),
@@ -529,7 +537,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_twitter == "y" %}
+    {%- if 'twitter' in cookiecutter.allauth_providers == "y" %}
     "twitter_oauth2": {
         "APP": {
             "client_id": env("TWITTER_LOGIN_CLIENT_ID"),
@@ -537,15 +545,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if cookiecutter.use_allauth_atlassian == "y" %}
-    "atlassian": {
-        "APP": {
-            "client_id": env("ATLASSIAN_LOGIN_CLIENT_ID"),
-            "secret": env("ATLASSIAN_LOGIN_SECRET"),
-        },
-    },
-    {%- endif %}
-    {%- if cookiecutter.use_allauth_openid_connect == "y" %}
+    {%- if 'openid_connect' in cookiecutter.allauth_providers == "y" %}
     "openid_connect": {
         "APP": {
             "client_id": "oidc",
