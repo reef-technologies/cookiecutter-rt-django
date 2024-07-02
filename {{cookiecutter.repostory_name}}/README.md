@@ -119,6 +119,7 @@ After acquiring the id and secret, simply fill in the env vars for the provider.
 
 {%- if 'openid_connect' in cookiecutter.allauth_providers == "y" %}
 ## Setting up a generic OpenID Connect service
+<details>
 If an SSO provider supports the OIDC protocol, it can be set up as a generic OIDC provider here: 
 
 1. Come up with a new `provider_id`
@@ -132,6 +133,7 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 3. Fill in the `OPENID_CONNECT_*` env vars 
    - `OPENID_CONNECT_NICE_NAME` is just a human-readable name, it will be later shown on login form (Log in with {name}...)
    - the `OPENID_CONNECT_SERVER_URL` value is just the URL **before** the .well-known part, so for https://gitlab.com/.well-known/openid-configuration this is just https://gitlab.com
+</details>
 
 {% endif %} 
 ## Allauth users in django
