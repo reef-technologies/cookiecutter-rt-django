@@ -104,34 +104,34 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    {%- if 'apple' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'apple' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.apple",
     {%- endif %}
-    {%- if 'atlassian' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'atlassian' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.atlassian",
     {%- endif %}
-    {%- if 'discord' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'discord' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.discord",
     {%- endif %}
-    {%- if 'facebook' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'facebook' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.facebook",
     {%- endif %}
-    {%- if 'github' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'github' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.github",
     {%- endif %}
-    {%- if 'gitlab' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'gitlab' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.gitlab",
     {%- endif %}
-    {%- if 'google' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'google' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.google",
     {%- endif %}
-    {%- if 'microsoft' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'microsoft' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.microsoft",
     {%- endif %}
-    {%- if 'openid_connect' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'openid_connect' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.openid_connect",
     {%- endif %}
-    {%- if 'twitter' in cookiecutter.allauth_providers == "y" -%}
+    {%- if 'twitter' in cookiecutter.allauth_providers -%}
     "allauth.socialaccount.providers.twitter_oauth2",
     {%- endif %}
     {%- endif %}
@@ -466,7 +466,7 @@ ACCOUNT_MAX_EMAIL_ADDRESSES = 1
 SOCIALACCOUNT_EMAIL_AUTHENTICATION: True
 {%- endif %}
 SOCIALACCOUNT_PROVIDERS = {
-    {%- if 'apple' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'apple' in cookiecutter.allauth_providers %}
     "apple": {
         "APP": {
             "client_id": env("APPLE_LOGIN_CLIENT_ID"),
@@ -478,7 +478,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'atlassian' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'atlassian' in cookiecutter.allauth_providers %}
     "atlassian": {
         "APP": {
             "client_id": env("ATLASSIAN_LOGIN_CLIENT_ID"),
@@ -486,7 +486,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'discord' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'discord' in cookiecutter.allauth_providers %}
     "discord": {
         "APP": {
             "client_id": env("DISCORD_LOGIN_CLIENT_ID"),
@@ -494,7 +494,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'facebook' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'facebook' in cookiecutter.allauth_providers %}
     "facebook": {
         "APP": {
             "client_id": env("FACEBOOK_LOGIN_CLIENT_ID"),
@@ -502,7 +502,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'github' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'github' in cookiecutter.allauth_providers %}
     "github": {
         "APP": {
             "client_id": env("GITHUB_LOGIN_CLIENT_ID"),
@@ -510,7 +510,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'gitlab' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'gitlab' in cookiecutter.allauth_providers %}
     "gitlab": {
         "APP": {
             "client_id": env("GITLAB_LOGIN_CLIENT_ID"),
@@ -518,7 +518,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'google' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'google' in cookiecutter.allauth_providers %}
     "google": {
         "APP": {
             "client_id": env("GOOGLE_LOGIN_CLIENT_ID"),
@@ -526,7 +526,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'microsoft' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'microsoft' in cookiecutter.allauth_providers %}
     "microsoft": {
         "APP": {
             "client_id": env("MICROSOFT_LOGIN_CLIENT_ID"),
@@ -537,7 +537,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'twitter' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'twitter' in cookiecutter.allauth_providers %}
     "twitter_oauth2": {
         "APP": {
             "client_id": env("TWITTER_LOGIN_CLIENT_ID"),
@@ -545,7 +545,7 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
     {%- endif %}
-    {%- if 'openid_connect' in cookiecutter.allauth_providers == "y" %}
+    {%- if 'openid_connect' in cookiecutter.allauth_providers %}
     "openid_connect": {
         "APP": {
             "client_id": "oidc",

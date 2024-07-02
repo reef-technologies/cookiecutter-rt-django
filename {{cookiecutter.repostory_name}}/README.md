@@ -117,7 +117,7 @@ After acquiring the id and secret, simply fill in the env vars for the provider.
 
 {% endif %}
 
-{%- if 'openid_connect' in cookiecutter.allauth_providers == "y" %}
+{%- if 'openid_connect' in cookiecutter.allauth_providers %}
 ## Setting up a generic OpenID Connect service
 <details>
 If an SSO provider supports the OIDC protocol, it can be set up as a generic OIDC provider here: 
