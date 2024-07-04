@@ -464,11 +464,6 @@ ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_CHANGE_EMAIL = False
 ACCOUNT_MAX_EMAIL_ADDRESSES = 1
-{%- if cookiecutter.allauth_trust_external_emails == "y" %}
-# Trust, that the configured SSO providers verify that the users own the addresses that we get from the SSO flow.
-# This allows users to log in to any existing account with any configured provider if the email addresses match.
-SOCIALACCOUNT_EMAIL_AUTHENTICATION: True
-{%- endif %}
 SOCIALACCOUNT_PROVIDERS = {
     {%- if 'apple' in cookiecutter.allauth_providers %}
     "apple": {
@@ -480,54 +475,11 @@ SOCIALACCOUNT_PROVIDERS = {
                 "certificate_key": env("APPLE_LOGIN_CERTIFICATE_PRIVATE_KEY"),
             },
         },
-    },
-    {%- endif %}
-    {%- if 'atlassian' in cookiecutter.allauth_providers %}
-    "atlassian": {
-        "APP": {
-            "client_id": env("ATLASSIAN_LOGIN_CLIENT_ID"),
-            "secret": env("ATLASSIAN_LOGIN_SECRET"),
-        },
-    },
-    {%- endif %}
-    {%- if 'discord' in cookiecutter.allauth_providers %}
-    "discord": {
-        "APP": {
-            "client_id": env("DISCORD_LOGIN_CLIENT_ID"),
-            "secret": env("DISCORD_LOGIN_SECRET"),
-        },
-    },
-    {%- endif %}
-    {%- if 'facebook' in cookiecutter.allauth_providers %}
-    "facebook": {
-        "APP": {
-            "client_id": env("FACEBOOK_LOGIN_CLIENT_ID"),
-            "secret": env("FACEBOOK_LOGIN_SECRET"),
-        },
-    },
-    {%- endif %}
-    {%- if 'github' in cookiecutter.allauth_providers %}
-    "github": {
-        "APP": {
-            "client_id": env("GITHUB_LOGIN_CLIENT_ID"),
-            "secret": env("GITHUB_LOGIN_SECRET"),
-        },
-    },
-    {%- endif %}
-    {%- if 'gitlab' in cookiecutter.allauth_providers %}
-    "gitlab": {
-        "APP": {
-            "client_id": env("GITLAB_LOGIN_CLIENT_ID"),
-            "secret": env("GITLAB_LOGIN_SECRET"),
-        },
-    },
-    {%- endif %}
-    {%- if 'google' in cookiecutter.allauth_providers %}
-    "google": {
-        "APP": {
-            "client_id": env("GOOGLE_LOGIN_CLIENT_ID"),
-            "secret": env("GOOGLE_LOGIN_SECRET"),
-        },
+        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        # Trust, that Apple verifies that the users own the addresses that we get from the SSO flow.
+        # This allows users to log in to any existing account with any configured provider if the email addresses match.
+        "EMAIL_AUTHENTICATION": True,
+        {%- endif %}
     },
     {%- endif %}
     {%- if 'microsoft' in cookiecutter.allauth_providers %}
@@ -539,14 +491,11 @@ SOCIALACCOUNT_PROVIDERS = {
                 "tenant": "organizations",
             },
         },
-    },
-    {%- endif %}
-    {%- if 'twitter' in cookiecutter.allauth_providers %}
-    "twitter_oauth2": {
-        "APP": {
-            "client_id": env("TWITTER_LOGIN_CLIENT_ID"),
-            "secret": env("TWITTER_LOGIN_SECRET"),
-        },
+        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        # Trust, that Microsoft verifies that the users own the addresses that we get from the SSO flow.
+        # This allows users to log in to any existing account with any configured provider if the email addresses match.
+        "EMAIL_AUTHENTICATION": True,
+        {%- endif %}
     },
     {%- endif %}
     {%- if 'openid_connect' in cookiecutter.allauth_providers %}
@@ -557,9 +506,27 @@ SOCIALACCOUNT_PROVIDERS = {
             "secret": env("OPENID_CONNECT_LOGIN_SECRET"),
             "settings": {
                 "server_url": env("OPENID_CONNECT_SERVER_URL")
-            }
+            },
         },
+        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        # Trust, that this provider verifies that the users own the addresses that we get from the SSO flow.
+        # This allows users to log in to any existing account with any configured provider if the email addresses match.
+        "EMAIL_AUTHENTICATION": True,
+        {%- endif %}
     },
     {%- endif %}
+    {%- for provider in ['atlassian', 'discord', 'facebook', 'github', 'gitlab', 'google', 'twitter'] if provider in cookiecutter.allauth_providers %}
+    "{{ provider }}": {
+        "APP": {
+            "client_id": env("{{ provider | upper }}_LOGIN_CLIENT_ID"),
+            "secret": env("{{ provider | upper }}_LOGIN_SECRET"),
+        },
+        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        # Trust, that {{ provider | capitalize }} verifies that the users own the addresses that we get from the SSO flow.
+        # This allows users to log in to any existing account with any configured provider if the email addresses match.
+        "EMAIL_AUTHENTICATION": True,
+        {%- endif %}
+    },
+    {%- endfor %}
 }
 {%- endif %}
