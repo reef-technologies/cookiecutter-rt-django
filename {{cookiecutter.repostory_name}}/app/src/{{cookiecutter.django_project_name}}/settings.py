@@ -454,7 +454,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         ],
     )
     ignore_logger("django.security.DisallowedHost")
-{% if cookiecutter.use_allauth == "y" -%}
+{% if cookiecutter.use_allauth == "y" %}
 LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_AUTHENTICATION_METHOD = "email"
