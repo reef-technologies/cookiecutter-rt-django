@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import contextlib
 import functools
+import hashlib
+import json
 import os
 import subprocess
 import tempfile
@@ -19,6 +21,12 @@ ROOT = Path(".")
 PYTHON_VERSIONS = ["3.11"]
 PYTHON_DEFAULT_VERSION = PYTHON_VERSIONS[-1]
 
+# tested default config overrides
+CRUFT_TESTED_CONFIG_MATRIX = {
+    "default": {},
+}
+CRUFT_TESTED_CONFIGS = os.getenv("CRUFT_TESTED_CONFIGS", ",".join(CRUFT_TESTED_CONFIG_MATRIX)).split(",")
+
 nox.options.default_venv_backend = "venv"
 nox.options.reuse_existing_virtualenvs = True
 
@@ -31,6 +39,37 @@ if CI:
 MD_PATHS = ["*.md"]
 
 
+def get_cruft_config(config_name="default", **kw):
+    with (Path(__file__).parent / "cookiecutter.json").open() as f:
+        cruft_config = json.load(f)
+    overrides = CRUFT_TESTED_CONFIG_MATRIX[config_name]
+    complete_config = {**cruft_config, **overrides, **kw}
+    config_hash = hashlib.sha256(json.dumps(complete_config, sort_keys=True).encode()).hexdigest()
+    complete_config["django_project_name"] = f"{config_name}_{config_hash[:8]}"
+    complete_config["repostory_name"] = complete_config["django_project_name"].replace("_", "-")
+    return complete_config
+
+
+@contextlib.contextmanager
+def with_dirty_commit(session):
+    """
+    Returned context manager will commit changes to the git repository if it is dirty.
+
+    This is needed because tools like `cruft` only use committed changes.
+    """
+    is_dirty = not CI and subprocess.run(["git", "diff", "--quiet"], check=False).returncode
+    if is_dirty:
+        with tempfile.TemporaryDirectory(prefix="rt_tmpl_repo") as tmpdir:
+            session.log(f"Found dirty git repository, temporarily committing changes in {tmpdir}")
+            subprocess.run(["cp", "-r", ".", tmpdir], check=True)
+            with session.chdir(tmpdir):
+                subprocess.run(["git", "add", "-A"], check=True)
+                subprocess.run(["git", "commit", "-m", "nox: dirty commit"], check=True)
+                yield
+    else:
+        yield
+
+
 @functools.lru_cache
 def _list_files() -> list[Path]:
     file_list = []
@@ -40,8 +79,7 @@ def _list_files() -> list[Path]:
     ):
         cmd_result = subprocess.run(cmd, check=True, text=True, capture_output=True)
         file_list.extend(cmd_result.stdout.splitlines())
-    file_paths = [Path(p) for p in file_list]
-    return file_paths
+    return [Path(p) for p in file_list]
 
 
 def list_files(suffix: str | None = None) -> list[Path]:
@@ -136,20 +174,33 @@ def lint(session):
 
 
 @contextlib.contextmanager
-def crufted_project(session):
+def crufted_project(session, cruft_config):
     session.run("pip", "install", "-e", ".")
     tmpdir = crufted_project.tmpdir
     if not tmpdir:
         session.notify("cleanup_crufted_project")
-        crufted_project.tmpdir = tmpdir = tempfile.TemporaryDirectory(prefix="rt-crufted_")
+        crufted_project.tmpdir = tmpdir = tempfile.TemporaryDirectory(prefix="rt_crufted_")
+    tmpdir_path = Path(tmpdir.name)
+    tmpdir_path.mkdir(exist_ok=True)
+
+    project_path = tmpdir_path / cruft_config["repostory_name"]
+    if not project_path.exists():
         session.log("Creating project in %s", tmpdir.name)
-        session.run("cruft", "create", ".", "--output-dir", tmpdir.name, "--no-input")
-        project_path = Path(tmpdir.name) / "project"
+        with with_dirty_commit(session):
+            session.run(
+                "cruft",
+                "create",
+                ".",
+                "--output-dir",
+                str(tmpdir_path),
+                "--no-input",
+                "--extra-context",
+                json.dumps(cruft_config),
+            )
         with session.chdir(project_path):
             session.run("git", "init", external=True)
             session.run("./setup-dev.sh", external=True)
-    else:
-        project_path = Path(tmpdir.name) / "project"
+
     with session.chdir(project_path):
         yield project_path
 
@@ -159,25 +210,43 @@ crufted_project.tmpdir = None
 
 def rm_root_owned(session, dirpath):
     assert not ROOT.is_relative_to(dirpath)  # sanity check before we nuke dirpath
-    session.run("docker", "run", "--rm", "-v", f"{dirpath}:/tmpdir/", "alpine:3.18.0", "rm", "-rf", "/tmpdir/project")
+    children = sorted(dirpath.iterdir())
+    session.run(
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{dirpath}:/tmpdir/",
+        "alpine:3.18.0",
+        "rm",
+        "-rf",
+        *[f"/tmpdir/{f.name}" for f in children],
+        external=True,
+    )
 
 
 @contextlib.contextmanager
 def docker_up(session):
     session.run("docker", "compose", "up", "-d")
-    yield
-    session.run("docker", "compose", "down", "-v", "--remove-orphans")
+    try:
+        yield
+    finally:
+        session.run("docker", "compose", "down", "-v", "--remove-orphans")
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
-def lint_crufted_project(session):
-    with crufted_project(session):
+@nox.parametrize("cruft_config_name", CRUFT_TESTED_CONFIGS)
+def lint_crufted_project(session, cruft_config_name):
+    cruft_config = get_cruft_config(cruft_config_name)
+    with crufted_project(session, cruft_config):
         session.run("nox", "-s", "lint")  # TODO: RT-49 re-enable 'type_check'
 
 
 @nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
-def test_crufted_project(session):
-    with crufted_project(session):
+@nox.parametrize("cruft_config_name", CRUFT_TESTED_CONFIGS)
+def test_crufted_project(session, cruft_config_name):
+    cruft_config = get_cruft_config(cruft_config_name)
+    with crufted_project(session, cruft_config):
         with docker_up(session):
             session.run("nox", "-s", "test")
 
@@ -186,6 +255,6 @@ def test_crufted_project(session):
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:
         # workaround for docker compose creating root-owned files
-        rm_root_owned(session, crufted_project.tmpdir.name)
+        rm_root_owned(session, Path(crufted_project.tmpdir.name))
         crufted_project.tmpdir.cleanup()
         crufted_project.tmpdir = None
