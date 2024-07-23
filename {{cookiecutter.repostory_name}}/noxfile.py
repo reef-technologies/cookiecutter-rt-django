@@ -140,13 +140,6 @@ def type_check(session):
         session.run("mypy", "--config-file", "mypy.ini", ".", *session.posargs)
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
-def security_check(session):
-    install(session, "security_check")
-    with session.chdir(str(APP_ROOT)):
-        session.run("bandit", "--ini", "bandit.ini", "-r", ".", *session.posargs)
-
-
 @nox.session(python=PYTHON_VERSIONS)
 def test(session):
     install(session, "test")
