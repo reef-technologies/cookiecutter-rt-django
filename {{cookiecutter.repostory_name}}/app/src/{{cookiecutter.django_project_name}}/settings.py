@@ -10,14 +10,16 @@ from datetime import timedelta
 from functools import wraps
 
 import environ
+import structlog
 
 {% if cookiecutter.use_celery == "y" -%}
 # from celery.schedules import crontab
+from kombu import Queue
+
 {% endif %}
 {%- if cookiecutter.use_allauth == "y" -%}
 from django.urls import reverse_lazy
 {% endif -%}
-import structlog
 
 root = environ.Path(__file__) - 2
 
@@ -337,7 +339,12 @@ CELERY_BEAT_SCHEDULE = {  # type: ignore
     #     'options': {"time_limit": 300},
     # },
 }
-CELERY_TASK_ROUTES = ["{{cookiecutter.django_project_name}}.celery.route_task"]
+CELERY_TASK_CREATE_MISSING_QUEUES = False
+CELERY_TASK_QUEUES = (Queue('celery'), Queue('worker'), Queue('dead_letter'))
+CELERY_TASK_DEFAULT_EXCHANGE = 'celery'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'celery'
+CELERY_TASK_ANNOTATIONS = {'*': {'acks_late': True, 'reject_on_worker_lost': True}}
+CELERY_TASK_ROUTES = {'*': {'queue': 'celery'}}
 CELERY_TASK_TIME_LIMIT = int(timedelta(minutes=5).total_seconds())
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 CELERY_ACCEPT_CONTENT = ["json"]

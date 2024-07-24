@@ -16,7 +16,6 @@ from .settings import configure_structlog
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "{{cookiecutter.django_project_name}}.settings")
 
 app = Celery("{{cookiecutter.django_project_name}}")
-
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.steps["worker"].add(DjangoStructLogInitStep)
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
@@ -33,8 +32,16 @@ def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pr
     configure_structlog()
 
 
-def route_task(name, args, kwargs, options, task=None, **kw):
-    return {"queue": "celery"}
+def get_tasks_in_queue(queue_name: str) -> list[bytes]:
+    with app.pool.acquire(block=True) as conn:
+        return conn.default_channel.client.lrange(queue_name, 0, -1)
+
+
+def get_num_tasks_in_queue(queue_name: str) -> int:
+    with app.pool.acquire(block=True) as conn:
+        return conn.default_channel.client.llen(queue_name)
+
+
 {% if cookiecutter.monitoring == "y" %}
 
 @worker_process_shutdown.connect
