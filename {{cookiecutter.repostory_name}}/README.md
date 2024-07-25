@@ -145,6 +145,28 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 3. A "profile" page is available at `/accounts/`
 
 {% endif %}
+
+{% if cookiecutter.use_celery == 'y' %}
+# Background tasks with Celery
+
+## Dead letter queue
+
+There is a special queue named `dead_letter` that is used to store tasks
+that failed for some reason.
+
+A task should be annotated with `on_failure=send_to_dead_letter_queue`.
+Once the reason of tasks failure is fixed, the task can be re-processed
+by moving tasks from dead letter queue to the main one ("celery"):
+
+    manage.py move_tasks "dead_letter" "celery"
+
+If tasks fails again, it will be put back to dead letter queue.
+
+To flush add tasks in specific queue, use
+
+    manage.py flush_tasks "dead_letter"
+
+{% endif %}
 {% if cookiecutter.monitoring == 'y' %}
 # Monitoring
 

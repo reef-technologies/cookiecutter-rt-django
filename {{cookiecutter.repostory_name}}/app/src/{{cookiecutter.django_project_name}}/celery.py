@@ -3,6 +3,7 @@ import logging
 import os
 
 from celery import Celery
+from more_itertools import chunked
 {%- if cookiecutter.monitoring == "y" %}
 from celery.signals import setup_logging, worker_process_shutdown
 {% endif -%}
@@ -40,6 +41,24 @@ def get_tasks_in_queue(queue_name: str) -> list[bytes]:
 def get_num_tasks_in_queue(queue_name: str) -> int:
     with app.pool.acquire(block=True) as conn:
         return conn.default_channel.client.llen(queue_name)
+
+
+def move_tasks(source_queue: str, destination_queue: str, chunk_size: int = 100) -> None:
+    with app.pool.acquire(block=True) as conn:
+        client = conn.default_channel.client
+        tasks = client.lrange(source_queue, 0, -1)
+
+        for chunk in chunked(tasks, chunk_size):
+            with client.pipeline() as pipe:
+                for task in chunk:
+                    client.rpush(destination_queue, task)
+                    client.lrem(source_queue, 1, task)
+                pipe.execute()
+
+
+def flush_tasks(queue_name: str) -> None:
+    with app.pool.acquire(block=True) as conn:
+        conn.default_channel.client.delete(queue_name)
 
 
 {% if cookiecutter.monitoring == "y" %}
