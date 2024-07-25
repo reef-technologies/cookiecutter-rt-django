@@ -26,6 +26,7 @@ dependencies = [
     "sentry-sdk==1.3.0",
     "ipython~=8.14.0",
     "nox==2023.4.22",
+    "more-itertools~=10.3.0",
     {% if cookiecutter.monitoring == "y" -%}
     "psutil>=5.9.8",
     "prometheus-client~=0.17.0",

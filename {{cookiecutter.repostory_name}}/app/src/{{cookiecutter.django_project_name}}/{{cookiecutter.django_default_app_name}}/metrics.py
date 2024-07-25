@@ -1,12 +1,16 @@
 {%- if cookiecutter.monitoring == "y" -%}
 import glob
 import os
+from functools import partial
 
 import prometheus_client
+from django.conf import settings
 from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
 from django_prometheus.migrations import ExportMigrations
 from prometheus_client import multiprocess
+
+from ..celery import get_num_tasks_in_queue
 
 
 class RecursiveMultiProcessCollector(multiprocess.MultiProcessCollector):
@@ -33,4 +37,14 @@ def metrics_view(request):
         )
     else:
         return ExportToDjangoView(request)
+
+
+num_tasks_in_queue = {}
+for queue in settings.CELERY_TASK_QUEUES:
+    gauge = prometheus_client.Gauge(
+        f'celery_{queue.name}_queue_len',
+        f'How many tasks are there in "{queue.name}" queue',
+    )
+    num_tasks_in_queue[queue.name] = gauge
+    gauge.set_function(partial(get_num_tasks_in_queue, queue.name))
 {% endif %}
