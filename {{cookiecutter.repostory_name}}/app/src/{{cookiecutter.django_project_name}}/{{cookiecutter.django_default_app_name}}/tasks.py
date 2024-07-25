@@ -27,7 +27,7 @@ def send_to_dead_letter_queue(task: Task, exc, task_id, args, kwargs, einfo):
     if task.app.conf.task_always_eager:
         return  # do not run failed task again in eager mode
 
-    logger.debug(
+    logger.warning(
         "Sending failed task to dead letter queue",
         task=task, exc=exc, task_id=task_id, args=args, kwargs=kwargs, einfo=einfo,
     )
