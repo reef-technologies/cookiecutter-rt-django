@@ -34,7 +34,7 @@ dependencies = [
     "django-health-check>=3.18.1,<4",
     {% endif -%}
     {% if cookiecutter.use_fingerprinting == "y" -%}
-    "django-fingerprint-rt @ git+https://github.com/reef-technologies/django-fingerprint-rt.git@cb3ca19d06755c86dd59ebb33462960b574923fc",
+    "django-fingerprint-rt~=0.1.0",
     {% endif -%}
     {% if cookiecutter.use_channels == "y" -%}
     "channels[daphne]~=4.0",
