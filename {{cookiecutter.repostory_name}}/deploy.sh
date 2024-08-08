@@ -16,7 +16,7 @@ docker image tag "${BASE_IMAGE}" {{cookiecutter.django_project_name}}/app-builde
 # collect static files to external storage while old app is still running
 # docker compose run --rm app sh -c "python manage.py collectstatic --no-input"
 
-SERVICES=$(docker compose ps --services 2>&1 > /dev/stderr \
+SERVICES=$(docker compose ps --services 2>/dev/null \
            | grep -v -e 'is not set' -e db -e redis)
 
 # shellcheck disable=2086
