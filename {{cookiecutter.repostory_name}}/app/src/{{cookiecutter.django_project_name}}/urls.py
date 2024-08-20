@@ -25,7 +25,7 @@ urlpatterns = [
     path("healthcheck/", include("health_check.urls")),
     {%- endif %}
     {%- if cookiecutter.use_allauth == "y" %}
-    path('accounts/', include('allauth.urls')),
+    path("accounts/", include("allauth.urls")),
     {%- else %}
     path("", include("django.contrib.auth.urls")),
     {%- endif %}
