@@ -1,4 +1,4 @@
-{%- if cookiecutter.use_channels -%}
+{%- if cookiecutter.use_channels == "y" -%}
 import pytest
 
 from ..schemas import Heartbeat
