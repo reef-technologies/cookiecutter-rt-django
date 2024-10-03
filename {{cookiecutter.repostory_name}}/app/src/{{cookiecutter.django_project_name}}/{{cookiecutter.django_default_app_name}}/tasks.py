@@ -1,4 +1,4 @@
-{%- if cookiecutter.use_celery == 'y' -%}
+{%- if cookiecutter.use_celery == "y" -%}
 import structlog
 from celery import Task
 from celery.utils.log import get_task_logger
@@ -15,9 +15,14 @@ def send_to_dead_letter_queue(task: Task, exc, task_id, args, kwargs, einfo):
 
     logger.warning(
         "Sending failed task to dead letter queue",
-        task=task, exc=exc, task_id=task_id, args=args, kwargs=kwargs, einfo=einfo,
+        task=task,
+        exc=exc,
+        task_id=task_id,
+        args=args,
+        kwargs=kwargs,
+        einfo=einfo,
     )
-    task.apply_async(args=args, kwargs=kwargs, queue='dead_letter')
+    task.apply_async(args=args, kwargs=kwargs, queue="dead_letter")
 
 
 @app.task(on_failure=send_to_dead_letter_queue)

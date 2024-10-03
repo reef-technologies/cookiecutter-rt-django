@@ -42,8 +42,8 @@ def metrics_view(request):
 num_tasks_in_queue = {}
 for queue in settings.CELERY_TASK_QUEUES:
     gauge = prometheus_client.Gauge(
-        f'celery_{queue.name}_queue_len',
-        f'How many tasks are there in "{queue.name}" queue',
+        f"celery_{queue.name}_queue_len",
+        f"How many tasks are there in '{queue.name}' queue",
     )
     num_tasks_in_queue[queue.name] = gauge
     gauge.set_function(partial(get_num_tasks_in_queue, queue.name))

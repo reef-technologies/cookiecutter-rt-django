@@ -3,12 +3,12 @@ import logging
 import os
 
 from celery import Celery
-from more_itertools import chunked
 {%- if cookiecutter.monitoring == "y" %}
 from celery.signals import setup_logging, worker_process_shutdown
 {% endif -%}
 from django.conf import settings
 from django_structlog.celery.steps import DjangoStructLogInitStep
+from more_itertools import chunked
 {%- if cookiecutter.monitoring == "y" %}
 from prometheus_client import multiprocess
 {% endif %}
@@ -60,9 +60,7 @@ def flush_tasks(queue_name: str) -> None:
     with app.pool.acquire(block=True) as conn:
         conn.default_channel.client.delete(queue_name)
 
-
 {% if cookiecutter.monitoring == "y" %}
-
 @worker_process_shutdown.connect
 def child_exit(pid, **kw):
     multiprocess.mark_process_dead(pid)
