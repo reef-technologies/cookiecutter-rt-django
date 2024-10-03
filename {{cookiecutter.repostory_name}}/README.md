@@ -151,6 +151,7 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 
 ## Dead letter queue
 
+<details>
 There is a special queue named `dead_letter` that is used to store tasks
 that failed for some reason.
 
@@ -165,6 +166,7 @@ If tasks fails again, it will be put back to dead letter queue.
 To flush add tasks in specific queue, use
 
     manage.py flush_tasks "dead_letter"
+</details>
 
 {% endif %}
 {% if cookiecutter.monitoring == 'y' %}
