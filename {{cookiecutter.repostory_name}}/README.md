@@ -174,6 +174,29 @@ To flush add tasks in specific queue, use
 
 Running the app requires proper certificates to be put into `nginx/monitoring_certs`,
 see [nginx/monitoring_certs/README.md](nginx/monitoring_certs/README.md) for more details.
+
+## Monitoring execution time of code blocks
+
+Somewhere, probably in `metrics.py`:
+
+```python
+some_calculation_time = prometheus_client.Histogram(
+    'some_calculation_time',
+    'How Long it took to calculate something',
+    namespace='django',
+    unit='seconds',
+    labelnames=['task_type_for_example'],
+    buckets=[0.5, 1, *range(2, 30, 2), *range(30, 75, 5), *range(75, 135, 15)]
+)
+```
+
+Somewhere else:
+ 
+```python
+with some_calculation_time.labels('blabla').time():
+    do_some_work()
+```
+
 {% endif %}
 
 # Cloud deployment
