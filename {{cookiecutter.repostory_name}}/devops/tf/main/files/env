@@ -1,4 +1,4 @@
-ENV=prod
+ENV=${env}
 NGINX_HOST=localhost
 DEBUG=0
 SECRET_KEY=${secret_key}
