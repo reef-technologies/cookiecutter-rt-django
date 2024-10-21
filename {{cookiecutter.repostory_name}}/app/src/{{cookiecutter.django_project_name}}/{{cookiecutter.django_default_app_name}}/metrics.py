@@ -7,7 +7,6 @@ import prometheus_client
 from django.conf import settings
 from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
-from django_prometheus.migrations import ExportMigrations
 from prometheus_client import multiprocess
 
 from ..celery import get_num_tasks_in_queue
@@ -26,8 +25,6 @@ ENV_VAR_NAME = "PROMETHEUS_MULTIPROC_DIR"
 
 def metrics_view(request):
     """Exports metrics as a Django view"""
-    # Export Django migration metrics
-    ExportMigrations()
     if os.environ.get(ENV_VAR_NAME):
         registry = prometheus_client.CollectorRegistry()
         RecursiveMultiProcessCollector(registry)
