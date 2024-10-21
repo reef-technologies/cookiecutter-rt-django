@@ -141,7 +141,7 @@ INSTALLED_APPS = [
 ]
 
 {%- if cookiecutter.monitoring == "y" %}
-PROMETHEUS_EXPORT_MIGRATIONS = True
+PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS", default=True)
 {%- endif %}
 {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
 PROMETHEUS_LATENCY_BUCKETS = (
