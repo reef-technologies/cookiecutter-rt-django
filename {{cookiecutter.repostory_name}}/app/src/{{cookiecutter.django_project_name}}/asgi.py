@@ -2,7 +2,7 @@ import os
 
 {% if cookiecutter.use_channels == "y" -%}
 from channels.routing import ProtocolTypeRouter, URLRouter
-{%- endif %}
+{% endif -%}
 from django.core.asgi import get_asgi_application
 
 # init django before importing urls
