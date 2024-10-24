@@ -1,8 +1,17 @@
 import multiprocessing
-{% if cookiecutter.monitoring == "y" %}
+
+import environ
+{%- if cookiecutter.monitoring == "y" %}
 from prometheus_client import multiprocess
 {% endif %}
-workers = 2 * multiprocessing.cpu_count() + 1
+env = environ.Env()
+
+workers = env.int("GUNICORN_WORKERS", 2 * multiprocessing.cpu_count() + 1)
+max_workers = env.int("GUNICORN_MAX_WORKERS", 0)
+if max_workers > 0:
+    workers = min(max_workers, workers)
+threads = env.int("GUNICORN_THREADS", 1)
+preload_app = env.bool("GUNICORN_PRELOAD_APP", True)
 bind = "0.0.0.0:8000"
 {%- if cookiecutter.use_channels == "y" %}
 wsgi_app = "{{ cookiecutter.django_project_name }}.asgi:application"
