@@ -101,7 +101,7 @@ server {
         proxy_pass http://app:8000/metrics;
     }
 
-    location /application-business-metrics/ {
+    location /business-metrics/ {
         proxy_pass_header Server;
         proxy_redirect off;
         proxy_set_header Host $http_host;
