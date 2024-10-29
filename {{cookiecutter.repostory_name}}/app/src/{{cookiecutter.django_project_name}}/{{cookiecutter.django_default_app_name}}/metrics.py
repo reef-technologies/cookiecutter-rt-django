@@ -1,13 +1,15 @@
 {%- if cookiecutter.monitoring == "y" -%}
 import glob
 import os
-from functools import partial
+from collections.abc import Iterator
 
 import prometheus_client
 from django.conf import settings
 from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
 from prometheus_client import multiprocess
+from prometheus_client.core import REGISTRY, GaugeMetricFamily, Metric
+from prometheus_client.registry import Collector
 
 from ..celery import get_num_tasks_in_queue
 
@@ -28,6 +30,7 @@ def metrics_view(request):
     if os.environ.get(ENV_VAR_NAME):
         registry = prometheus_client.CollectorRegistry()
         RecursiveMultiProcessCollector(registry)
+        registry.register(CustomCeleryCollector())
         return HttpResponse(
             prometheus_client.generate_latest(registry),
             content_type=prometheus_client.CONTENT_TYPE_LATEST,
@@ -36,12 +39,17 @@ def metrics_view(request):
         return ExportToDjangoView(request)
 
 
-num_tasks_in_queue = {}
-for queue in settings.CELERY_TASK_QUEUES:
-    gauge = prometheus_client.Gauge(
-        f"celery_{queue.name}_queue_len",
-        f"How many tasks are there in '{queue.name}' queue",
-    )
-    num_tasks_in_queue[queue.name] = gauge
-    gauge.set_function(partial(get_num_tasks_in_queue, queue.name))
+class CustomCeleryCollector(Collector):
+    def collect(self) -> Iterator[Metric]:
+        num_tasks_in_queue = GaugeMetricFamily(
+            "celery_queue_len",
+            "How many tasks are there in a queue",
+            labels=("queue",),
+        )
+        for queue in settings.CELERY_TASK_QUEUES:
+            num_tasks_in_queue.add_metric([queue.name], get_num_tasks_in_queue(queue.name))
+        yield num_tasks_in_queue
+
+
+REGISTRY.register(CustomCeleryCollector())
 {% endif %}
