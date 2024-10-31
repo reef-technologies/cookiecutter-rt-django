@@ -35,7 +35,7 @@ services:
       dockerfile: app/Dockerfile
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
-      test: wget -q --spider 127.0.0.1:8000/admin/login/ || exit 1
+      test: ["CMD", "./healthcheck.py", "/var/run/gunicorn/gunicorn.sock"]
     init: true
     restart: unless-stopped
     env_file: ./.env
@@ -49,6 +49,7 @@ services:
     {%- endif %}
     volumes:
       - backend-static:/root/src/static
+      - gunicorn-socket:/var/run/gunicorn
       - ./media:/root/src/media
       {% if cookiecutter.monitoring == 'y' -%}
       # Add this mount to each container that should dump Prometheus metrics.
@@ -125,7 +126,7 @@ services:
     healthcheck:
       test: [
         "CMD-SHELL",
-        "curl 0.0.0.0:80 -s --fail -H \"Host: $NGINX_HOST\" -H \"User-Agent: docker-compose-healthcheck\" -o /dev/null || exit 1"
+        "curl 0.0.0.0:80/admin/login/ -s --fail -H \"Host: $NGINX_HOST\" -H \"User-Agent: docker-compose-healthcheck\" -o /dev/null || exit 1"
       ]
       interval: 30s
       retries: 5
@@ -140,6 +141,7 @@ services:
       - ./media:/srv/media:ro
       - ./letsencrypt/etc:/etc/letsencrypt
       - ./nginx/monitoring_certs:/etc/monitoring_certs
+      - gunicorn-socket:/var/run/gunicorn:ro
     depends_on:
       - app
       {% if cookiecutter.monitoring == 'y' %}
@@ -217,3 +219,4 @@ services:
 
 volumes:
   backend-static:
+  gunicorn-socket:

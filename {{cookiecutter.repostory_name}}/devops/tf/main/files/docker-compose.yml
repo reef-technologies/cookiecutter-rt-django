@@ -6,6 +6,8 @@ services:
     init: true
     restart: always
     env_file: ./.env
+    healthcheck:
+      test: ["CMD", "./healthcheck.py", "/var/run/gunicorn/gunicorn.sock"]
     {% if cookiecutter.monitoring == 'y' %}
     environment:
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
@@ -16,6 +18,7 @@ services:
     {% endif %}
     volumes:
       - backend-static:/root/src/static
+      - gunicorn-socket:/var/run/gunicorn
       - ./media:/root/src/media
     {% if cookiecutter.monitoring == 'y' %}
       # Add this mount to each container that should dump Prometheus metrics.
@@ -67,7 +70,7 @@ services:
     image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.2'
     restart: unless-stopped
     healthcheck:
-      test: wget -q --spider http://0.0.0.0:8000/admin/login || exit 1
+      test: wget -q --spider http://0.0.0.0:8000/admin/login/ || exit 1
     depends_on:
       - app
       {% if cookiecutter.monitoring == 'y' %}
@@ -86,6 +89,7 @@ services:
       - backend-static:/srv/static:ro
       - ./media:/srv/media:ro
       - ./nginx/monitoring_certs:/etc/monitoring_certs
+      - gunicorn-socket:/var/run/gunicorn:ro
     logging:
       driver: awslogs
       options:
@@ -100,3 +104,4 @@ services:
 
 volumes:
   backend-static:
+  gunicorn-socket:
