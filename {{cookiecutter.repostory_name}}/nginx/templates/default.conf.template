@@ -5,6 +5,10 @@
 # Generated for Intermediate configuration, nginx 1.20.1 or later
 #
 
+upstream gunicorn {
+    server unix:/var/run/gunicorn/gunicorn.sock fail_timeout=0;
+}
+
 server {
     listen 80 default_server;
     server_name _;
@@ -106,7 +110,7 @@ server {
         {% if cookiecutter.nginx_tls_early_data_enabled == 'y' -%}
         proxy_set_header Early-Data $ssl_early_data;
         {%- endif %}
-        proxy_pass http://app:8000/;
+        proxy_pass http://gunicorn;
     }
 }
 
@@ -161,7 +165,7 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X_SCHEME $scheme;
-        proxy_pass http://app:8000/metrics;
+        proxy_pass http://gunicorn/metrics;
     }
 
     location /business-metrics {
@@ -170,7 +174,7 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X_SCHEME $scheme;
-        proxy_pass http://app:8000/business-metrics;
+        proxy_pass http://gunicorn/business-metrics;
     }
 }
 {%- endif %}

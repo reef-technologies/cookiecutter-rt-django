@@ -12,7 +12,7 @@ if max_workers > 0:
     workers = min(max_workers, workers)
 threads = env.int("GUNICORN_THREADS", 1)
 preload_app = env.bool("GUNICORN_PRELOAD_APP", True)
-bind = "0.0.0.0:8000"
+bind = "unix:/var/run/gunicorn/gunicorn.sock"
 {%- if cookiecutter.use_channels == "y" %}
 wsgi_app = "{{ cookiecutter.django_project_name }}.asgi:application"
 {%- else %}

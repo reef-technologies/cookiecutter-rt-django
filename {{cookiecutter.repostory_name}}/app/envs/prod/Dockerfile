@@ -62,6 +62,4 @@ RUN grep psycopg pdm.lock && apk add --no-cache libpq || true
 RUN grep Pillow pdm.lock && apk add --no-cache jpeg tiff zlib libwebp || true
 {%- endif %}
 
-EXPOSE 8000
-
 CMD ["./entrypoint.sh"]
