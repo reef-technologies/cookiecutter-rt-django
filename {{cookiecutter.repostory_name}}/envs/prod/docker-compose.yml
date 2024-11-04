@@ -110,11 +110,12 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
+      - FLOWER_TASK_RUNTIME_METRIC_BUCKETS=1,2,3,5,10,20,30,45,60,120,180,240,300,600,inf
     command: celery --app={{cookiecutter.django_project_name}} --broker="${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
     depends_on:
       - celery-worker
     ports:
-      - 5555:5555
+      - 127.0.0.1:5555:5555
     logging:
       <<: *logging
   {% endif %}
