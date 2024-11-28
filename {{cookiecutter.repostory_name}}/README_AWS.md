@@ -122,11 +122,17 @@ The same goes for AMI built by packer.
 
 Cloud init is configured to provision EC2 machines spun up as part of this project's infrastructure.
 As part of this provisioning, SSM parameters following a specific name convention are read and saved as files in EC2's home directory (RDS access details are managed in another way).
+SSM parameters can be managed via AWS console (Systems Manager -> Parameter Store) or via AWS CLI (`aws ssm`).
 The naming convention is `/application/{{ cookiecutter.aws_project_name }}/{env}/{path_of_the_file_to_be_created}`, for example `/application/project/staging/.env`.
 A few such parameters are managed by terraform in this project (e.g. `.env`, `docker-compose.yml`) and more can be added.
 In case you need to add confidential files (like a GCP credentials file) you can simply create appropriate SSM parameters.
 These will only be accessible to people that access to AWS or EC2 machines, not to people who have access to this repository.
 One such parameter, namely `/application/{{ cookiecutter.aws_project_name }}/{env}/secret.env` is treated specially - if it exists (it doesn't by default) its contents are appended to `.env` during EC2 machine provisioning - this is a convenient way of supplying pieces of confidential information, like external systems' access keys to `.env`.
+
+## Vulnerability scanning
+If you set up your project with `vulnerabilities_scanning` enabled, you need to create an additional SSM parameter with the name `/application/{{ cookiecutter.aws_project_name }}/{env}/.vuln.env` containing environment variables required by [vulnrelay](https://github.com/reef-technologies/vulnrelay) prior to deploying the project. Look at the `/envs/prod/.vuln.env.template` file to see the expected file format.
+
+For variable values, please refer to the [instructions in the internal handbook](https://github.com/reef-technologies/internal-handbook/blob/master/vuln_management.md)
 
 ## Deploying apps
 
