@@ -16,6 +16,7 @@
     "use_allauth": "n",
     "allauth_trust_external_emails": "y",
     "allauth_providers": "google",
+    "vulnerabilities_scanning": "y",
     "sentry_dsn": "",
     "csp_enabled": "n",
     "csp_report_only": "y",

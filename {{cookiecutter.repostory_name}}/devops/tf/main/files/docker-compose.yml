@@ -101,6 +101,35 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     {% endif %}
+  {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+  vulnrelay:
+    image: 'ghcr.io/reef-technologies/vulnrelay:latest'
+    container_name: vulnrelay
+    restart: unless-stopped
+    env_file: ./.vuln.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-vulnrelay'
+        awslogs-create-group: "true"
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: --interval 7200 vulnrelay
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-vulnrelay'
+        awslogs-create-group: "true"
+  {% endif %}
 
 volumes:
   backend-static:
