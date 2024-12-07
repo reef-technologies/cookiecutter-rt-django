@@ -49,5 +49,8 @@
     "aws_staging_domain_name": "staging.{{ cookiecutter.aws_domain_name }}",
     "aws_ec2_ssh_key": "",
     "ci_use_linter": "y",
-    "ci_use_spellchecker": "y"
+    "ci_use_spellchecker": "y",
+    "_copy_without_render": [
+      ".github/workflows/cruft-updates.yml"
+    ]
 }
