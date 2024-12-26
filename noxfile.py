@@ -27,14 +27,8 @@ CRUFT_TESTED_CONFIG_MATRIX = {
 }
 CRUFT_TESTED_CONFIGS = os.getenv("CRUFT_TESTED_CONFIGS", ",".join(CRUFT_TESTED_CONFIG_MATRIX)).split(",")
 
-nox.options.default_venv_backend = "venv"
+nox.options.default_venv_backend = "uv"
 nox.options.reuse_existing_virtualenvs = True
-
-
-# In CI, use Python interpreter provided by GitHub Actions
-if CI:
-    nox.options.force_venv_backend = "none"
-
 
 MD_PATHS = ["*.md"]
 
@@ -155,7 +149,16 @@ def run_shellcheck(session, mode="check"):
 @nox.session(name="format", python=PYTHON_DEFAULT_VERSION)
 def format_(session):
     """Lint the code and apply fixes in-place whenever possible."""
-    session.run("pip", "install", "-e", ".[format]")
+    uv_env = getattr(session.virtualenv, "location", os.getenv("VIRTUAL_ENV"))
+    session.run_install(
+        "uv",
+        "sync",
+        "--locked",
+        "--extra",
+        "format",
+        env={"UV_PROJECT_ENVIRONMENT": uv_env},
+    )
+
     session.run("ruff", "check", "--fix", ".")
     run_shellcheck(session, mode="fmt")
     run_readable(session, mode="fmt")
@@ -165,7 +168,16 @@ def format_(session):
 @nox.session(python=PYTHON_DEFAULT_VERSION)
 def lint(session):
     """Run linters in readonly mode."""
-    session.run("pip", "install", "-e", ".[lint]")
+    uv_env = getattr(session.virtualenv, "location", os.getenv("VIRTUAL_ENV"))
+    session.run_install(
+        "uv",
+        "sync",
+        "--locked",
+        "--extra",
+        "lint",
+        env={"UV_PROJECT_ENVIRONMENT": uv_env},
+    )
+
     session.run("ruff", "check", "--diff", "--unsafe-fixes", ".")
     session.run("codespell", ".")
     run_shellcheck(session, mode="check")
@@ -175,7 +187,14 @@ def lint(session):
 
 @contextlib.contextmanager
 def crufted_project(session, cruft_config):
-    session.run("pip", "install", "-e", ".")
+    uv_env = getattr(session.virtualenv, "location", os.getenv("VIRTUAL_ENV"))
+    session.run_install(
+        "uv",
+        "sync",
+        "--locked",
+        env={"UV_PROJECT_ENVIRONMENT": uv_env},
+    )
+
     tmpdir = crufted_project.tmpdir
     if not tmpdir:
         session.notify("cleanup_crufted_project")
