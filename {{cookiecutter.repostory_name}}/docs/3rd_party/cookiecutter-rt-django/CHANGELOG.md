@@ -12,6 +12,7 @@ Currently, `cookiecutter-rt-django` has no explicit versioning amd we purely rel
 
 ## [Unreleased]
 
+* **BREAKING** Switched from `pdm` to [`uv`](https://docs.astral.sh/uv/) for Python dependency management.
 * **BREAKING** Switched from `docker-compose` v1 script to `docker compose` v2 plugin (https://docs.docker.com/compose/cli-command/)
 * **BREAKING** Added formatting with ruff.
 * **BREAKING** Started using [pdm](https://github.com/pdm-project/pdm) for managing Python dependencies.

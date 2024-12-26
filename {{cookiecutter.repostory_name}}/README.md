@@ -8,7 +8,7 @@
 
 - docker with [compose plugin](https://docs.docker.com/compose/install/linux/)
 - python 3.11
-- [pdm](https://pdm-project.org)
+- [uv](https://docs.astral.sh/uv/)
 - [nox](https://nox.thea.codes)
 
 # Setup development environment
@@ -17,9 +17,9 @@
 ./setup-dev.sh
 docker compose up -d
 cd app/src
-pdm run manage.py wait_for_database --timeout 10
-pdm run manage.py migrate
-pdm run manage.py runserver
+uv run manage.py wait_for_database --timeout 10
+uv run manage.py migrate
+uv run manage.py runserver
 ```
 
 # Setup production environment (git deployment)

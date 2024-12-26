@@ -55,7 +55,7 @@ build-backend = "pdm.backend"
 [tool.pdm]
 distribution = false
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 test = [
     'pytest',
     'pytest-django',
