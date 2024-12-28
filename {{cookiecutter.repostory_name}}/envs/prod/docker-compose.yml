@@ -216,6 +216,25 @@ services:
     logging:
       <<: *logging
   {% endif %}
+  {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+  vulnrelay:
+    image: 'ghcr.io/reef-technologies/vulnrelay:latest'
+    container_name: vulnrelay
+    restart: unless-stopped
+    env_file: ./.vuln.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      <<: *logging
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: --interval 7200 vulnrelay
+    logging:
+      <<: *logging
+  {% endif %}
 
 volumes:
   backend-static:

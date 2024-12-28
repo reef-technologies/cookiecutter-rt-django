@@ -8,6 +8,7 @@
 /db/
 /letsencrypt/
 .env
+.vuln.env
 .venv
 venv
 media/
