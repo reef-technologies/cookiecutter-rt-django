@@ -171,9 +171,14 @@ services:
     pid: host
     volumes:
       - /:/host:ro,rslave
+      - nodeexporter_collectors:/textfile_collectors
+      
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
+      {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+      - '--collector.textfile.directory=textfile_collectors'
+      {% endif %}
       {% if cookiecutter.monitor_tcpstat == 'y' %}
       - '--collector.tcpstat'
       {% endif %}
@@ -222,8 +227,11 @@ services:
     container_name: vulnrelay
     restart: unless-stopped
     env_file: ./.vuln.env
+    environment:
+      - METRICS_DIR=/app/metrics
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - nodeexporter_collectors:/app/metrics
     logging:
       <<: *logging
   watchtower:
@@ -239,3 +247,4 @@ services:
 volumes:
   backend-static:
   gunicorn-socket:
+  nodeexporter_collectors:
