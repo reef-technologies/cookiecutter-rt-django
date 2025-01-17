@@ -9,8 +9,9 @@ from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
 from prometheus_client import multiprocess
 
+{%- if cookiecutter.use_celery == "y" -%}
 from ..celery import get_num_tasks_in_queue
-
+{% endif %}
 
 class RecursiveMultiProcessCollector(multiprocess.MultiProcessCollector):
     """A multiprocess collector that scans the directory recursively"""
@@ -35,7 +36,7 @@ def metrics_view(request):
     else:
         return ExportToDjangoView(request)
 
-
+{%- if cookiecutter.use_celery == "y" -%}
 num_tasks_in_queue = {}
 for queue in settings.CELERY_TASK_QUEUES:
     gauge = prometheus_client.Gauge(
@@ -44,4 +45,5 @@ for queue in settings.CELERY_TASK_QUEUES:
     )
     num_tasks_in_queue[queue.name] = gauge
     gauge.set_function(partial(get_num_tasks_in_queue, queue.name))
+{% endif %}
 {% endif %}
