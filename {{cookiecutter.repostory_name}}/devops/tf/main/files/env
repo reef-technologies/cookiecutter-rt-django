@@ -7,6 +7,15 @@ POSTGRES_USER=${database_user}
 POSTGRES_PASSWORD=${database_password}
 DATABASE_URL=${database_connection_string}
 
+EMAIL_BACKEND=django.core.mail.backends.filebased.EmailBackend
+EMAIL_FILE_PATH=/tmp/email
+EMAIL_HOST=smtp.sendgrid.net
+EMAIL_PORT=587
+EMAIL_USE_TLS=1
+EMAIL_HOST_USER=apikey
+EMAIL_HOST_PASSWORD=
+DEFAULT_FROM_EMAIL=
+
 SENTRY_DSN=
 HTTPS_REDIRECT=n
 HTTPS_PROXY_HEADER=X_SCHEME

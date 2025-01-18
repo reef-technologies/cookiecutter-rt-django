@@ -25,6 +25,8 @@ tail -f /var/log/celery-*.log &
 
 # check celery status periodically to exit if it crashed
 while true; do
-    sleep 30
-    celery -A {{cookiecutter.django_project_name}} status > /dev/null 2>&1 || exit 1
+    sleep 120
+    echo "Checking celery status"
+    celery -A project status -t 30 > /dev/null 2>&1 || exit 1
+    echo "Celery status OK"
 done
