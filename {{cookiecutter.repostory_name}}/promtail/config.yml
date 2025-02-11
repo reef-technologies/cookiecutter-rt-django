@@ -6,7 +6,7 @@ positions:
   filename: /tmp/positions.yaml
 
 clients:
-  - url: "${LOKI_URL}/api/prom/push"
+  - url: "${LOKI_URL}/loki/api/v1/push"
     basic_auth:
       username: "${LOKI_USER}"
       password: "${LOKI_PASSWORD}"
