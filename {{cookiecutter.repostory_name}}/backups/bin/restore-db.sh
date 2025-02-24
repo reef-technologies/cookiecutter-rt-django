@@ -5,7 +5,7 @@ source "${SCRIPT_DIR}/common.sh"
 
 if [[ $# -ne 1 ]]; then
     echo "Usage: ./restore-db.sh <FILE>"
-    ${SCRIPT_DIR}/list-backups.sh
+    "${SCRIPT_DIR}"/list-backups.sh
     exit 2
 fi
 
@@ -14,7 +14,7 @@ if [[ "$1" == b2://* || "$1" == b2id://* ]]; then
     export B2_APPLICATION_KEY="$BACKUP_B2_KEY_SECRET"
     b2 cat "$1" | pg_restore -c -d "$DATABASE_URL"
 else
-    cat "$1" | pg_restore -c -d "$DATABASE_URL"
+    pg_restore -c -d "$DATABASE_URL" < "$1"
 fi
 
 echo 'restore finished'

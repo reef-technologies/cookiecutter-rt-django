@@ -3,7 +3,7 @@ set -eu
 
 if [ ! -f "$1" ]; then
   echo "Pass existing backup file name as the first argument"
-  find ${BACKUP_LOCAL_DIR} -name "*.dump.zstd" | sort -r
+  find "$BACKUP_LOCAL_DIR" -name "*.dump.zstd" | sort -r
   exit 127
 fi
 
