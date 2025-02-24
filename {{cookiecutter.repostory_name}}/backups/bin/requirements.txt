@@ -1,0 +1,4 @@
+prometheus_client==0.21.1
+b2sdk==2.8.0
+structlog==25.1.0
+b2==4.3.0

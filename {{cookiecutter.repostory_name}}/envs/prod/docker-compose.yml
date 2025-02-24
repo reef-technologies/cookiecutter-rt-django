@@ -29,6 +29,33 @@ services:
     logging:
       <<: *logging
 
+  backups:
+    build:
+      context: backups/
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - BACKUP_LOCAL_DIR=/var/backups
+      - BACKUP_LOCAL_ROTATE_KEEP_LAST=${BACKUP_LOCAL_ROTATE_KEEP_LAST}
+      - BACKUP_B2_BUCKET=${BACKUP_B2_BUCKET}
+      - BACKUP_B2_KEY_ID=${BACKUP_B2_KEY_ID}
+      - BACKUP_B2_KEY_SECRET=${BACKUP_B2_KEY_SECRET}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - EMAIL_TARGET=${EMAIL_TARGET}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - SENTRY_DSN=${SENTRY_DSN}
+    volumes:
+      - backups:/var/backups
+    depends_on:
+      - db
+    logging:
+      <<: *logging
+
   app:
     build:
       context: .
@@ -172,7 +199,7 @@ services:
     volumes:
       - /:/host:ro,rslave
       - nodeexporter_collectors:/textfile_collectors
-      
+
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
@@ -246,5 +273,6 @@ services:
 
 volumes:
   backend-static:
+  backups:
   gunicorn-socket:
   nodeexporter_collectors:
