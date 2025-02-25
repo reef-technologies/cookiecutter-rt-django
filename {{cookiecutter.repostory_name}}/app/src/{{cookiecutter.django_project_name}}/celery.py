@@ -10,7 +10,7 @@ from django.conf import settings
 from django_structlog.celery.steps import DjangoStructLogInitStep
 from more_itertools import chunked
 {%- if cookiecutter.monitoring == "y" %}
-from prometheus_client import multiprocess
+from prometheus_client import Gauge, multiprocess
 {% endif %}
 from .settings import configure_structlog
 
@@ -20,6 +20,14 @@ app = Celery("{{cookiecutter.django_project_name}}")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.steps["worker"].add(DjangoStructLogInitStep)
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+{%- if cookiecutter.monitoring == "y" %}
+num_tasks_in_queue = Gauge(
+    "celery_queue_len",
+    "How many tasks are there in a queue",
+    labelnames=("queue",),
+)
+{% endif %}
 
 
 @setup_logging.connect
