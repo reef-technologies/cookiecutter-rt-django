@@ -178,14 +178,14 @@ server {
     }
 
     {% if cookiecutter.use_flower == "y" -%}
-        location /celery-metrics/ {
-            proxy_pass_header Server;
-            proxy_redirect off;
-            proxy_set_header Host $http_host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X_SCHEME $scheme;
-            proxy_pass http://celery-flower:5555/metrics;
-        }
+    location /celery-metrics/ {
+        proxy_pass_header Server;
+        proxy_redirect off;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X_SCHEME $scheme;
+        proxy_pass http://celery-flower:5555/metrics;
+    }
     {% endif %}
 }
 {%- endif %}
