@@ -1,7 +1,6 @@
 {%- if cookiecutter.monitoring == "y" -%}
 import glob
 import os
-from collections.abc import Iterator
 
 import prometheus_client
 from django.conf import settings
@@ -9,7 +8,7 @@ from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
 from prometheus_client import REGISTRY, multiprocess
 
-from ..celery import num_tasks_in_queue, get_num_tasks_in_queue
+from ..celery import get_num_tasks_in_queue, num_tasks_in_queue
 
 
 class RecursiveMultiProcessCollector(multiprocess.MultiProcessCollector):
