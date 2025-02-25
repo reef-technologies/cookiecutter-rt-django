@@ -19,7 +19,7 @@ class RecursiveMultiProcessCollector(multiprocess.MultiProcessCollector):
         return self.merge(files, accumulate=True)
 
 
-if (is_multiprocess := bool(os.environ.get("PROMETHEUS_MULTIPROC_DIR"))):
+if is_multiprocess := bool(os.environ.get("PROMETHEUS_MULTIPROC_DIR")):
     registry = prometheus_client.CollectorRegistry()
     RecursiveMultiProcessCollector(registry)
 else:

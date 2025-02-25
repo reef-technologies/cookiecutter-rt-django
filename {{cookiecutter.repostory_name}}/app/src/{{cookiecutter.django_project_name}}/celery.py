@@ -27,7 +27,7 @@ num_tasks_in_queue = Gauge(
     "How many tasks are there in a queue",
     labelnames=("queue",),
 )
-{% endif %}
+{%- endif %}
 
 
 @setup_logging.connect
