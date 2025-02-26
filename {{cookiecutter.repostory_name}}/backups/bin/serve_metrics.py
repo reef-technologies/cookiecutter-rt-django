@@ -1,3 +1,4 @@
+from functools import wraps
 import logging
 import subprocess
 import time
@@ -8,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 from os import environ
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Callable
 
 import structlog
 from b2sdk.v2 import B2Api, InMemoryAccountInfo
@@ -54,11 +56,32 @@ B2_APPLICATION_KEY = environ.get("BACKUP_B2_KEY_SECRET")
 log = structlog.getLogger(__name__)
 
 
+def cached_method(method: Callable) -> Callable:
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        cache_key = (*args, *sorted(kwargs.items()))
+
+        if not hasattr(self, "_cache"):
+            self._cache = {}
+
+        try:
+            return self._cache[cache_key]
+        except KeyError:
+            self._cache[cache_key] = result = method(self, *args, **kwargs)
+            return result
+
+    return wrapper
+
+
 @dataclass
 class Backup:
     location: Path
     created_at: datetime
     size_bytes: int
+
+    def __hash__(self) -> int:
+        return hash(self.location)
 
 
 def check_pg_restore(backup_path: Path, expected_record: str = " TABLE DATA public django_migrations ") -> bool:
@@ -102,6 +125,7 @@ class LocalBackupManager(BackupManager):
                 size_bytes=stat.st_size,
             )
 
+    @cached_method
     def check_is_operational(self, backup: Backup) -> bool:
         return check_pg_restore(backup.location)
 
@@ -128,6 +152,7 @@ class B2BackupManager(BackupManager):
                 size_bytes=file_version.size,
             )
 
+    @cached_method
     def check_is_operational(self, backup: Backup) -> bool:
         """
         Download only head of the backup file, and use it to retrieve DB ToC.
