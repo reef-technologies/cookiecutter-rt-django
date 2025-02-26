@@ -412,6 +412,11 @@ LOGGING = {
             # only logs unavailable libs during psycopg initialization
             "propagate": False,
         },
+        # Fix spamming DEBUG-level logs in manage.py shell and shell_plus.
+        "parso": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
     },
 }
 
