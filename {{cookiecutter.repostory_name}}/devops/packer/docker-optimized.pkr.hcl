@@ -70,6 +70,13 @@ build {
       "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin",
       "sudo gpasswd -a ubuntu docker",
       "sudo mkdir -p /etc/docker/",
+
+      "if [ ! -f /etc/docker/daemon.json ]; then
+        echo '{ "registry-mirrors": ["https://mirror.gcr.io"] }' > /etc/docker/daemon.json
+      else
+        jq '.["registry-mirrors"] += ["https://mirror.gcr.io"]' /etc/docker/daemon.json > /etc/docker/daemon.tmp && mv /etc/docker/daemon.tmp /etc/docker/daemon.json
+      fi",
+
       "sudo service docker restart",
     ]
   }
