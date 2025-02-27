@@ -8,6 +8,7 @@ SENTRY_CLI="$(command -v sentry-cli || true)"
 B2_CLI="$(command -v b2 || true)"
 AWS_CLI="$(command -v aws || true)"
 JQ_BIN="$(command -v jq || true)"
+USER="$(id -un 1000)"
 
 if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SENTRY_CLI}" ] && [ -x "${B2_CLI}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
     echo "\e[32mEverything required is already installed\e[0m";
@@ -62,6 +63,8 @@ if [ ! -f /etc/docker/daemon.json ]; then
 else
   jq '.["registry-mirrors"] += ["https://mirror.gcr.io"]' /etc/docker/daemon.json > /etc/docker/daemon.tmp && mv /etc/docker/daemon.tmp /etc/docker/daemon.json
 fi
+
+service docker restart
 
 if [ ! -x "${AWS_CLI}" ]; then
   apt-get -y install gpg unzip
