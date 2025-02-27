@@ -53,6 +53,16 @@ if [ ! -x "${DOCKER_BIN}" ] || [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
     usermod -aG docker "$USER"
 fi
 
+if [ ! -x "${JQ_BIN}" ]; then
+  apt-get -y install jq
+fi
+
+if [ ! -f /etc/docker/daemon.json ]; then
+  echo '{ "registry-mirrors": ["https://mirror.gcr.io"] }' > /etc/docker/daemon.json
+else
+  jq '.["registry-mirrors"] += ["https://mirror.gcr.io"]' /etc/docker/daemon.json > /etc/docker/daemon.tmp && mv /etc/docker/daemon.tmp /etc/docker/daemon.json
+fi
+
 if [ ! -x "${AWS_CLI}" ]; then
   apt-get -y install gpg unzip
   curl "https://awscli.amazonaws.com/awscli-exe-linux-${PLATFORM}.zip" -o "awscliv2.zip"
@@ -91,8 +101,4 @@ EOF
   gpg --verify awscliv2.sig awscliv2.zip
   unzip awscliv2.zip
   ./aws/install
-fi
-
-if [ ! -x "${JQ_BIN}" ]; then
-  apt-get -y install jq
 fi
