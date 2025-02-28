@@ -123,7 +123,7 @@ After acquiring the id and secret, simply fill in the env vars for the provider.
 {%- if 'openid_connect' in cookiecutter.allauth_providers %}
 ## Setting up a generic OpenID Connect service
 <details>
-If an SSO provider supports the OIDC protocol, it can be set up as a generic OIDC provider here: 
+If an SSO provider supports the OIDC protocol, it can be set up as a generic OIDC provider here:
 
 1. Come up with a new `provider_id`
    - it's just an arbitrary alphanumerical string to identify the provider in the app
@@ -133,12 +133,12 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 2. Register the app with the provider to acquire a `client_id`, a `secret` and the URL for the openid config (e.g. https://gitlab.com/.well-known/openid-configuration)
    - When asked for callback / redirect url, use `https://{domain}/accounts/oidc/{provider_id}/login/callback/`
    - For development, usually http://127.0.0.1:8000 can be used as the base URL here
-3. Fill in the `OPENID_CONNECT_*` env vars 
+3. Fill in the `OPENID_CONNECT_*` env vars
    - `OPENID_CONNECT_NICE_NAME` is just a human-readable name, it will be later shown on login form (Log in with {name}...)
    - the `OPENID_CONNECT_SERVER_URL` value is just the URL **before** the .well-known part, so for https://gitlab.com/.well-known/openid-configuration this is just https://gitlab.com
 </details>
 
-{% endif %} 
+{% endif %}
 ## Allauth users in django
 1. Allauth does not disable django's authentication. It lives next to it as an alternative. You can still access django admin login.
 2. Allauth "social users" are just an extension to regular django users. When someone logs in via allauth, a django user model will also be created for them.
@@ -191,7 +191,7 @@ some_calculation_time = prometheus_client.Histogram(
 ```
 
 Somewhere else:
- 
+
 ```python
 with some_calculation_time.labels('blabla').time():
     do_some_work()
@@ -237,46 +237,61 @@ For more details see [README_vultr.md](README_vultr.md).
 <details>
 <summary>Click to for backup setup & recovery information</summary>
 
-## Setting up periodic backups
+Backups are managed by `backups` container.
 
-Add to crontab:
+## Local volume
 
-```sh
-# crontab -e
-30 0 * * * cd ~/domains/{{ cookiecutter.repostory_name }} && ./bin/backup-db.sh > ~/backup.log 2>&1
-```
+By default, backups will be created [periodically](backups/backup.cron) and stored in `backups` volume.
 
-Set `BACKUP_LOCAL_ROTATE_KEEP_LAST` to keep only a specific number of most recent backups in local `.backups` directory.
+### Backups rotation
+Set env var:
+- `BACKUP_LOCAL_ROTATE_KEEP_LAST`
 
-## Configuring offsite targets for backups
+### Email
 
-Backups are put in `.backups` directory locally, additionally then can be stored offsite in following ways:
-
-**Backblaze**
-
-Set in `.env` file:
-
-- `BACKUP_B2_BUCKET_NAME`
-- `BACKUP_B2_KEY_ID`
-- `BACKUP_B2_KEY_SECRET`
-
-**Email**
-
-Set in `.env` file:
-
+Local backups may be sent to email manually. Set env vars:
 - `EMAIL_HOST`
 - `EMAIL_PORT`
 - `EMAIL_HOST_USER`
 - `EMAIL_HOST_PASSWORD`
-- `EMAIL_TARGET`
+- `DEFAULT_FROM_EMAIL`
+
+Then run:
+```sh
+docker compose run --rm -e EMAIL_TARGET=youremail@domain.com backups ./backup-db.sh
+```
+
+## B2 cloud storage
+
+Set env vars:
+- `BACKUP_B2_BUCKET`
+- `BACKUP_B2_KEY_ID`
+- `BACKUP_B2_KEY_SECRET`
+
+Backups will be stored in the bucket, no rotation is performed.
+
+## List all available backups
+
+```sh
+docker compose run --rm backups ./list-backups.sh
+```
 
 ## Restoring system from backup after a catastrophical failure
 
 1. Follow the instructions above to set up a new production environment
-2. Restore the database using bin/restore-db.sh
+2. Restore the database using one of
+```sh
+docker compose run --rm backups ./restore-db.sh /var/backups/{backup-name}.dump.zstd
+
+docker compose run --rm backups ./restore-db.sh b2://{bucket-name}/{backup-name}.dump.zstd
+docker compose run --rm backups ./restore-db.sh b2id://{ID}
+```
 3. See if everything works
-4. Set up backups on the new machine
-5. Make sure everything is filled up in .env, error reporting integration, email accounts etc
+4. Make sure everything is filled up in `.env`, error reporting integration, email accounts etc
+
+## Monitoring
+
+`backups` container runs a simple server which [exposes essential metrics about backups](backups/bin/serve_metrics.py).
 
 </details>
 

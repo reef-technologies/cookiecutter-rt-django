@@ -7,7 +7,7 @@ if [ ! -f ".env" ]; then
     exit 1;
 fi
 
-DOCKER_BUILDKIT=0 docker compose build
+docker compose build
 
 # Tag the first image from multi-stage app Dockerfile to mark it as not dangling
 BASE_IMAGE=$(docker images --quiet --filter="label=builder=true" | head -n1)
@@ -22,8 +22,10 @@ SERVICES=$(docker compose ps --services 2>/dev/null \
 # shellcheck disable=2086
 docker compose stop $SERVICES
 
-# start the app container only in order to perform migrations
 docker compose up -d db  # in case it hasn't been launched before
+# backup db before any database changes
+docker compose run --rm backups ./backup-db.sh
+# start the app container only in order to perform migrations
 docker compose run --rm app sh -c "python manage.py wait_for_database --timeout 10; python manage.py migrate"
 
 # start everything

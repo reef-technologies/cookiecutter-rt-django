@@ -187,6 +187,15 @@ server {
         proxy_pass http://celery-flower:5555/metrics;
     }
     {% endif %}
+
+    location /backup-metrics/ {
+        proxy_pass_header Server;
+        proxy_redirect off;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X_SCHEME $scheme;
+        proxy_pass http://backups:8000/;
+    }
 }
 {%- endif %}
 
