@@ -143,10 +143,10 @@ class B2BackupManager(BackupManager):
 
     def iter_backups(self) -> Iterator[Backup]:
         bucket = self.b2.get_bucket_by_name(B2_BUCKET)
-        for file_version in bucket.ls():
+        for file_version, _ in bucket.ls():
             yield Backup(
                 location=Path(file_version.file_name),
-                created_at=datetime.fromtimestamp(file_version.upload_timestamp, tz=UTC),
+                created_at=datetime.fromtimestamp(file_version.upload_timestamp / 1000, tz=UTC),
                 size_bytes=file_version.size,
             )
 
@@ -159,10 +159,12 @@ class B2BackupManager(BackupManager):
 
         log.debug("Downloading a part of the backup for integrity check", backup=backup)
         bucket = self.b2.get_bucket_by_name(self.bucket_name)
-        downloaded_file = bucket.download_file_by_name(backup.path, range_=(0, self.integrity_check_download_bytes))
+        downloaded_file = bucket.download_file_by_name(
+            str(backup.location), range_=(0, self.integrity_check_download_bytes)
+        )
         with NamedTemporaryFile() as temp_file:
             downloaded_file.save(temp_file)
-            return check_pg_restore(str(temp_file))
+            return check_pg_restore(temp_file.name)
 
 
 def update_metrics() -> None:
