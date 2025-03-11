@@ -39,6 +39,7 @@ backup_size = Histogram(
         1024 * GiB,
     ),
 )
+total_backup_size = Gauge("total_backup_size", "Total size of all backups", unit="MiB")
 backup_count = Gauge("backup_count", "Number of backups")
 first_backup_time = Gauge("first_backup_time", "Timestamp of the first backup")
 last_backup_time = Gauge("last_backup_time", "Timestamp of the last backup")
@@ -182,9 +183,12 @@ def update_metrics() -> None:
     backups = manager.iter_backups()
     first_backup, last_backup = None, None
     num_backups = 0
+    total_size = 0
     for num_backups, backup in enumerate(backups, start=1):  # noqa: B007
         log.debug("Processing backup", backup=backup)
-        backup_size.observe(backup.size_bytes / 1024 / 1024)
+        size_mib = backup.size_bytes / 1024 / 1024
+        backup_size.observe(size_mib)
+        total_size += size_mib
 
         if not first_backup or first_backup.created_at > backup.created_at:
             first_backup = backup
@@ -193,6 +197,7 @@ def update_metrics() -> None:
             last_backup = backup
 
     backup_count.set(num_backups)
+    total_backup_size.set(total_size)
 
     if first_backup:
         first_backup_time.set(first_backup.created_at.timestamp())
