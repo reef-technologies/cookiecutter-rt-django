@@ -9,7 +9,7 @@ def healthcheck(socket_path: str, url: str):
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
         s.settimeout(1)
         s.connect(socket_path)
-        req = f"GET {url} HTTP/1.1\r\n\r\n"
+        req = f"GET {url} HTTP/1.1\r\nHost: localhost\r\n\r\n"
         s.sendall(req.encode())
         response = s.recv(64)
         assert response, "No response received"
