@@ -39,7 +39,7 @@ resource "vultr_load_balancer" "loadbalancer" {
   }
 
   health_check {
-    path                = "/admin/"
+    path                = "/alive/"
     port                = "443"
     protocol            = "https"
     response_timeout    = 5
