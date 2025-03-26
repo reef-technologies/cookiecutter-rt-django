@@ -23,7 +23,7 @@ def healthcheck(socket_path: str, url: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("socket_path", type=str, help="Path to the socket file")
-    parser.add_argument("--url", type=str, required=False, default="/admin/login/", help="URL to check")
+    parser.add_argument("--url", type=str, required=False, default="/alive/", help="URL to check")
     args = parser.parse_args()
 
     try:

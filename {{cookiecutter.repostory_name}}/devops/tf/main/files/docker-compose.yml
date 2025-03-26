@@ -99,7 +99,7 @@ services:
     image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.2'
     restart: unless-stopped
     healthcheck:
-      test: wget -q --spider http://0.0.0.0:8000/admin/login/ || exit 1
+      test: wget -q --spider http://0.0.0.0:8000/alive/ || exit 1
     depends_on:
       - app
       {% if cookiecutter.monitoring == 'y' %}

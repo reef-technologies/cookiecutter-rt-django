@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.admin.sites import site
+from django.http import HttpResponse
 from django.urls import include, path
 {% if cookiecutter.use_fingerprinting == "y" -%}
 from fingerprint.views import FingerprintView
@@ -14,7 +15,13 @@ from .{{cookiecutter.django_default_app_name}}.consumers import DefaultConsumer
 from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 {%- endif %}
 
+
+def alive_view(request):
+    return HttpResponse(b"ok")
+
+
 urlpatterns = [
+    path("alive/", alive_view),
     path("admin/", site.urls),
     {%- if cookiecutter.use_fingerprinting == "y" %}
     path("redirect/", FingerprintView.as_view(), name="fingerprint"),
