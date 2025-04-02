@@ -1,4 +1,4 @@
-{%- if cookiecutter.use_channels == "y" -%}
+{% if cookiecutter.use_channels == "y" %}
 from typing import Literal
 
 from pydantic import BaseModel

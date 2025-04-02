@@ -53,5 +53,9 @@
     "ci_use_spellchecker": "y",
     "_copy_without_render": [
       ".github/workflows/cruft-updates.yml"
-    ]
+    ],
+    "_jinja2_env_vars": {
+      "trim_blocks": true,
+      "lstrip_blocks": true
+    }
 }

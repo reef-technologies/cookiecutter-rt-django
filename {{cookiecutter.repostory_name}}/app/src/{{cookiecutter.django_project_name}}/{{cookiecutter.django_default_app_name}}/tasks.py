@@ -1,4 +1,4 @@
-{%- if cookiecutter.use_celery == "y" -%}
+{% if cookiecutter.use_celery == "y" %}
 import structlog
 from celery import Task
 from celery.utils.log import get_task_logger
