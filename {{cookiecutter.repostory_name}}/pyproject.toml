@@ -14,6 +14,10 @@ dependencies = [
     "django-probes==1.7.0",
     "django-debug-toolbar==4.1.0",
     "django-structlog{% if cookiecutter.use_celery == "y" %}[celery]{% endif %}==8.0.0",
+    {% if cookiecutter.use_rest_framework == 'y' %}
+    "djangorestframework~=3.16.0",
+    "drf-spectacular[sidecar]~=0.28.0",
+    {% endif %}
     {% if cookiecutter.use_celery == "y" %}
     "celery~=5.3.1",
     {% if cookiecutter.use_flower == 'y' %}
