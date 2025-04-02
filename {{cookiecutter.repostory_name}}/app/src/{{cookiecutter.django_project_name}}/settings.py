@@ -4,22 +4,22 @@ Django settings for {{cookiecutter.django_project_name}} project.
 
 import inspect
 import logging
-{% if cookiecutter.use_celery == "y" -%}
+{% if cookiecutter.use_celery == "y" %}
 from datetime import timedelta
-{% endif -%}
+{% endif %}
 from functools import wraps
 
 import environ
 import structlog
 
-{% if cookiecutter.use_celery == "y" -%}
+{% if cookiecutter.use_celery == "y" %}
 # from celery.schedules import crontab
 from kombu import Queue
 
 {% endif %}
-{%- if cookiecutter.use_allauth == "y" -%}
+{% if cookiecutter.use_allauth == "y" %}
 from django.urls import reverse_lazy
-{% endif -%}
+{% endif %}
 
 root = environ.Path(__file__) - 2
 
@@ -66,16 +66,16 @@ ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    {%- if cookiecutter.use_allauth == "y" %}
+    {% if cookiecutter.use_allauth == "y" %}
     "allauth.account.auth_backends.AuthenticationBackend",
-    {%- endif %}
+    {% endif %}
 ]
 
 INSTALLED_APPS = [
-    {%- if cookiecutter.use_channels == "y" %}
+    {% if cookiecutter.use_channels == "y" %}
     "daphne",
-    {%- endif %}
-    {%- if cookiecutter.monitoring == "y" %}
+    {% endif %}
+    {% if cookiecutter.monitoring == "y" %}
     "django_prometheus",
     "health_check",
     "health_check.db",
@@ -84,11 +84,11 @@ INSTALLED_APPS = [
     "health_check.contrib.migrations",
     "health_check.contrib.psutil",
     "health_check.contrib.redis",
-    {%- endif %}
-    {%- if cookiecutter.monitoring == "y" and cookiecutter.use_celery == "y" %}
+    {% endif %}
+    {% if cookiecutter.monitoring == "y" and cookiecutter.use_celery == "y" %}
     "health_check.contrib.celery",
     "health_check.contrib.celery_ping",
-    {%- endif %}
+    {% endif %}
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -99,51 +99,51 @@ INSTALLED_APPS = [
     "django_probes",
     "django_structlog",
     "constance",
-    {%- if cookiecutter.use_fingerprinting == "y" %}
+    {% if cookiecutter.use_fingerprinting == "y" %}
     "fingerprint",
-    {%- endif %}
-    {%- if cookiecutter.use_allauth == "y" %}
+    {% endif %}
+    {% if cookiecutter.use_allauth == "y" %}
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    {%- if 'apple' in cookiecutter.allauth_providers -%}
+    {% if 'apple' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.apple",
-    {%- endif %}
-    {%- if 'atlassian' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'atlassian' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.atlassian",
-    {%- endif %}
-    {%- if 'discord' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'discord' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.discord",
-    {%- endif %}
-    {%- if 'facebook' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'facebook' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.facebook",
-    {%- endif %}
-    {%- if 'github' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'github' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.github",
-    {%- endif %}
-    {%- if 'gitlab' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'gitlab' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.gitlab",
-    {%- endif %}
-    {%- if 'google' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'google' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.google",
-    {%- endif %}
-    {%- if 'microsoft' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'microsoft' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.microsoft",
-    {%- endif %}
-    {%- if 'openid_connect' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'openid_connect' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.openid_connect",
-    {%- endif %}
-    {%- if 'twitter' in cookiecutter.allauth_providers -%}
+    {% endif %}
+    {% if 'twitter' in cookiecutter.allauth_providers %}
     "allauth.socialaccount.providers.twitter_oauth2",
-    {%- endif %}
-    {%- endif %}
+    {% endif %}
+    {% endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
 
-{%- if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring == "y" %}
 PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS", default=True)
-{%- endif %}
-{%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+{% endif %}
+{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
     0.016,
@@ -160,13 +160,13 @@ PROMETHEUS_LATENCY_BUCKETS = (
     32.0,
     64.0,
     float("inf"),
-){%- endif %}
-
+)
+{% endif %}
 
 MIDDLEWARE = [
-    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    {%- endif %}
+    {% endif %}
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -174,13 +174,13 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    {%- if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
     "django_prometheus.middleware.PrometheusAfterMiddleware",
-    {%- endif %}
+    {% endif %}
     "django_structlog.middlewares.RequestMiddleware",
-    {%- if cookiecutter.use_allauth == "y" -%}
+    {% if cookiecutter.use_allauth == "y" %}
     "allauth.account.middleware.AccountMiddleware",
-    {%- endif %}
+    {% endif %}
 ]
 
 
@@ -245,9 +245,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "{{cookiecutter.django_project_name}}.wsgi.application"
-{%- if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels == "y" %}
 ASGI_APPLICATION = "{{cookiecutter.django_project_name}}.asgi.application"
-{%- endif %}
+{% endif %}
 
 DATABASES = {}
 if env("DATABASE_POOL_URL"):  # DB transaction-based connection pool, such as one provided PgBouncer
@@ -298,7 +298,7 @@ if env.bool("HTTPS_REDIRECT", default=False) and not DEBUG:
 else:
     SECURE_SSL_REDIRECT = False
 
-{%- if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels == "y" %}
 CHANNELS_BACKEND_URL = env("CHANNELS_BACKEND_URL")
 CHANNEL_LAYERS = {
     "default": {
@@ -308,15 +308,15 @@ CHANNEL_LAYERS = {
         },
     },
 }
-{%- endif %}
+{% endif %}
 
-{%- if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring == "y" %}
 REDIS_HOST = env("REDIS_HOST")
 REDIS_PORT = env.int("REDIS_PORT")
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
-{%- endif %}
+{% endif %}
 
-{%- if cookiecutter.use_celery == "y" %}
+{% if cookiecutter.use_celery == "y" %}
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_CONFIG = {
@@ -356,7 +356,7 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER",
 CELERY_BROKER_POOL_LIMIT = env.int("CELERY_BROKER_POOL_LIMIT", default=50)
 
 DJANGO_STRUCTLOG_CELERY_ENABLED = True
-{%- endif %}
+{% endif %}
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 EMAIL_FILE_PATH = env("EMAIL_FILE_PATH")
@@ -445,9 +445,9 @@ configure_structlog()
 # Sentry
 if SENTRY_DSN := env("SENTRY_DSN", default=""):
     import sentry_sdk
-    {% if cookiecutter.use_celery == "y" -%}
+    {% if cookiecutter.use_celery == "y" %}
     from sentry_sdk.integrations.celery import CeleryIntegration
-    {% endif -%}
+    {% endif %}
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
     from sentry_sdk.integrations.redis import RedisIntegration
@@ -457,9 +457,9 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         environment=ENV,
         integrations=[
             DjangoIntegration(),
-            {% if cookiecutter.use_celery == "y" -%}
+            {% if cookiecutter.use_celery == "y" %}
             CeleryIntegration(),
-            {% endif -%}
+            {% endif %}
             RedisIntegration(),
             LoggingIntegration(
                 level=logging.INFO,  # Capture info and above as breadcrumbs
@@ -479,7 +479,7 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_CHANGE_EMAIL = False
 ACCOUNT_MAX_EMAIL_ADDRESSES = 1
 SOCIALACCOUNT_PROVIDERS = {
-    {%- if 'apple' in cookiecutter.allauth_providers %}
+    {% if 'apple' in cookiecutter.allauth_providers %}
     "apple": {
         "APP": {
             "client_id": env("APPLE_LOGIN_CLIENT_ID"),
@@ -489,14 +489,14 @@ SOCIALACCOUNT_PROVIDERS = {
                 "certificate_key": env("APPLE_LOGIN_CERTIFICATE_PRIVATE_KEY"),
             },
         },
-        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails == "y" %}
         # Trust, that Apple verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
-        {%- endif %}
+        {% endif %}
     },
-    {%- endif %}
-    {%- if 'microsoft' in cookiecutter.allauth_providers %}
+    {% endif %}
+    {% if 'microsoft' in cookiecutter.allauth_providers %}
     "microsoft": {
         "APP": {
             "client_id": env("MICROSOFT_LOGIN_CLIENT_ID"),
@@ -505,14 +505,14 @@ SOCIALACCOUNT_PROVIDERS = {
                 "tenant": "organizations",
             },
         },
-        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails == "y" %}
         # Trust, that Microsoft verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
-        {%- endif %}
+        {% endif %}
     },
-    {%- endif %}
-    {%- if 'openid_connect' in cookiecutter.allauth_providers %}
+    {% endif %}
+    {% if 'openid_connect' in cookiecutter.allauth_providers %}
     "openid_connect": {
         "APP": {
             "client_id": "oidc",
@@ -522,25 +522,25 @@ SOCIALACCOUNT_PROVIDERS = {
                 "server_url": env("OPENID_CONNECT_SERVER_URL")
             },
         },
-        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails == "y" %}
         # Trust, that this provider verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
-        {%- endif %}
+        {% endif %}
     },
-    {%- endif %}
-    {%- for provider in ['atlassian', 'discord', 'facebook', 'github', 'gitlab', 'google', 'twitter'] if provider in cookiecutter.allauth_providers %}
+    {% endif %}
+    {% for provider in ['atlassian', 'discord', 'facebook', 'github', 'gitlab', 'google', 'twitter'] if provider in cookiecutter.allauth_providers %}
     "{{ provider }}": {
         "APP": {
             "client_id": env("{{ provider | upper }}_LOGIN_CLIENT_ID"),
             "secret": env("{{ provider | upper }}_LOGIN_SECRET"),
         },
-        {%- if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails == "y" %}
         # Trust, that {{ provider | capitalize }} verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
-        {%- endif %}
+        {% endif %}
     },
-    {%- endfor %}
+    {% endfor %}
 }
-{%- endif %}
+{% endif %}

@@ -66,29 +66,29 @@ services:
     init: true
     restart: unless-stopped
     env_file: ./.env
-    {% if cookiecutter.monitoring == 'y' -%}
+    {% if cookiecutter.monitoring == 'y' %}
     environment:
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
       # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
       # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
       # Don't forget to also mount the prometheus-metrics volume in other containers too.
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
-    {%- endif %}
+    {% endif %}
     volumes:
       - backend-static:/root/src/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:/root/src/media
-      {% if cookiecutter.monitoring == 'y' -%}
+      {% if cookiecutter.monitoring == 'y' %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
-      {%- endif %}
+      {% endif %}
     depends_on:
       - redis
       - db
     logging:
       <<: *logging
 
-  {% if cookiecutter.use_celery == "y" -%}
+  {% if cookiecutter.use_celery == "y" %}
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
     init: true
@@ -98,14 +98,14 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
-      {% if cookiecutter.monitoring == 'y' -%}
+      {% if cookiecutter.monitoring == 'y' %}
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/celery-worker
-      {%- endif %}
+      {% endif %}
     command: ./celery-entrypoint.sh
-    {% if cookiecutter.monitoring == 'y' -%}
+    {% if cookiecutter.monitoring == 'y' %}
     volumes:
       - ./prometheus-metrics:/prometheus-multiproc-dir
-    {%- endif %}
+    {% endif %}
     tmpfs: /run
     depends_on:
       - redis
@@ -127,7 +127,7 @@ services:
     logging:
       <<: *logging
 
-  {% if cookiecutter.use_flower == "y" -%}
+  {% if cookiecutter.use_flower == "y" %}
   celery-flower:
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
@@ -146,7 +146,7 @@ services:
     logging:
       <<: *logging
   {% endif %}
-  {% endif -%}
+  {% endif %}
 
   nginx:
     image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.2'

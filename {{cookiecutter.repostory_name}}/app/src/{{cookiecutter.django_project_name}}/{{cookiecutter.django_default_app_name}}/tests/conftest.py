@@ -1,12 +1,12 @@
 from collections.abc import Generator
 
 import pytest
-{%- if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels == "y" %}
 import pytest_asyncio
 from channels.testing import WebsocketCommunicator
 
 from ...asgi import application
-{%- endif %}
+{% endif %}
 
 
 @pytest.fixture

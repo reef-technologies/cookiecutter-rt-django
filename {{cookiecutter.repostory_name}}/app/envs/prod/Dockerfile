@@ -1,6 +1,6 @@
-{% if cookiecutter.use_alpine_linux == "y" -%}
+{% if cookiecutter.use_alpine_linux == "y" %}
 ARG BASE_IMAGE=python:3.11-alpine
-{% else -%}
+{% else %}
 ARG BASE_IMAGE=python:3.11-slim
 {% endif %}
 
@@ -18,17 +18,17 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
-{% if cookiecutter.use_alpine_linux == "y" -%}
+{% if cookiecutter.use_alpine_linux == "y" %}
 RUN grep uvicorn uv.lock && apk add --no-cache build-base || true
 RUN grep psycopg uv.lock && apk add --no-cache postgresql-dev gcc python3-dev musl-dev libffi-dev || true
 RUN grep Pillow uv.lock && apk add --no-cache jpeg-dev tiff-dev zlib-dev libwebp-dev gcc python3-dev musl-dev || true
-{% endif -%}
+{% endif %}
 
-{% if cookiecutter.use_alpine_linux == "y" -%}
+{% if cookiecutter.use_alpine_linux == "y" %}
 RUN apk add git
-{%- else -%}
+{% else %}
 RUN apt-get update && apt-get install -y git
-{%- endif %}
+{% endif %}
 
 RUN --mount=type=cache,target=/root/.cache/uv \
 	uv sync --frozen --no-install-project --no-dev --no-editable
@@ -44,13 +44,13 @@ RUN ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy uv run python3 manage.py
 FROM $BASE_IMAGE AS secondary-image
 LABEL builder=false
 
-{% if cookiecutter.use_alpine_linux == "y" -%}
+{% if cookiecutter.use_alpine_linux == "y" %}
 RUN apk add wget
-{%- else -%}
+{% else %}
 RUN apt-get update \
 	&& apt-get install -y wget \
 	&& rm -rf /var/lib/apt/lists/*
-{%- endif %}
+{% endif %}
 
 WORKDIR /root/src/
 ENV PYTHONUNBUFFERED=1
@@ -58,9 +58,9 @@ ENV PATH="/root/src/.venv/bin:$PATH"
 
 COPY --from=base-image /root/src/ /root/src/
 
-{% if cookiecutter.use_alpine_linux == "y" -%}
+{% if cookiecutter.use_alpine_linux == "y" %}
 RUN grep psycopg uv.lock && apk add --no-cache libpq || true
 RUN grep Pillow uv.lock && apk add --no-cache jpeg tiff zlib libwebp || true
-{%- endif %}
+{% endif %}
 
 CMD ["./entrypoint.sh"]

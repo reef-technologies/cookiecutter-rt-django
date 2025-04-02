@@ -1,15 +1,15 @@
-{%- if cookiecutter.use_celery == 'y' -%}
+{% if cookiecutter.use_celery == 'y' %}
 import logging
 import os
 
 from celery import Celery
-{%- if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring == "y" %}
 from celery.signals import setup_logging, worker_process_shutdown
-{% endif -%}
+{% endif %}
 from django.conf import settings
 from django_structlog.celery.steps import DjangoStructLogInitStep
 from more_itertools import chunked
-{%- if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring == "y" %}
 from prometheus_client import Gauge, multiprocess
 {% endif %}
 from .settings import configure_structlog
@@ -21,13 +21,13 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 app.steps["worker"].add(DjangoStructLogInitStep)
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-{%- if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring == "y" %}
 num_tasks_in_queue = Gauge(
     "celery_queue_len",
     "How many tasks are there in a queue",
     labelnames=("queue",),
 )
-{%- endif %}
+{% endif %}
 
 
 @setup_logging.connect
@@ -72,8 +72,8 @@ def flush_tasks(queue_name: str) -> None:
 @worker_process_shutdown.connect
 def child_exit(pid, **kw):
     multiprocess.mark_process_dead(pid)
-{% endif -%}
+{% endif %}
 {% else %}
 # Use this as a starting point for your project with celery.
 # If you are not using celery, you can remove this app
-{% endif -%}
+{% endif %}

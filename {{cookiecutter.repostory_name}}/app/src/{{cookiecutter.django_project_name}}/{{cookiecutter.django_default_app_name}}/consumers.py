@@ -1,4 +1,4 @@
-{%- if cookiecutter.use_channels == "y" -%}
+{% if cookiecutter.use_channels == "y" %}
 from collections.abc import Callable
 from typing import Annotated, ClassVar, Union
 
