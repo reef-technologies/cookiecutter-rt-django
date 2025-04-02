@@ -280,7 +280,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-{% if cookiecutter.use_rest_framework == "y" -%}
+{% if cookiecutter.use_rest_framework == "y" %}
 REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -311,7 +311,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
 }
-{%- endif %}
+{% endif %}
 
 # Internationalization
 LANGUAGE_CODE = "en-us"

@@ -1,13 +1,14 @@
 from django.conf import settings
 from django.contrib.admin.sites import site
 from django.urls import include, path{% if cookiecutter.use_rest_framework == "y" %}, re_path{% endif %}
+
 {% if cookiecutter.use_rest_framework == "y" %}
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 {% endif %}
-
 {% if cookiecutter.use_fingerprinting == "y" %}
 from fingerprint.views import FingerprintView
 {% endif %}
+
 {% if cookiecutter.use_rest_framework == "y" %}
 from .api.routers import router as api_router
 {% endif %}
@@ -29,7 +30,7 @@ urlpatterns = [
     re_path(r"^api/(?P<version>v0)/schema/swagger-ui/$", SpectacularSwaggerView.as_view(url_name='schema')),
     re_path(r"^api/auth/", include("rest_framework.urls", namespace="rest_framework")),
     {% endif %}
-    {%- if cookiecutter.use_fingerprinting == "y" %}
+    {% if cookiecutter.use_fingerprinting == "y" %}
     path("redirect/", FingerprintView.as_view(), name="fingerprint"),
     {% endif %}
     {% if cookiecutter.monitoring == "y" %}
