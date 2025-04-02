@@ -4,6 +4,7 @@ import environ
 {% if cookiecutter.monitoring == "y" %}
 from prometheus_client import multiprocess
 {% endif %}
+
 env = environ.Env()
 
 workers = env.int("GUNICORN_WORKERS", 2 * multiprocessing.cpu_count() + 1)

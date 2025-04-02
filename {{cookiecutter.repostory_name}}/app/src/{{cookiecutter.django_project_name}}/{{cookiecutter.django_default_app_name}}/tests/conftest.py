@@ -16,6 +16,7 @@ def some() -> Generator[int, None, None]:
     # teardown code
 {% if cookiecutter.use_channels == "y" %}
 
+
 @pytest_asyncio.fixture
 async def communicator():
     communicator = WebsocketCommunicator(application, "/ws/v0/")

@@ -4,6 +4,7 @@ from django.urls import include, path
 {% if cookiecutter.use_fingerprinting == "y" %}
 from fingerprint.views import FingerprintView
 {% endif %}
+
 {% if cookiecutter.monitoring == "y" %}
 from .{{cookiecutter.django_default_app_name}}.business_metrics import metrics_manager
 {% endif %}
