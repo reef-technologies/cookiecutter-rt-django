@@ -1,5 +1,5 @@
 #!/bin/sh
-{% if cookiecutter.monitoring == "y" -%}
+{% if cookiecutter.monitoring == "y" %}
 set -e
 
 if [ -n "$PROMETHEUS_MULTIPROC_DIR" ]; then
@@ -13,6 +13,6 @@ if [ -n "$PROMETHEUS_MULTIPROC_DIR" ]; then
         mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
     fi
 fi
-{%- else -%}
+{% else %}
 # No Prometheus clean up required as metrics are disabled.
-{%- endif %}
+{% endif %}

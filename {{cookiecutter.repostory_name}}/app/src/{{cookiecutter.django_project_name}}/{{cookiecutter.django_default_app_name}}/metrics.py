@@ -1,4 +1,4 @@
-{%- if cookiecutter.monitoring == "y" -%}
+{% if cookiecutter.monitoring == "y" %}
 import glob
 import os
 
