@@ -11,7 +11,7 @@
     "postgres_user": "postgres",
     "use_rest_framework": "n",
     "use_celery": "y",
-    "use_flower": "n",
+    "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
     "use_fingerprinting": "n",
     "use_channels": "y",
     "use_allauth": "n",
