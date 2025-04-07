@@ -19,9 +19,11 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python {% raw %}${{ env.PYTHON_DEFAULT_VERSION }}{% endraw %}
+
         uses: actions/setup-python@v4
         with:
           python-version: {% raw %}${{ env.PYTHON_DEFAULT_VERSION }}{% endraw %}
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -39,9 +41,11 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python {% raw %}${{ env.PYTHON_DEFAULT_VERSION }}{% endraw %}
+
         uses: actions/setup-python@v4
         with:
           python-version: {% raw %}${{ env.PYTHON_DEFAULT_VERSION }}{% endraw %}
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
