@@ -136,6 +136,12 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.twitter_oauth2",
     {% endif %}
     {% endif %}
+    {% if cookiecutter.use_rest_framework == "y" %}
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+    {% endif %}
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
 
@@ -273,6 +279,39 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+{% if cookiecutter.use_rest_framework == "y" %}
+REST_FRAMEWORK = {
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAdminUser",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "10/m", "user": "100/m"},
+    "DEFAULT_PAGINATION_CLASS": "{{cookiecutter.django_project_name}}.api.pagination.CursorPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+SPECTACULAR_SETTINGS = {
+    "SERVE_PERMISSIONS": [
+        "rest_framework.permissions.IsAdminUser",
+    ],
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+}
+{% endif %}
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
