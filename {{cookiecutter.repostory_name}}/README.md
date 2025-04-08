@@ -263,12 +263,19 @@ docker compose run --rm -e EMAIL_TARGET=youremail@domain.com backups ./backup-db
 
 ## B2 cloud storage
 
+Create an application key with restricted access to a single bucket. The key should have following permissions:
+- `listFiles`
+- `readFiles`
+- `writeFiles`
+
 Set env vars:
 - `BACKUP_B2_BUCKET`
 - `BACKUP_B2_KEY_ID`
 - `BACKUP_B2_KEY_SECRET`
 
-Backups will be stored in the bucket, no rotation is performed.
+Backups will be uploaded to the bucket.
+
+Set up backups lifecycle rules by following these instructions: https://www.backblaze.com/docs/cloud-storage-configure-and-manage-lifecycle-rules
 
 ## List all available backups
 
