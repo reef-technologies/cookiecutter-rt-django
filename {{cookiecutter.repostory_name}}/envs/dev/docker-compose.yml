@@ -2,10 +2,17 @@ version: '3.7'
 
 services:
   redis:
+    {% if cookiecutter.use_valkey == "y" %}
+    image: mirror.gcr.io/valkey/valkey:8.1-alpine
+    command: valkey-server --appendonly yes
+    healthcheck:
+      test: valkey-cli ping
+    {% else %}
     image: mirror.gcr.io/redis:6-alpine
     command: redis-server --appendonly yes
     healthcheck:
       test: redis-cli ping
+    {% endif %}
     volumes:
       - ./redis/data:/data
     ports:

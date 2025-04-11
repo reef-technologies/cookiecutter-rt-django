@@ -9,6 +9,7 @@
     "log_aggregating": "y",
     "log_aggregator_url": "https://loki.reef.pl",
     "postgres_user": "postgres",
+    "use_valkey": "y",
     "use_rest_framework": "n",
     "use_celery": "y",
     "use_flower": "{% if cookiecutter.use_celery == 'y' %}y{% else %}n{% endif %}",
