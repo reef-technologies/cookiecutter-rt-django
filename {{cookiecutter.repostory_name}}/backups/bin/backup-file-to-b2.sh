@@ -12,7 +12,10 @@ elif [ ! -f "$1" ]; then
   echo "Pass existing backup file name as the first argument"
   exit 2
 else
-  BACKUP_B2_FILENAME"$(basename "$1")"
+  BACKUP_B2_FILENAME="$(basename "$1")"
+  if [ -n "${BACKUP_B2_FOLDER:-}" ]; then
+    BACKUP_B2_FILENAME="$BACKUP_B2_FOLDER/$BACKUP_B2_FILENAME"
+  fi
 fi
 
 export B2_APPLICATION_KEY_ID="$BACKUP_B2_KEY_ID"

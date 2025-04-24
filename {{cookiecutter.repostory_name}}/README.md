@@ -263,19 +263,27 @@ docker compose run --rm -e EMAIL_TARGET=youremail@domain.com backups ./backup-db
 
 ## B2 cloud storage
 
-Create an application key with restricted access to a single bucket. The key should have following permissions:
-- `listFiles`
-- `readFiles`
-- `writeFiles`
+> In these examples we assume that backups will be stored inside `folder`. If you want to store backups in the root folder, just use empty string instead of `folder`.
 
-Set env vars:
-- `BACKUP_B2_BUCKET`
-- `BACKUP_B2_KEY_ID`
-- `BACKUP_B2_KEY_SECRET`
+First, create a Backblaze B2 account and a bucket for backups (with [lifecycle rules](https://www.backblaze.com/docs/cloud-storage-configure-and-manage-lifecycle-rules)):
 
-Backups will be uploaded to the bucket.
+```sh
+b2 bucket create --lifecycle-rule '{"daysFromHidingToDeleting": 30, "daysFromUploadingToHiding": 30, "fileNamePrefix": "folder/"}' "{{cookiecutter.repostory_name}}-backups" allPrivate
+```
 
-Set up backups lifecycle rules by following these instructions: https://www.backblaze.com/docs/cloud-storage-configure-and-manage-lifecycle-rules
+> If you want to add backups to already existing bucket, use `b2 bucket update` command and don't forget to list all previous lifecycle rules as well as adding the new one.
+
+Create an application key with restricted access to a single bucket:
+
+```sh
+b2 key create --bucket "{{cookiecutter.repostory_name}}-backups" --namePrefix "folder/" "{{cookiecutter.repostory_name}}-backups-key" listFiles,readFiles,writeFiles
+```
+
+Fill in `.env` file:
+- `BACKUP_B2_BUCKET={{cookiecutter.repostory_name}}-backups`
+- `BACKUP_B2_FOLDER=folder`
+- `BACKUP_B2_KEY_ID=0012345abcdefgh0000000000`
+- `BACKUP_B2_KEY_SECRET=A001bcdefgHIJKLMNOPQRSTUxx11x22`
 
 ## List all available backups
 
