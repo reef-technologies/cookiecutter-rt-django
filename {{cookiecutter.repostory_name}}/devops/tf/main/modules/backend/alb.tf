@@ -17,7 +17,7 @@ resource "aws_lb_target_group" "self" {
   health_check {
     enabled             = true
     port                = 8000
-    path                = "/admin/login"
+    path                = "/alive/"
     matcher             = "200-302"
   }
 }

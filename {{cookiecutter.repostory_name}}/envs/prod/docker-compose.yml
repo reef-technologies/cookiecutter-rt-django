@@ -161,7 +161,7 @@ services:
     healthcheck:
       test: [
         "CMD-SHELL",
-        "curl 0.0.0.0:80/admin/login/ -s --fail -H \"Host: $NGINX_HOST\" -H \"User-Agent: docker-compose-healthcheck\" -o /dev/null || exit 1"
+        "curl 0.0.0.0:80/alive/ -s --fail -H \"Host: $NGINX_HOST\" -H \"User-Agent: docker-compose-healthcheck\" -o /dev/null || exit 1"
       ]
       interval: 30s
       retries: 5
