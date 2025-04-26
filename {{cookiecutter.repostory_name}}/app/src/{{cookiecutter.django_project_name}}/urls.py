@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.admin.sites import site
+from django.http import HttpResponse
 from django.urls import include, path{% if cookiecutter.use_rest_framework == "y" %}, re_path{% endif %}
 
 {% if cookiecutter.use_rest_framework == "y" %}
@@ -20,9 +21,10 @@ from .{{cookiecutter.django_default_app_name}}.consumers import DefaultConsumer
 {% endif %}
 {% if cookiecutter.monitoring == "y" %}
 from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
-{% endif %}
 
+{% endif %}
 urlpatterns = [
+    path("alive/", lambda _: HttpResponse(b"ok")),
     path("admin/", site.urls),
     {% if cookiecutter.use_rest_framework == "y" %}
     re_path(r"^api/(?P<version>v0)/", include(api_router.urls)),
