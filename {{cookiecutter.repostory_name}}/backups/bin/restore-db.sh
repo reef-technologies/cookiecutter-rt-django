@@ -10,8 +10,6 @@ if [[ $# -ne 1 ]]; then
 fi
 
 if [[ "$1" == b2://* || "$1" == b2id://* ]]; then
-    export B2_APPLICATION_KEY_ID="$BACKUP_B2_KEY_ID"
-    export B2_APPLICATION_KEY="$BACKUP_B2_KEY_SECRET"
     b2 cat "$1" | pg_restore -c -d "$DATABASE_URL"
 else
     pg_restore -c -d "$DATABASE_URL" < "$1"

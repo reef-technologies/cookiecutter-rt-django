@@ -49,10 +49,10 @@ DATABASE_URL = environ["DATABASE_URL"]
 LOCAL_BACKUP_PATH = Path(environ["BACKUP_LOCAL_DIR"])
 LOCAL_ROTATE_KEEP_LAST = (keep_last := environ.get("BACKUP_LOCAL_ROTATE_KEEP_LAST")) and int(keep_last)
 
-B2_BUCKET = environ.get("BACKUP_B2_BUCKET")
-B2_FOLDER = environ.get("BACKUP_B2_FOLDER")
-B2_APPLICATION_KEY_ID = environ.get("BACKUP_B2_KEY_ID")
-B2_APPLICATION_KEY = environ.get("BACKUP_B2_KEY_SECRET")
+B2_BUCKET = environ.get("B2_BUCKET")
+B2_FOLDER = environ.get("B2_FOLDER")
+B2_APPLICATION_KEY_ID = environ.get("B2_APPLICATION_KEY_ID")
+B2_APPLICATION_KEY = environ.get("B2_APPLICATION_KEY")
 
 log = structlog.getLogger(__name__)
 
