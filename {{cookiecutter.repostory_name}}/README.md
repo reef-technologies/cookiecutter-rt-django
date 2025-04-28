@@ -68,6 +68,7 @@ export REPO={{ cookiecutter.repostory_name }}
 while read oldrev newrev ref
 do
     if [[ $ref =~ .*/master$ ]]; then
+        echo "Deploying revision $newrev pushed to $ref."
         export GIT_DIR="$ROOT/repos/$REPO.git/"
         export GIT_WORK_TREE="$ROOT/domains/$REPO/"
         git checkout -f master
@@ -80,13 +81,25 @@ done
 EOT
 
 chmod +x hooks/post-receive
-./hooks/post-receive
+echo "_ _ production/master" | ./hooks/post-receive
+```
+
+Please note that first hook execution (deployment) will fail.
+
+Continue with production environment day one setup:
+
+```sh
+# remote server
 cd ~/domains/{{ cookiecutter.repostory_name }}
 sudo bin/prepare-os.sh
 ./setup-prod.sh
+```
 
-# adjust the `.env` file
+Adjust the `.env` file (`SECRET_KEY`, `POSTGRES_PASSWORD` etc.)
 
+Setup certificates:
+```sh
+# remote server
 mkdir letsencrypt
 ./letsencrypt_setup.sh
 ./deploy.sh
