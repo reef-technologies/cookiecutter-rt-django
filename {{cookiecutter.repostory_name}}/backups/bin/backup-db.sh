@@ -11,7 +11,7 @@ DUMP_DB_TO_STDOUT=(
   pg_dump -Fc --compress=zstd -c --if-exists "$DATABASE_URL"
 )
 
-if [ -n "${BACKUP_B2_BUCKET}" ]; then
+if [ -n "${B2_BUCKET}" ]; then
   "${DUMP_DB_TO_STDOUT[@]}" | "${SCRIPT_DIR}"/backup-file-to-b2.sh - "${TARGET_FILENAME}"
 else
   mkdir -p "$BACKUP_LOCAL_DIR"

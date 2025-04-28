@@ -276,14 +276,14 @@ b2 bucket create --lifecycle-rule '{"daysFromHidingToDeleting": 30, "daysFromUpl
 Create an application key with restricted access to a single bucket:
 
 ```sh
-b2 key create --bucket "{{cookiecutter.repostory_name}}-backups" --namePrefix "folder/" "{{cookiecutter.repostory_name}}-backups-key" listFiles,readFiles,writeFiles
+b2 key create --bucket "{{cookiecutter.repostory_name}}-backups" --namePrefix "folder/" "{{cookiecutter.repostory_name}}-backups-key" listBuckets,listFiles,readFiles,writeFiles
 ```
 
 Fill in `.env` file:
 - `BACKUP_B2_BUCKET={{cookiecutter.repostory_name}}-backups`
 - `BACKUP_B2_FOLDER=folder`
-- `BACKUP_B2_KEY_ID=0012345abcdefgh0000000000`
-- `BACKUP_B2_KEY_SECRET=A001bcdefgHIJKLMNOPQRSTUxx11x22`
+- `BACKUP_B2_APPLICATION_KEY_ID=0012345abcdefgh0000000000`
+- `BACKUP_B2_APPLICATION_KEY=A001bcdefgHIJKLMNOPQRSTUxx11x22`
 
 ## List all available backups
 
