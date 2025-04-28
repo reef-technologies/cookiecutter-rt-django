@@ -13,9 +13,10 @@ elif [ ! -f "$1" ]; then
   exit 2
 else
   B2_FILENAME="$(basename "$1")"
-  if [ -n "${B2_FOLDER:-}" ]; then
-    B2_FILENAME="$B2_FOLDER/$B2_FILENAME"
-  fi
+fi
+
+if [ -n "${B2_FOLDER:-}" ]; then
+  B2_FILENAME="$B2_FOLDER/$B2_FILENAME"
 fi
 
 uv run b2 file upload "$B2_BUCKET" "$1" "$B2_FILENAME"
