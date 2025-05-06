@@ -76,17 +76,6 @@ INSTALLED_APPS = [
     {% endif %}
     {% if cookiecutter.monitoring == "y" %}
     "django_prometheus",
-    "health_check",
-    "health_check.db",
-    "health_check.cache",
-    "health_check.storage",
-    "health_check.contrib.migrations",
-    "health_check.contrib.psutil",
-    "health_check.contrib.redis",
-    {% endif %}
-    {% if cookiecutter.monitoring == "y" and cookiecutter.use_celery == "y" %}
-    "health_check.contrib.celery",
-    "health_check.contrib.celery_ping",
     {% endif %}
     "django.contrib.admin",
     "django.contrib.auth",

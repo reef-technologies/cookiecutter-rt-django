@@ -192,6 +192,8 @@ def crufted_project(session, cruft_config):
         "uv",
         "sync",
         "--locked",
+        "--extra",
+        "format",  # ruff is needed for the formatter hook
         env={"UV_PROJECT_ENVIRONMENT": uv_env},
     )
 
