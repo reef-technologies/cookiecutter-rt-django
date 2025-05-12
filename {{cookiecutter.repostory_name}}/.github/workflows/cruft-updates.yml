@@ -2,6 +2,7 @@ name: Update repository with Cruft
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 on:
   schedule:
     - cron: "0 2 * * 1" # Every Monday at 2am
@@ -21,7 +22,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Cruft
-        run: pip3 install cruft
+        run: pip3 install cruft~=2.16.0 ruff~=0.8.4
 
       - name: Check if update is available
         continue-on-error: false
