@@ -70,7 +70,7 @@
 - [Sentry](https://sentry.io) error tracking preconfigured
 - Grafana for metrics and log aggregation (Grafana Loki)
   - Prometheus for data collection
-  - Grafana Loki for log aggregation with Promtail for log shipping
+  - Grafana Loki for log aggregation with Alloy for log shipping
   - Generic host dashboard section optimized for both VM and physical machines
   - [Integration of framework allowing easy addition of new application-level metrics](https://github.com/reef-technologies/django-business-metrics)
   - nginx-level dashboard section for http/ws statistics
