@@ -17,7 +17,7 @@ source "amazon-ebs" "docker-optimized" {
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
-      name = "*ubuntu-focal-20.04-amd64-minimal-*"
+      name = "*ubuntu-noble-24.04-amd64-minimal-*"
       root-device-type = "ebs"
     }
 

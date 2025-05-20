@@ -45,7 +45,7 @@
     "aws_project_name": "{{ cookiecutter.repostory_name }}",
     "aws_infra_bucket": "{{ cookiecutter.aws_project_name }}-{{ random_ascii_string(6)|lower }}",
     "aws_region": "us-east-1",
-    "aws_ami_image": "{% if cookiecutter.aws_use_packer == 'n' %}*ubuntu-focal-20.04-amd64-minimal-*{% else %}docker-optimized-*{% endif %}",
+    "aws_ami_image": "{% if cookiecutter.aws_use_packer == 'n' %}*ubuntu-noble-24.04-amd64-minimal-*{% else %}docker-optimized-*{% endif %}",
     "aws_ami_image_owner": "{% if cookiecutter.aws_use_packer == 'n' %}099720109477{% else %}self{% endif %}",
     "aws_base_domain_name": "fake-domain.com",
     "aws_domain_name": "api.{{ cookiecutter.aws_base_domain_name }}",
