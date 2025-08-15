@@ -8,5 +8,5 @@ find "$BACKUP_LOCAL_DIR" -name "*.dump.zstd" | sort -r
 
 if [ -n "${B2_BUCKET}" ]; then
     echo "B2 backups:"
-    uv run b2 ls --long "b2://$B2_BUCKET/$B2_FOLDER"
+    uv run b2 ls --long "b2://$B2_BUCKET${B2_FOLDER:+/$B2_FOLDER/}"
 fi
