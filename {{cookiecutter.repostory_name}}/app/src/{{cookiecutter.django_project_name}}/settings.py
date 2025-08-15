@@ -147,8 +147,7 @@ INSTALLED_APPS = [
 
 {% if cookiecutter.monitoring == "y" %}
 PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS", default=True)
-{% endif %}
-{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
     0.016,
@@ -166,6 +165,7 @@ PROMETHEUS_LATENCY_BUCKETS = (
     64.0,
     float("inf"),
 )
+{% endif %}
 {% endif %}
 
 MIDDLEWARE = [
@@ -354,14 +354,12 @@ REDIS_PORT = env.int("REDIS_PORT")
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 {% endif %}
 
-{% if cookiecutter.use_celery == "y" %}
-
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_CONFIG = {
     # "PARAMETER": (default-value, "Help text", type),
 }
 
-
+{% if cookiecutter.use_celery == "y" %}
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="")
 CELERY_RESULT_BACKEND = env("CELERY_BROKER_URL", default="")  # store results in Redis
 CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until task result deletion
@@ -506,6 +504,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         ],
     )
     ignore_logger("django.security.DisallowedHost")
+
 {% if cookiecutter.use_allauth == "y" %}
 LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = "/"
