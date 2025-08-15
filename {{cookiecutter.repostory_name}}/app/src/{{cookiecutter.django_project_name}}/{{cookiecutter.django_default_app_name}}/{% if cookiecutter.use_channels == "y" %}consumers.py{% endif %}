@@ -1,4 +1,3 @@
-{% if cookiecutter.use_channels == "y" %}
 from collections.abc import Callable
 from typing import Annotated, ClassVar, Union
 
@@ -41,4 +40,3 @@ class DefaultConsumer(AsyncWebsocketConsumer):
         Heartbeat: handle_heartbeat,
     }
     MESSAGE_MODEL = TypeAdapter(Annotated[Union[*MESSAGE_HANDLERS.keys()], Field(discriminator="type")])
-{% endif %}

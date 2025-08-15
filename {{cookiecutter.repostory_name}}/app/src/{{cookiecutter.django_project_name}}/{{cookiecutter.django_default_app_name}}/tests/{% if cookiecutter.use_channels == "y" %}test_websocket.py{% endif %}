@@ -1,4 +1,3 @@
-{% if cookiecutter.use_channels == "y" %}
 import pytest
 
 from ..schemas import Heartbeat
@@ -11,4 +10,3 @@ async def test__websocket__heartbeat(communicator) -> None:
     await communicator.send_json_to(Heartbeat().dict())
     response = await communicator.receive_json_from()
     assert response == Heartbeat().dict()
-{% endif %}
