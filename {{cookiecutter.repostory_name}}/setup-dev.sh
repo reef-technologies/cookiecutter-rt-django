@@ -8,10 +8,6 @@ ENV_DIR="./envs/dev"
 # shellcheck disable=SC2164
 cd "${PROJECT_DIR}"
 
-if [[ ! -d ".venv" ]]; then
-    python3.11 -m venv .venv
-fi
-
 # Create a lock file if doesn't exist
 if [[ ! -f "uv.lock" ]]; then
     uv lock
