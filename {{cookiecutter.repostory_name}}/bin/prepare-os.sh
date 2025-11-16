@@ -2,6 +2,8 @@
 # Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
 set -eux
 
+sudo ufw allow proto tcp from 172.0.0.0/8 to any port 9100  # nginx getting node-exporter metrics
+
 DOCKER_BIN="$(command -v docker || true)"
 DOCKER_COMPOSE_INSTALLED="$(docker compose version || true)"
 SENTRY_CLI="$(command -v sentry-cli || true)"
