@@ -19,4 +19,4 @@ docker run --entrypoint certbot -it --rm \
       ghcr.io/reef-technologies/nginx-rt:v1.2.2 \
       certonly \
       --standalone --preferred-challenges http\
-      -d "$NGINX_HOST" -d "www.$NGINX_HOST"
+      -d "$NGINX_HOST"
