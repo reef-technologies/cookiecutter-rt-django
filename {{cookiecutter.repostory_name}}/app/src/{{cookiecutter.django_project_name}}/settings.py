@@ -168,12 +168,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
-    "django_prometheus.middleware.PrometheusAfterMiddleware",
-    {% endif %}
     "django_structlog.middlewares.RequestMiddleware",
     {% if cookiecutter.use_allauth == "y" %}
     "allauth.account.middleware.AccountMiddleware",
+    {% endif %}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
     {% endif %}
 ]
 

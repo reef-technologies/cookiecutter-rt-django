@@ -2,7 +2,9 @@ import glob
 import os
 
 import prometheus_client
+{% if cookiecutter.use_celery == "y" %}
 from django.conf import settings
+{% endif %}
 from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
 from prometheus_client import REGISTRY, multiprocess
@@ -27,12 +29,13 @@ else:
     registry = REGISTRY
 
 
-{% if cookiecutter.use_celery == "y" %}
 def metrics_view(request):
     """Exports metrics as a Django view"""
 
+    {% if cookiecutter.use_celery == "y" %}
     for queue in settings.CELERY_TASK_QUEUES:
         num_tasks_in_queue.labels(queue.name).set(get_num_tasks_in_queue(queue.name))
+    {% endif %}
 
     if is_multiprocess:
         return HttpResponse(
@@ -41,4 +44,3 @@ def metrics_view(request):
         )
 
     return ExportToDjangoView(request)
-{% endif %}
