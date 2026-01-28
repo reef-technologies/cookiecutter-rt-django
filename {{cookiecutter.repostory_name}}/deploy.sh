@@ -9,10 +9,6 @@ fi
 
 docker compose build
 
-# Tag the first image from multi-stage app Dockerfile to mark it as not dangling
-BASE_IMAGE=$(docker images --quiet --filter="label=builder=true" | head -n1)
-docker image tag "${BASE_IMAGE}" {{cookiecutter.django_project_name}}/app-builder
-
 # collect static files to external storage while old app is still running
 # docker compose run --rm app sh -c "python manage.py collectstatic --no-input"
 
@@ -31,7 +27,5 @@ docker compose run --rm app sh -c "python manage.py wait_for_database --timeout 
 # start everything
 docker compose up -d
 
-# Clean all dangling images
-docker images --quiet --filter=dangling=true \
-    | xargs --no-run-if-empty docker rmi \
-    || true
+# Clean up older dangling images without killing recent build cache
+docker image prune -f --filter "until=168h" || true
