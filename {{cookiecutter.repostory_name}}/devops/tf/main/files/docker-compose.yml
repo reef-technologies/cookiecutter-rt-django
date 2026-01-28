@@ -8,22 +8,10 @@ services:
     env_file: ./.env
     healthcheck:
       test: ["CMD", "./healthcheck.py", "/var/run/gunicorn/gunicorn.sock"]
-    {% if cookiecutter.monitoring == 'y' %}
-    environment:
-      # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
-      # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
-      # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
-      # Don't forget to also mount the prometheus-metrics volume in other containers too.
-      - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
-    {% endif %}
     volumes:
       - backend-static:/root/src/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:/root/src/media
-    {% if cookiecutter.monitoring == 'y' %}
-      # Add this mount to each container that should dump Prometheus metrics.
-      - ./prometheus-metrics:/prometheus-multiproc-dir
-    {% endif %}
     logging: &app_logging
       driver: awslogs
       options:
