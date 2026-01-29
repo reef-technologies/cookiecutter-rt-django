@@ -9,18 +9,19 @@ fi
 
 docker compose build
 
-# collect static files to external storage while old app is still running
-# docker compose run --rm app sh -c "python manage.py collectstatic --no-input"
-
-SERVICES=$(docker compose ps --services 2>/dev/null \
-           | grep -v -e 'is not set' -e db -e redis)
-
-# shellcheck disable=2086
-docker compose stop $SERVICES
-
 docker compose up -d db  # in case it hasn't been launched before
 # backup db before any database changes
 docker compose run --rm backups ./backup-db.sh
+
+# collect static files to external storage while old app is still running
+# docker compose run --rm app sh -c "python manage.py collectstatic --no-input"
+
+# Stop app/celery services before migrations to avoid schema mismatches
+SERVICES=$(docker compose ps --services 2>/dev/null | grep -E '^(app|celery-worker|celery-beat)$' || true)
+if [ -n "$SERVICES" ]; then
+    # shellcheck disable=2086
+    docker compose stop $SERVICES
+fi
 # start the app container only in order to perform migrations
 docker compose run --rm app sh -c "python manage.py wait_for_database --timeout 10; python manage.py migrate"
 
