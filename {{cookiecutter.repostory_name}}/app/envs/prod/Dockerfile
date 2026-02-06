@@ -63,4 +63,9 @@ RUN grep psycopg uv.lock && apk add --no-cache libpq || true
 RUN grep Pillow uv.lock && apk add --no-cache jpeg tiff zlib libwebp || true
 {% endif %}
 
+{% if cookiecutter.monitoring == "y" %}
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus-metrics
+RUN mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
+{% endif %}
+
 CMD ["./entrypoint.sh"]
