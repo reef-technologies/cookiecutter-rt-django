@@ -5,7 +5,8 @@ Opinionated CookieCutter template for production-ready Django applications.
 ## Requirements
 
 ```sh
-pip install cruft ruff
+uv tool install cruft
+uv tool install ruff
 ```
 
 ## Usage
