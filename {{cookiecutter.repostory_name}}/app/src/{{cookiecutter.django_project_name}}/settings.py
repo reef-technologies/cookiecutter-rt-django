@@ -4,7 +4,7 @@ Django settings for {{cookiecutter.django_project_name}} project.
 
 import inspect
 import logging
-{% if cookiecutter.use_celery == "y" %}
+{% if cookiecutter.use_celery %}
 from datetime import timedelta
 {% endif %}
 from functools import wraps
@@ -12,11 +12,11 @@ from functools import wraps
 import environ
 import structlog
 
-{% if cookiecutter.use_celery == "y" %}
+{% if cookiecutter.use_celery %}
 # from celery.schedules import crontab
 from kombu import Queue
 {% endif %}
-{% if cookiecutter.use_allauth == "y" %}
+{% if cookiecutter.use_allauth %}
 from django.urls import reverse_lazy
 {% endif %}
 
@@ -65,16 +65,16 @@ ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    {% if cookiecutter.use_allauth == "y" %}
+    {% if cookiecutter.use_allauth %}
     "allauth.account.auth_backends.AuthenticationBackend",
     {% endif %}
 ]
 
 INSTALLED_APPS = [
-    {% if cookiecutter.use_channels == "y" %}
+    {% if cookiecutter.use_channels %}
     "daphne",
     {% endif %}
-    {% if cookiecutter.monitoring == "y" %}
+    {% if cookiecutter.monitoring %}
     "django_prometheus",
     {% endif %}
     "django.contrib.admin",
@@ -87,10 +87,10 @@ INSTALLED_APPS = [
     "django_probes",
     "django_structlog",
     "constance",
-    {% if cookiecutter.use_fingerprinting == "y" %}
+    {% if cookiecutter.use_fingerprinting %}
     "fingerprint",
     {% endif %}
-    {% if cookiecutter.use_allauth == "y" %}
+    {% if cookiecutter.use_allauth %}
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -125,7 +125,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.twitter_oauth2",
     {% endif %}
     {% endif %}
-    {% if cookiecutter.use_rest_framework == "y" %}
+    {% if cookiecutter.use_rest_framework %}
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
@@ -134,9 +134,9 @@ INSTALLED_APPS = [
     "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
 
-{% if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring %}
 PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS", default=True)
-{% if cookiecutter.monitor_view_execution_time_in_djagno == "y" %}
+{% if cookiecutter.monitor_view_execution_time_in_djagno %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
     0.016,
@@ -158,7 +158,7 @@ PROMETHEUS_LATENCY_BUCKETS = (
 {% endif %}
 
 MIDDLEWARE = [
-    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     {% endif %}
     "django.middleware.security.SecurityMiddleware",
@@ -169,10 +169,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_structlog.middlewares.RequestMiddleware",
-    {% if cookiecutter.use_allauth == "y" %}
+    {% if cookiecutter.use_allauth %}
     "allauth.account.middleware.AccountMiddleware",
     {% endif %}
-    {% if cookiecutter.monitor_view_execution_time_in_djagno == "y" and cookiecutter.monitoring == "y" %}
+    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {% endif %}
 ]
@@ -239,7 +239,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "{{cookiecutter.django_project_name}}.wsgi.application"
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 ASGI_APPLICATION = "{{cookiecutter.django_project_name}}.asgi.application"
 {% endif %}
 
@@ -269,7 +269,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-{% if cookiecutter.use_rest_framework == "y" %}
+{% if cookiecutter.use_rest_framework %}
 REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -325,7 +325,7 @@ if env.bool("HTTPS_REDIRECT", default=False) and not DEBUG:
 else:
     SECURE_SSL_REDIRECT = False
 
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 CHANNELS_BACKEND_URL = env("CHANNELS_BACKEND_URL")
 CHANNEL_LAYERS = {
     "default": {
@@ -337,7 +337,7 @@ CHANNEL_LAYERS = {
 }
 {% endif %}
 
-{% if cookiecutter.monitoring == "y" %}
+{% if cookiecutter.monitoring %}
 REDIS_HOST = env("REDIS_HOST")
 REDIS_PORT = env.int("REDIS_PORT")
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
@@ -348,7 +348,7 @@ CONSTANCE_CONFIG = {
     # "PARAMETER": (default-value, "Help text", type),
 }
 
-{% if cookiecutter.use_celery == "y" %}
+{% if cookiecutter.use_celery %}
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="")
 CELERY_RESULT_BACKEND = env("CELERY_BROKER_URL", default="")  # store results in Redis
 CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until task result deletion
@@ -470,7 +470,7 @@ configure_structlog()
 # Sentry
 if SENTRY_DSN := env("SENTRY_DSN", default=""):
     import sentry_sdk
-    {% if cookiecutter.use_celery == "y" %}
+    {% if cookiecutter.use_celery %}
     from sentry_sdk.integrations.celery import CeleryIntegration
     {% endif %}
     from sentry_sdk.integrations.django import DjangoIntegration
@@ -482,7 +482,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
         environment=ENV,
         integrations=[
             DjangoIntegration(),
-            {% if cookiecutter.use_celery == "y" %}
+            {% if cookiecutter.use_celery %}
             CeleryIntegration(),
             {% endif %}
             RedisIntegration(),
@@ -495,7 +495,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
     ignore_logger("django.security.DisallowedHost")
     ignore_logger("django_structlog.celery.receivers")
 
-{% if cookiecutter.use_allauth == "y" %}
+{% if cookiecutter.use_allauth %}
 LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_AUTHENTICATION_METHOD = "email"
@@ -516,7 +516,7 @@ SOCIALACCOUNT_PROVIDERS = {
                 "certificate_key": env("APPLE_LOGIN_CERTIFICATE_PRIVATE_KEY"),
             },
         },
-        {% if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails %}
         # Trust, that Apple verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
@@ -532,7 +532,7 @@ SOCIALACCOUNT_PROVIDERS = {
                 "tenant": "organizations",
             },
         },
-        {% if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails %}
         # Trust, that Microsoft verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
@@ -549,7 +549,7 @@ SOCIALACCOUNT_PROVIDERS = {
                 "server_url": env("OPENID_CONNECT_SERVER_URL")
             },
         },
-        {% if cookiecutter.allauth_trust_external_emails == "y" %}
+        {% if cookiecutter.allauth_trust_external_emails %}
         # Trust, that this provider verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
@@ -562,8 +562,8 @@ SOCIALACCOUNT_PROVIDERS = {
             "client_id": env("{{ provider | upper }}_LOGIN_CLIENT_ID"),
             "secret": env("{{ provider | upper }}_LOGIN_SECRET"),
         },
-        {% if cookiecutter.allauth_trust_external_emails == "y" %}
-        # Trust, that {{ provider | capitalize }} verifies that the users own the addresses that we get from the SSO flow.
+        {% if cookiecutter.allauth_trust_external_emails %}
+        # Trust that {{ provider | capitalize }} verifies that the users own the addresses that we get from the SSO flow.
         # This allows users to log in to any existing account with any configured provider if the email addresses match.
         "EMAIL_AUTHENTICATION": True,
         {% endif %}

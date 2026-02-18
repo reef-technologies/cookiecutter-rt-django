@@ -23,7 +23,7 @@ server {
         root /srv/;
     }
 
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
     location /metrics {
         return 404;
     }
@@ -34,7 +34,7 @@ server {
     {% endif %}
 
     location / {
-        {% if cookiecutter.nginx_tls_early_data_enabled == 'y' %}
+        {% if cookiecutter.nginx_tls_early_data_enabled %}
         if ($too_early) {
             return 425;
         }
@@ -44,14 +44,14 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_pass_header X-Forwarded-Proto;
-        {% if cookiecutter.nginx_tls_early_data_enabled == 'y' %}
+        {% if cookiecutter.nginx_tls_early_data_enabled %}
         proxy_set_header Early-Data $ssl_early_data;
         {% endif %}
         proxy_pass http://gunicorn;
     }
 }
 
-{% if cookiecutter.monitoring == 'y' %}
+{% if cookiecutter.monitoring %}
 upstream node_exporter {
     server host.docker.internal:9100;
 }
@@ -114,7 +114,7 @@ server {
         proxy_pass http://gunicorn/business-metrics;
     }
 
-    {% if cookiecutter.use_flower == "y" %}
+    {% if cookiecutter.use_celery and cookiecutter.use_flower %}
     location /celery-metrics/ {
         proxy_pass_header Server;
         proxy_redirect off;
@@ -137,7 +137,7 @@ server {
 }
 {% endif %}
 
-{% if cookiecutter.nginx_tls_early_data_enabled == 'y' %}
+{% if cookiecutter.nginx_tls_early_data_enabled %}
 ssl_early_data on;
 
 map "$request_method:$ssl_early_data" $too_early {

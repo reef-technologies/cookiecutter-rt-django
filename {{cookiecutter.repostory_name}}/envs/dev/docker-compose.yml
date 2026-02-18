@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   redis:
-    {% if cookiecutter.use_valkey == "y" %}
+    {% if cookiecutter.use_valkey %}
     image: mirror.gcr.io/valkey/valkey:8.1-alpine
     command: valkey-server --appendonly yes
     healthcheck:
