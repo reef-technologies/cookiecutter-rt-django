@@ -9,7 +9,6 @@ jobs:
   deploy:
     env:
       AWS_ACCESS_KEY_ID: {% raw %} ${{ secrets.DEPLOYMENT_AWS_ACCESS_KEY_ID }} {% endraw %}
-
       AWS_SECRET_ACCESS_KEY: {% raw %} ${{ secrets.DEPLOYMENT_AWS_SECRET_ACCESS_KEY }} {% endraw %}
 
     runs-on: ubuntu-latest

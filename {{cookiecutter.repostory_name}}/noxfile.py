@@ -11,8 +11,8 @@ import nox
 CI = os.environ.get("CI") is not None
 
 ROOT = Path(".")
-PYTHON_VERSIONS = ["3.11"]
-PYTHON_DEFAULT_VERSION = PYTHON_VERSIONS[-1]
+PYPROJECT = nox.project.load_toml("pyproject.toml")
+PYTHON_VERSION = PYPROJECT["project"]["requires-python"].strip("=~.*")
 APP_ROOT = ROOT / "app" / "src"
 
 nox.options.default_venv_backend = "uv"
@@ -118,7 +118,7 @@ def run_shellcheck(session, mode="check"):
     session.run(*shellcheck_cmd, external=True)
 
 
-@nox.session(name="format", python=PYTHON_DEFAULT_VERSION)
+@nox.session(name="format", python=PYTHON_VERSION)
 def format_(session):
     """Lint the code and apply fixes in-place whenever possible."""
     install(session, "format")
@@ -128,7 +128,7 @@ def format_(session):
     session.run("ruff", "format", ".")
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
+@nox.session(python=PYTHON_VERSION)
 def lint(session):
     """Run linters in readonly mode."""
     install(session, "lint")
@@ -139,14 +139,14 @@ def lint(session):
     session.run("ruff", "format", "--diff", ".")
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
+@nox.session(python=PYTHON_VERSION)
 def type_check(session):
     install(session, "type_check")
     with session.chdir(str(APP_ROOT)):
         session.run("mypy", "--config-file", "mypy.ini", ".", *session.posargs)
 
 
-@nox.session(python=PYTHON_VERSIONS)
+@nox.session(python=PYTHON_VERSION)
 def test(session):
     install(session, "test")
     with session.chdir(str(APP_ROOT)):

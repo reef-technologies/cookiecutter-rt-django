@@ -8,10 +8,6 @@ ENV_DIR="./envs/dev"
 # shellcheck disable=SC2164
 cd "${PROJECT_DIR}"
 
-# Create a lock file if doesn't exist
-if [[ ! -f "uv.lock" ]]; then
-    uv lock
-fi
 # Install Python dependencies
 uv sync --all-groups
 

@@ -23,3 +23,5 @@ Currently, `cookiecutter-rt-django` has no explicit versioning amd we purely rel
 * **BREAKING** Updated Django from 3.2 to 4.2 (https://docs.djangoproject.com/en/4.2/releases/4.0/#backwards-incompatible-changes-in-4-0)
 * **BREAKING** Updated django-cors-headers from 3.7 to 4.0 (https://github.com/adamchainz/django-cors-headers/blob/main/CHANGELOG.rst#400-2023-05-12)
 * **BREAKING** Updated django-environ from 0.7 to 0.10 (https://django-environ.readthedocs.io/en/latest/changelog.html)
+* **BREAKING** Updated Python from 3.11 to 3.14
+* **BREAKING** Updated Django from 4.2 to 5.2 (https://docs.djangoproject.com/en/5.2/releases/5.0/#backwards-incompatible-changes-in-5-0)

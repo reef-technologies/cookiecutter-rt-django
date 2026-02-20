@@ -6,10 +6,8 @@
 
 # Base requirements
 
-- docker with [compose plugin](https://docs.docker.com/compose/install/linux/)
-- python 3.11
+- [docker](https://docs.docker.com)
 - [uv](https://docs.astral.sh/uv/)
-- [nox](https://nox.thea.codes)
 
 # Setup development environment
 
@@ -309,6 +307,22 @@ docker compose run --rm backups ./restore-db.sh b2id://{ID}
 `backups` container runs a simple server which [exposes essential metrics about backups](backups/bin/serve_metrics.py).
 
 </details>
+
+# Tests / CI
+
+First install `nox` as tool for running tests and other checks:
+
+```sh
+# pyyaml is required for nox to read `pyproject.toml` file
+uv tool install --with pyyaml nox
+```
+
+Then run desired nox session:
+
+```sh
+uvx nox -s lint
+uvx nox -s test
+```
 
 # cookiecutter-rt-django
 

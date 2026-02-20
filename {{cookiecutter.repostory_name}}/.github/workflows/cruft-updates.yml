@@ -17,12 +17,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.11"
+          version: "0.10.x"
 
       - name: Install Cruft
-        run: pip3 install cruft~=2.16.0 ruff~=0.8.4
+        run: uv tool install cruft~=2.16.0
 
       - name: Check if update is available
         continue-on-error: false
@@ -30,7 +31,7 @@ jobs:
         run: |
           CHANGES=0
           if [ -f .cruft.json ]; then
-            if ! cruft check; then
+            if ! uvx cruft check; then
               CHANGES=1
             fi
           else
@@ -45,7 +46,7 @@ jobs:
           git config --global user.email "updater@reef.pl"
           git config --global user.name "Cruft Updater"
 
-          cruft update --skip-apply-ask --refresh-private-variables
+          uvx cruft update --skip-apply-ask --refresh-private-variables
           git restore --staged .
 
       - name: Check for .rej files

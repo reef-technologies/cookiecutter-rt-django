@@ -3,7 +3,7 @@ name = "cookiecutter-rt-django"
 description = "RT Django project template - don't install try to install this as package, use it as cruft template"
 version = "0"
 license = {file = "LICENSE"}
-requires-python = ">=3.11"
+requires-python = "==3.14.*"
 
 dependencies = [
     "cruft",
