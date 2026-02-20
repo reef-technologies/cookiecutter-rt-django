@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   redis:
-    {% if cookiecutter.use_valkey == "y" %}
+    {% if cookiecutter.use_valkey %}
     image: mirror.gcr.io/valkey/valkey:8.1-alpine
     command: valkey-server --appendonly yes
     healthcheck:
@@ -74,7 +74,7 @@ services:
     init: true
     restart: unless-stopped
     env_file: ./.env
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
     environment:
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
       # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
@@ -86,7 +86,7 @@ services:
       - backend-static:/root/src/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:/root/src/media
-      {% if cookiecutter.monitoring == 'y' %}
+      {% if cookiecutter.monitoring %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
       {% endif %}
@@ -96,7 +96,7 @@ services:
     logging:
       <<: *logging
 
-  {% if cookiecutter.use_celery == "y" %}
+  {% if cookiecutter.use_celery %}
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
     init: true
@@ -106,11 +106,11 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
-      {% if cookiecutter.monitoring == 'y' %}
+      {% if cookiecutter.monitoring %}
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/celery-worker
       {% endif %}
     command: ./celery-entrypoint.sh
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
     volumes:
       - ./prometheus-metrics:/prometheus-multiproc-dir
     {% endif %}
@@ -135,7 +135,7 @@ services:
     logging:
       <<: *logging
 
-  {% if cookiecutter.use_flower == "y" %}
+  {% if cookiecutter.use_flower %}
   celery-flower:
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
@@ -180,7 +180,7 @@ services:
       - gunicorn-socket:/var/run/gunicorn:ro
     depends_on:
       - app
-      {% if cookiecutter.monitoring == 'y' %}
+      {% if cookiecutter.monitoring %}
       - cadvisor
       - node-exporter
       {% endif %}
@@ -188,17 +188,17 @@ services:
     ports:
       - 80:80
       - 443:443
-      {% if cookiecutter.monitoring == 'y' %}
+      {% if cookiecutter.monitoring %}
       - 10443:10443
       {% endif %}
     logging:
       <<: *logging
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     {% endif %}
 
-  {% if cookiecutter.monitoring == 'y' %}
+  {% if cookiecutter.monitoring %}
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -212,10 +212,10 @@ services:
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
-      {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+      {% if cookiecutter.vulnerabilities_scanning %}
       - '--collector.textfile.directory=textfile_collectors'
       {% endif %}
-      {% if cookiecutter.monitor_tcpstat == 'y' %}
+      {% if cookiecutter.monitor_tcpstat %}
       - '--collector.tcpstat'
       {% endif %}
     logging:
@@ -237,7 +237,7 @@ services:
       <<: *logging
   {% endif %}
 
-  {% if cookiecutter.log_aggregating == 'y' %}
+  {% if cookiecutter.log_aggregating %}
   alloy:
     image: grafana/alloy:v1.8.3
     restart: unless-stopped
@@ -256,7 +256,7 @@ services:
     logging:
       <<: *logging
   {% endif %}
-  {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+  {% if cookiecutter.vulnerabilities_scanning %}
   vulnrelay:
     image: 'ghcr.io/reef-technologies/vulnrelay:latest'
     container_name: vulnrelay

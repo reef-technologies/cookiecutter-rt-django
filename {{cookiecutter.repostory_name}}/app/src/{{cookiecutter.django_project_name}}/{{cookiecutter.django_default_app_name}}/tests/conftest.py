@@ -1,7 +1,7 @@
 from collections.abc import Generator
 
 import pytest
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 import pytest_asyncio
 from channels.testing import WebsocketCommunicator
 
@@ -14,7 +14,7 @@ def some() -> Generator[int, None, None]:
     # setup code
     yield 1
     # teardown code
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 
 
 @pytest_asyncio.fixture

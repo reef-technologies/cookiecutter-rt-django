@@ -1,3 +1,3 @@
 #!/bin/bash
 set -eux
-ruff format .
+uvx ruff format .

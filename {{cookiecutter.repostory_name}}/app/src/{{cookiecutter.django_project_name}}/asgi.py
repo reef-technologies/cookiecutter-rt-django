@@ -1,6 +1,6 @@
 import os
 
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 from channels.routing import ProtocolTypeRouter, URLRouter
 {% endif %}
 from django.core.asgi import get_asgi_application
@@ -9,11 +9,11 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "{{cookiecutter.django_project_name}}.settings")
 http_app = get_asgi_application()
 
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 from .urls import ws_urlpatterns  # noqa
 {% endif %}
 
-{% if cookiecutter.use_channels == "y" %}
+{% if cookiecutter.use_channels %}
 
 application = ProtocolTypeRouter(
     {
