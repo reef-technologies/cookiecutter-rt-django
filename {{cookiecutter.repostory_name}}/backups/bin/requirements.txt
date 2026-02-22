@@ -2,3 +2,4 @@ prometheus_client==0.21.1
 b2sdk==2.10.2
 structlog==25.1.0
 b2==4.5.0
+sentry-sdk==2.53.0
