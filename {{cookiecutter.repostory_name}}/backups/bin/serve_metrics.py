@@ -10,10 +10,13 @@ from os import environ
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+import sentry_sdk
 import structlog
 from b2sdk.v2 import B2Api, InMemoryAccountInfo
 from prometheus_client import Gauge, Histogram, start_http_server
 from structlog.contextvars import bound_contextvars
+
+sentry_sdk.init()
 
 MiB = 1
 GiB = 1024 * MiB
