@@ -86,6 +86,9 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_probes",
     "django_structlog",
+    {% if cookiecutter.csp_enabled %}
+    "csp",
+    {% endif %}
     "constance",
     {% if cookiecutter.use_fingerprinting %}
     "fingerprint",
@@ -163,6 +166,9 @@ MIDDLEWARE = [
     {% endif %}
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    {% if cookiecutter.csp_enabled %}
+    "csp.middleware.CSPMiddleware",
+    {% endif %}
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -196,29 +202,67 @@ if CORS_ENABLED := env.bool("CORS_ENABLED", default=True):
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Content Security Policy
-if CSP_ENABLED := env.bool("CSP_ENABLED"):
-    MIDDLEWARE.append("csp.middleware.CSPMiddleware")
+{% if cookiecutter.csp_enabled %}
+CONTENT_SECURITY_POLICY = {
+    "EXCLUDE_URL_PREFIXES": env.tuple("CSP_EXCLUDE_URL_PREFIXES"),
+    "DIRECTIVES": {
+        "default-src": env.tuple("CSP_DEFAULT_SRC"),
+        "script-src": env.tuple("CSP_SCRIPT_SRC"),
+        "script-src-attr": env.tuple("CSP_SCRIPT_SRC_ATTR"),
+        "script-src-elem": env.tuple("CSP_SCRIPT_SRC_ELEM"),
+        "img-src": env.tuple("CSP_IMG_SRC"),
+        "object-src": env.tuple("CSP_OBJECT_SRC"),
+        "media-src": env.tuple("CSP_MEDIA_SRC"),
+        "frame-src": env.tuple("CSP_FRAME_SRC"),
+        "font-src": env.tuple("CSP_FONT_SRC"),
+        "connect-src": env.tuple("CSP_CONNECT_SRC"),
+        "style-src": env.tuple("CSP_STYLE_SRC"),
+        "style-src-attr": env.tuple("CSP_STYLE_SRC_ATTR"),
+        "style-src-elem": env.tuple("CSP_STYLE_SRC_ELEM"),
+        "base-uri": env.tuple("CSP_BASE_URI"),
+        "frame-ancestors": env.tuple("CSP_FRAME_ANCESTORS"),
+        "form-action": env.tuple("CSP_FORM_ACTION"),
+        "sandbox": env.tuple("CSP_SANDBOX"),
+        "report-uri": env.str("CSP_REPORT_URI"),
+        "report-to": env.str("CSP_REPORT_TO"),
+        "manifest-src": env.tuple("CSP_MANIFEST_SRC"),
+        "worker-src": env.tuple("CSP_WORKER_SRC"),
+        "upgrade-insecure-requests": env.bool("CSP_UPGRADE_INSECURE_REQUESTS"),
+        "require-trusted-types-for": env.tuple("CSP_REQUIRE_TRUSTED_TYPES_FOR"),
+        "trusted-types": env.tuple("CSP_TRUSTED_TYPES"),
+    },
+}
 
-    CSP_REPORT_ONLY = env.bool("CSP_REPORT_ONLY", default=True)
-    CSP_REPORT_URL = env("CSP_REPORT_URL", default=None) or None
-
-    CSP_DEFAULT_SRC = env.tuple("CSP_DEFAULT_SRC")
-    CSP_SCRIPT_SRC = env.tuple("CSP_SCRIPT_SRC")
-    CSP_STYLE_SRC = env.tuple("CSP_STYLE_SRC")
-    CSP_FONT_SRC = env.tuple("CSP_FONT_SRC")
-    CSP_IMG_SRC = env.tuple("CSP_IMG_SRC")
-    CSP_MEDIA_SRC = env.tuple("CSP_MEDIA_SRC")
-    CSP_OBJECT_SRC = env.tuple("CSP_OBJECT_SRC")
-    CSP_FRAME_SRC = env.tuple("CSP_FRAME_SRC")
-    CSP_CONNECT_SRC = env.tuple("CSP_CONNECT_SRC")
-    CSP_CHILD_SRC = env.tuple("CSP_CHILD_SRC")
-    CSP_MANIFEST_SRC = env.tuple("CSP_MANIFEST_SRC")
-    CSP_WORKER_SRC = env.tuple("CSP_WORKER_SRC")
-
-    CSP_BLOCK_ALL_MIXED_CONTENT = env.bool("CSP_BLOCK_ALL_MIXED_CONTENT", default=False)
-    CSP_EXCLUDE_URL_PREFIXES = env.tuple("CSP_EXCLUDE_URL_PREFIXES", default=tuple())
-
+CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+    "EXCLUDE_URL_PREFIXES": env.tuple("CSP_REPORT_ONLY_EXCLUDE_URL_PREFIXES"),
+    "DIRECTIVES": {
+        "default-src": env.tuple("CSP_REPORT_ONLY_DEFAULT_SRC"),
+        "script-src": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC"),
+        "script-src-attr": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC_ATTR"),
+        "script-src-elem": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC_ELEM"),
+        "img-src": env.tuple("CSP_REPORT_ONLY_IMG_SRC"),
+        "object-src": env.tuple("CSP_REPORT_ONLY_OBJECT_SRC"),
+        "media-src": env.tuple("CSP_REPORT_ONLY_MEDIA_SRC"),
+        "frame-src": env.tuple("CSP_REPORT_ONLY_FRAME_SRC"),
+        "font-src": env.tuple("CSP_REPORT_ONLY_FONT_SRC"),
+        "connect-src": env.tuple("CSP_REPORT_ONLY_CONNECT_SRC"),
+        "style-src": env.tuple("CSP_REPORT_ONLY_STYLE_SRC"),
+        "style-src-attr": env.tuple("CSP_REPORT_ONLY_STYLE_SRC_ATTR"),
+        "style-src-elem": env.tuple("CSP_REPORT_ONLY_STYLE_SRC_ELEM"),
+        "base-uri": env.tuple("CSP_REPORT_ONLY_BASE_URI"),
+        "frame-ancestors": env.tuple("CSP_REPORT_ONLY_FRAME_ANCESTORS"),
+        "form-action": env.tuple("CSP_REPORT_ONLY_FORM_ACTION"),
+        "sandbox": env.tuple("CSP_REPORT_ONLY_SANDBOX"),
+        "report-uri": env.str("CSP_REPORT_ONLY_REPORT_URI"),
+        "report-to": env.str("CSP_REPORT_ONLY_REPORT_TO"),
+        "manifest-src": env.tuple("CSP_REPORT_ONLY_MANIFEST_SRC"),
+        "worker-src": env.tuple("CSP_REPORT_ONLY_WORKER_SRC"),
+        "upgrade-insecure-requests": env.bool("CSP_REPORT_ONLY_UPGRADE_INSECURE_REQUESTS"),
+        "require-trusted-types-for": env.tuple("CSP_REPORT_ONLY_REQUIRE_TRUSTED_TYPES_FOR"),
+        "trusted-types": env.tuple("CSP_REPORT_ONLY_TRUSTED_TYPES"),
+    },
+}
+{% endif %}
 
 ROOT_URLCONF = "{{cookiecutter.django_project_name}}.urls"
 
