@@ -111,7 +111,7 @@ INSTALLED_APPS = [
 ]
 
 {% if cookiecutter.monitoring %}
-PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS", default=True)
+PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS")
 {% if cookiecutter.monitor_view_execution_time_in_djagno %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
@@ -157,17 +157,17 @@ MIDDLEWARE = [
 ]
 
 
-if DEBUG_TOOLBAR := env.bool("DEBUG_TOOLBAR", default=False):
+if DEBUG_TOOLBAR := env.bool("DEBUG_TOOLBAR"):
     DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: True}
     INSTALLED_APPS.append("debug_toolbar")
     MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
 
-if CORS_ENABLED := env.bool("CORS_ENABLED", default=True):
+if CORS_ENABLED := env.bool("CORS_ENABLED"):
     INSTALLED_APPS.append("corsheaders")
     MIDDLEWARE = ["corsheaders.middleware.CorsMiddleware"] + MIDDLEWARE
-    CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
-    CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[])
-    CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
+    CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+    CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES")
+    CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -323,14 +323,14 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = env("STATIC_URL", default="/static/")
-STATIC_ROOT = env("STATIC_ROOT", default=root("static"))
-MEDIA_URL = env("MEDIA_URL", default="/media/")
-MEDIA_ROOT = env("MEDIA_ROOT", default=root("media"))
+STATIC_URL = "/static/"
+STATIC_ROOT = env("STATIC_ROOT")
+MEDIA_URL = "/media/"
+MEDIA_ROOT = env("MEDIA_ROOT")
 
 # Security
 # redirect HTTP to HTTPS
-if env.bool("HTTPS_REDIRECT", default=False) and not DEBUG:
+if env.bool("HTTPS_REDIRECT") and not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_REDIRECT_EXEMPT = []  # type: ignore
     SESSION_COOKIE_SECURE = True
@@ -362,8 +362,8 @@ CONSTANCE_CONFIG = {
 }
 
 {% if cookiecutter.use_celery %}
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="")
-CELERY_RESULT_BACKEND = env("CELERY_BROKER_URL", default="")  # store results in Redis
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = env("CELERY_BROKER_URL")  # store results in Redis
 CELERY_RESULT_EXPIRES = int(timedelta(days=1).total_seconds())  # time until task result deletion
 CELERY_COMPRESSION = "gzip"  # task compression
 CELERY_MESSAGE_COMPRESSION = "gzip"  # result compression
@@ -384,14 +384,14 @@ CELERY_TASK_DEFAULT_ROUTING_KEY = "celery"
 CELERY_TASK_ANNOTATIONS = {"*": {"acks_late": True, "reject_on_worker_lost": True}}
 CELERY_TASK_ROUTES = {"*": {"queue": "celery"}}
 CELERY_TASK_TIME_LIMIT = int(timedelta(minutes=5).total_seconds())
-CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER")
 CELERY_WORKER_SEND_TASK_EVENTS = True
 CELERY_TASK_SEND_SENT_EVENT = True
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_WORKER_PREFETCH_MULTIPLIER = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER", default=1)
-CELERY_BROKER_POOL_LIMIT = env.int("CELERY_BROKER_POOL_LIMIT", default=50)
+CELERY_WORKER_PREFETCH_MULTIPLIER = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER")
+CELERY_BROKER_POOL_LIMIT = env.int("CELERY_BROKER_POOL_LIMIT")
 
 DJANGO_STRUCTLOG_CELERY_ENABLED = True
 {% endif %}
@@ -481,7 +481,7 @@ def configure_structlog():
 configure_structlog()
 
 # Sentry
-if SENTRY_DSN := env("SENTRY_DSN", default=""):
+if SENTRY_DSN := env("SENTRY_DSN"):
     import sentry_sdk
     {% if cookiecutter.use_celery %}
     from sentry_sdk.integrations.celery import CeleryIntegration

@@ -1,11 +1,19 @@
 ENV=${env}
-NGINX_HOST=localhost
 DEBUG=0
+DEBUG_TOOLBAR=0
 SECRET_KEY=${secret_key}
+
 POSTGRES_DB=${database_name}
 POSTGRES_USER=${database_user}
 POSTGRES_PASSWORD=${database_password}
 DATABASE_URL=${database_connection_string}
+
+NGINX_HOST=localhost
+
+CORS_ENABLED=1
+CORS_ALLOWED_ORIGINS=
+CORS_ALLOWED_ORIGIN_REGEXES=
+CORS_ALLOW_ALL_ORIGINS=0
 
 EMAIL_BACKEND=django.core.mail.backends.filebased.EmailBackend
 EMAIL_FILE_PATH=/tmp/email
@@ -16,8 +24,15 @@ EMAIL_HOST_USER=apikey
 EMAIL_HOST_PASSWORD=
 DEFAULT_FROM_EMAIL=
 
-SENTRY_DSN=
-HTTPS_REDIRECT=n
+SENTRY_DSN={{cookiecutter.sentry_dsn}}
+{% if cookiecutter.monitoring %}
+PROMETHEUS_EXPORT_MIGRATIONS=1
+{% endif %}
+HTTPS_REDIRECT=1
+
+STATIC_ROOT=/root/src/static
+MEDIA_ROOT=/root/src/media
+
 HTTPS_PROXY_HEADER=X_SCHEME
 
 {% if cookiecutter.csp_enabled %}
@@ -72,6 +87,22 @@ CSP_REPORT_ONLY_WORKER_SRC='self'
 CSP_REPORT_ONLY_UPGRADE_INSECURE_REQUESTS=1
 CSP_REPORT_ONLY_REQUIRE_TRUSTED_TYPES_FOR='script'
 CSP_REPORT_ONLY_TRUSTED_TYPES='default'
+{% endif %}
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+{% if cookiecutter.use_celery %}
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_TASK_ALWAYS_EAGER=0
+CELERY_WORKER_PREFETCH_MULTIPLIER=1
+CELERY_BROKER_POOL_LIMIT=50
+CELERY_MASTER_CONCURRENCY=2
+CELERY_WORKER_CONCURRENCY=2
+{% if cookiecutter.use_flower %}
+CELERY_FLOWER_USER=flower
+CELERY_FLOWER_PASSWORD=
+{% endif %}
 {% endif %}
 
 BACKUP_LOCAL_ROTATE_KEEP_LAST=

@@ -83,9 +83,9 @@ services:
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
     {% endif %}
     volumes:
-      - backend-static:/root/src/static
+      - backend-static:${STATIC_ROOT}
       - gunicorn-socket:/var/run/gunicorn
-      - ./media:/root/src/media
+      - ./media:${MEDIA_ROOT}
       {% if cookiecutter.monitoring %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
