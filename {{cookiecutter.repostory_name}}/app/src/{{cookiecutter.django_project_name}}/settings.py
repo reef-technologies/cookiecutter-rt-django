@@ -206,24 +206,24 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CONTENT_SECURITY_POLICY = {
     "EXCLUDE_URL_PREFIXES": env.tuple("CSP_EXCLUDE_URL_PREFIXES"),
     "DIRECTIVES": {
-        "default-src": env.tuple("CSP_DEFAULT_SRC"),  # the default fallback for other resource directives
-        "script-src": env.tuple("CSP_SCRIPT_SRC"),  # trusted sources for JavaScript
+        "default-src": env.tuple("CSP_DEFAULT_SRC"),
+        "script-src": env.tuple("CSP_SCRIPT_SRC"),
         "script-src-attr": env.tuple("CSP_SCRIPT_SRC_ATTR"),
         "script-src-elem": env.tuple("CSP_SCRIPT_SRC_ELEM"),
-        "img-src": env.tuple("CSP_IMG_SRC"),  # trusted sources for images
-        "object-src": env.tuple("CSP_OBJECT_SRC"),  # allows plugins like <object> or <embed>
-        "media-src": env.tuple("CSP_MEDIA_SRC"),  # trusted sources for video and audio
-        "frame-src": env.tuple("CSP_FRAME_SRC"),  # specifies valid sources for nested browsing contexts (iframes)
-        "font-src": env.tuple("CSP_FONT_SRC"),  # trusted sources for fonts
-        "connect-src": env.tuple("CSP_CONNECT_SRC"),  # limits origins to which scripts can connect (e.g., fetch, XHR)
-        "style-src": env.tuple("CSP_STYLE_SRC"),  # trusted sources for stylesheets
+        "img-src": env.tuple("CSP_IMG_SRC"),
+        "object-src": env.tuple("CSP_OBJECT_SRC"),
+        "media-src": env.tuple("CSP_MEDIA_SRC"),
+        "frame-src": env.tuple("CSP_FRAME_SRC"),
+        "font-src": env.tuple("CSP_FONT_SRC"),
+        "connect-src": env.tuple("CSP_CONNECT_SRC"),
+        "style-src": env.tuple("CSP_STYLE_SRC"),
         "style-src-attr": env.tuple("CSP_STYLE_SRC_ATTR"),
         "style-src-elem": env.tuple("CSP_STYLE_SRC_ELEM"),
-        "base-uri": env.tuple("CSP_BASE_URI"),  # restricts the URLs allowed in a page's <base> element
-        "frame-ancestors": env.tuple("CSP_FRAME_ANCESTORS"),  # specifies parents that may embed a page (used for clickjacking defense)
-        "form-action": env.tuple("CSP_FORM_ACTION"),  # restricts allowed endpoints for <form> submissions
-        "sandbox": env.tuple("CSP_SANDBOX"),  # enables a sandbox for the requested resource (similar to iframe sandbox)
-        "report-uri": env.str("CSP_REPORT_URI"),  # defines the URL where violations are reported
+        "base-uri": env.tuple("CSP_BASE_URI"),
+        "frame-ancestors": env.tuple("CSP_FRAME_ANCESTORS"),
+        "form-action": env.tuple("CSP_FORM_ACTION"),
+        "sandbox": env.tuple("CSP_SANDBOX"),
+        "report-uri": env.str("CSP_REPORT_URI"),
         "report-to": env.str("CSP_REPORT_TO"),
         "manifest-src": env.tuple("CSP_MANIFEST_SRC"),
         "worker-src": env.tuple("CSP_WORKER_SRC"),
@@ -236,24 +236,24 @@ CONTENT_SECURITY_POLICY = {
 CONTENT_SECURITY_POLICY_REPORT_ONLY = {
     "EXCLUDE_URL_PREFIXES": env.tuple("CSP_REPORT_ONLY_EXCLUDE_URL_PREFIXES"),
     "DIRECTIVES": {
-        "default-src": env.tuple("CSP_REPORT_ONLY_DEFAULT_SRC"),  # the default fallback for other resource directives
-        "script-src": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC"),  # trusted sources for JavaScript
+        "default-src": env.tuple("CSP_REPORT_ONLY_DEFAULT_SRC"),
+        "script-src": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC"),
         "script-src-attr": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC_ATTR"),
         "script-src-elem": env.tuple("CSP_REPORT_ONLY_SCRIPT_SRC_ELEM"),
-        "img-src": env.tuple("CSP_REPORT_ONLY_IMG_SRC"),  # trusted sources for images
-        "object-src": env.tuple("CSP_REPORT_ONLY_OBJECT_SRC"),  # allows plugins like <object> or <embed>
-        "media-src": env.tuple("CSP_REPORT_ONLY_MEDIA_SRC"),  # trusted sources for video and audio
-        "frame-src": env.tuple("CSP_REPORT_ONLY_FRAME_SRC"),  # specifies valid sources for nested browsing contexts (iframes)
-        "font-src": env.tuple("CSP_REPORT_ONLY_FONT_SRC"),  # trusted sources for fonts
-        "connect-src": env.tuple("CSP_REPORT_ONLY_CONNECT_SRC"),  # limits origins to which scripts can connect (e.g., fetch, XHR)
-        "style-src": env.tuple("CSP_REPORT_ONLY_STYLE_SRC"),  # trusted sources for stylesheets
+        "img-src": env.tuple("CSP_REPORT_ONLY_IMG_SRC"),
+        "object-src": env.tuple("CSP_REPORT_ONLY_OBJECT_SRC"),
+        "media-src": env.tuple("CSP_REPORT_ONLY_MEDIA_SRC"),
+        "frame-src": env.tuple("CSP_REPORT_ONLY_FRAME_SRC"),
+        "font-src": env.tuple("CSP_REPORT_ONLY_FONT_SRC"),
+        "connect-src": env.tuple("CSP_REPORT_ONLY_CONNECT_SRC"),
+        "style-src": env.tuple("CSP_REPORT_ONLY_STYLE_SRC"),
         "style-src-attr": env.tuple("CSP_REPORT_ONLY_STYLE_SRC_ATTR"),
         "style-src-elem": env.tuple("CSP_REPORT_ONLY_STYLE_SRC_ELEM"),
-        "base-uri": env.tuple("CSP_REPORT_ONLY_BASE_URI"),  # restricts the URLs allowed in a page's <base> element
-        "frame-ancestors": env.tuple("CSP_REPORT_ONLY_FRAME_ANCESTORS"),  # specifies parents that may embed a page (used for clickjacking defense)
-        "form-action": env.tuple("CSP_REPORT_ONLY_FORM_ACTION"),  # restricts allowed endpoints for <form> submissions
-        "sandbox": env.tuple("CSP_REPORT_ONLY_SANDBOX"),  # enables a sandbox for the requested resource (similar to iframe sandbox)
-        "report-uri": env.str("CSP_REPORT_ONLY_REPORT_URI"),  # defines the URL where violations are reported
+        "base-uri": env.tuple("CSP_REPORT_ONLY_BASE_URI"),
+        "frame-ancestors": env.tuple("CSP_REPORT_ONLY_FRAME_ANCESTORS"),
+        "form-action": env.tuple("CSP_REPORT_ONLY_FORM_ACTION"),
+        "sandbox": env.tuple("CSP_REPORT_ONLY_SANDBOX"),
+        "report-uri": env.str("CSP_REPORT_ONLY_REPORT_URI"),
         "report-to": env.str("CSP_REPORT_ONLY_REPORT_TO"),
         "manifest-src": env.tuple("CSP_REPORT_ONLY_MANIFEST_SRC"),
         "worker-src": env.tuple("CSP_REPORT_ONLY_WORKER_SRC"),
