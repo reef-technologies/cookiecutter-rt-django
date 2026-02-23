@@ -16,7 +16,7 @@ MIMEType = TypeVar("MIMEType", bound=MIMEBase)
 
 
 @lru_cache(maxsize=10)
-def create_attachment(
+def create_attachment[MIMEType: MIMEBase](
     path: str,
     mime_type: Callable[[bytes], MIMEType] = MIMEImage,  # type: ignore[assignment] # https://github.com/python/mypy/issues/3737
 ) -> MIMEType:
