@@ -81,3 +81,17 @@ BACKUP_B2_APPLICATION_KEY_ID=
 BACKUP_B2_APPLICATION_KEY=
 DATABASE_POOL_URL=
 CHANNELS_BACKEND_URL=redis://redis:6379/1
+
+{% if cookiecutter.use_allauth %}
+{% for provider in cookiecutter.allauth_providers.split(",")|map("trim") %}
+{{ provider.upper() }}_LOGIN_CLIENT_ID=
+{{ provider.upper() }}_LOGIN_SECRET=
+{% if provider == "apple" %}
+APPLE_LOGIN_KEY=
+APPLE_LOGIN_CERTIFICATE_PRIVATE_KEY=
+{% elif provider == "openid_connect" %}
+OPENID_CONNECT_NICE_NAME=
+OPENID_CONNECT_SERVER_URL=
+{% endif %}
+{% endfor %}
+{% endif %}
