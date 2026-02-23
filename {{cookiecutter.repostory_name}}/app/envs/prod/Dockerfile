@@ -1,4 +1,4 @@
-{% if cookiecutter.use_alpine_linux == "y" %}
+{% if cookiecutter.use_alpine_linux %}
 ARG BASE_IMAGE=python:3.11-alpine
 {% else %}
 ARG BASE_IMAGE=python:3.11-slim
@@ -18,13 +18,13 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
-{% if cookiecutter.use_alpine_linux == "y" %}
+{% if cookiecutter.use_alpine_linux %}
 RUN grep uvicorn uv.lock && apk add --no-cache build-base || true
 RUN grep psycopg uv.lock && apk add --no-cache postgresql-dev gcc python3-dev musl-dev libffi-dev || true
 RUN grep Pillow uv.lock && apk add --no-cache jpeg-dev tiff-dev zlib-dev libwebp-dev gcc python3-dev musl-dev || true
 {% endif %}
 
-{% if cookiecutter.use_alpine_linux == "y" %}
+{% if cookiecutter.use_alpine_linux %}
 RUN apk add git
 {% else %}
 RUN apt-get update && apt-get install -y git
@@ -44,7 +44,7 @@ RUN ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy uv run python3 manage.py
 FROM $BASE_IMAGE AS secondary-image
 LABEL builder=false
 
-{% if cookiecutter.use_alpine_linux == "y" %}
+{% if cookiecutter.use_alpine_linux %}
 RUN apk add wget
 {% else %}
 RUN apt-get update \
@@ -58,7 +58,7 @@ ENV PATH="/root/src/.venv/bin:$PATH"
 
 COPY --from=base-image /root/src/ /root/src/
 
-{% if cookiecutter.use_alpine_linux == "y" %}
+{% if cookiecutter.use_alpine_linux %}
 RUN grep psycopg uv.lock && apk add --no-cache libpq || true
 RUN grep Pillow uv.lock && apk add --no-cache jpeg tiff zlib libwebp || true
 {% endif %}

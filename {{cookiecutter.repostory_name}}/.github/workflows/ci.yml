@@ -11,7 +11,7 @@ env:
   ENV_FILL_MISSING_VALUES: 1
 
 jobs:
-{% if cookiecutter.ci_use_linter == "y" %}
+{% if cookiecutter.ci_use_linter %}
   linter:
     runs-on: ubuntu-latest
     steps:

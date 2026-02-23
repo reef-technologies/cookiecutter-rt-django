@@ -8,7 +8,7 @@ services:
     env_file: ./.env
     healthcheck:
       test: ["CMD", "./healthcheck.py", "/var/run/gunicorn/gunicorn.sock"]
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
     environment:
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
       # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
@@ -20,7 +20,7 @@ services:
       - backend-static:/root/src/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:/root/src/media
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
     {% endif %}
@@ -58,7 +58,7 @@ services:
     logging:
       <<: *app_logging
 
-  {% if cookiecutter.monitoring == 'y' %}
+  {% if cookiecutter.monitoring %}
   node-exporter:
     image: ghcr.io/reef-technologies/node-exporter-aws-ec2:latest
     container_name: node-exporter
@@ -71,7 +71,7 @@ services:
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-      {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+      {% if cookiecutter.vulnerabilities_scanning %}
       - '--collector.textfile.directory=textfile_collectors'
       {% endif %}
     logging: &exporter_logging
@@ -103,13 +103,13 @@ services:
       test: wget -q --spider http://0.0.0.0:8000/alive/ || exit 1
     depends_on:
       - app
-      {% if cookiecutter.monitoring == 'y' %}
+      {% if cookiecutter.monitoring %}
       - cadvisor
       - node-exporter
       {% endif %}
     command: nginx -g 'daemon off;'
     ports:
-      {% if cookiecutter.monitoring == 'y' %}
+      {% if cookiecutter.monitoring %}
       - 10443:10443
       {% endif %}
       - 8000:8000
@@ -127,11 +127,11 @@ services:
         awslogs-group: /aws/ec2/${name}-${env}
         tag: '$${INSTANCE_ID_SUBST}-nginx'
         awslogs-create-group: "true"
-    {% if cookiecutter.monitoring == 'y' %}
+    {% if cookiecutter.monitoring %}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     {% endif %}
-  {% if cookiecutter.vulnerabilities_scanning == 'y' %}
+  {% if cookiecutter.vulnerabilities_scanning %}
   vulnrelay:
     image: 'ghcr.io/reef-technologies/vulnrelay:latest'
     container_name: vulnrelay

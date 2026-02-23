@@ -103,7 +103,7 @@ git push --force production local-branch-to-deploy:master
 
 </details>
 
-{% if cookiecutter.use_allauth == 'y' %}
+{% if cookiecutter.use_allauth %}
 # External auth (OAuth, OpenID connect etc.)
 To configure an external authentication mechanism, usually you must acquire a "client ID" and a "client secret".
 This usually requires registering your application on the provider's website. Look at allauth's documentation for the
@@ -112,7 +112,7 @@ specific provider to see how to do that:
 [https://docs.allauth.org/en/latest/socialaccount/providers/index.html](https://docs.allauth.org/en/latest/socialaccount/providers/index.html)
 
 After acquiring the id and secret, simply fill in the env vars for the provider.
-{% if cookiecutter.allauth_trust_external_emails == "y" %}
+{% if cookiecutter.allauth_trust_external_emails %}
 
 > ⚠️ Caution: the SSO provider is trusted to have verified the ownership of user's email address.
 > This will allow a user to log in to any account that matches the email address returned by the
@@ -146,7 +146,7 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 
 {% endif %}
 
-{% if cookiecutter.use_celery == 'y' %}
+{% if cookiecutter.use_celery %}
 # Background tasks with Celery
 
 ## Dead letter queue
@@ -169,7 +169,7 @@ To flush add tasks in specific queue, use
 </details>
 
 {% endif %}
-{% if cookiecutter.monitoring == 'y' %}
+{% if cookiecutter.monitoring %}
 # Monitoring
 
 Running the app requires proper certificates to be put into `nginx/monitoring_certs`,
