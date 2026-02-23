@@ -18,8 +18,8 @@ import nox
 CI = os.environ.get("CI") is not None
 
 ROOT = Path(".")
-PYTHON_VERSIONS = ["3.11"]
-PYTHON_DEFAULT_VERSION = PYTHON_VERSIONS[-1]
+PYPROJECT = nox.project.load_toml("pyproject.toml")
+PYTHON_VERSION = PYPROJECT["project"]["requires-python"].strip("=~.*")
 
 # tested default config overrides
 CRUFT_TESTED_CONFIG_MATRIX = {
@@ -146,7 +146,7 @@ def run_shellcheck(session, mode="check"):
     session.run(*shellcheck_cmd, external=True)
 
 
-@nox.session(name="format", python=PYTHON_DEFAULT_VERSION)
+@nox.session(name="format", python=PYTHON_VERSION)
 def format_(session):
     """Lint the code and apply fixes in-place whenever possible."""
     uv_env = getattr(session.virtualenv, "location", os.getenv("VIRTUAL_ENV"))
@@ -165,7 +165,7 @@ def format_(session):
     session.run("ruff", "format", ".")
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
+@nox.session(python=PYTHON_VERSION)
 def lint(session):
     """Run linters in readonly mode."""
     uv_env = getattr(session.virtualenv, "location", os.getenv("VIRTUAL_ENV"))
@@ -255,7 +255,7 @@ def docker_up(session):
         session.run("docker", "compose", "down", "-v", "--remove-orphans")
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
+@nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
 @nox.parametrize("cruft_config_name", CRUFT_TESTED_CONFIGS)
 def lint_crufted_project(session, cruft_config_name):
     cruft_config = get_cruft_config(cruft_config_name)
@@ -263,7 +263,7 @@ def lint_crufted_project(session, cruft_config_name):
         session.run("nox", "-s", "lint")  # TODO: RT-49 re-enable 'type_check'
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION, tags=["crufted_project"])
+@nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
 @nox.parametrize("cruft_config_name", CRUFT_TESTED_CONFIGS)
 def test_crufted_project(session, cruft_config_name):
     cruft_config = get_cruft_config(cruft_config_name)
@@ -272,7 +272,7 @@ def test_crufted_project(session, cruft_config_name):
             session.run("nox", "-s", "test")
 
 
-@nox.session(python=PYTHON_DEFAULT_VERSION)
+@nox.session(python=PYTHON_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:
         # workaround for docker compose creating root-owned files
