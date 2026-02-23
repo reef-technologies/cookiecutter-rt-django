@@ -7,7 +7,7 @@ ARG BASE_IMAGE=python:3.14-slim
 FROM $BASE_IMAGE AS base-image
 LABEL builder=true
 
-COPY --from=ghcr.io/astral-sh/uv:0.5 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.4 /uv /uvx /bin/
 
 WORKDIR /root/src/
 
