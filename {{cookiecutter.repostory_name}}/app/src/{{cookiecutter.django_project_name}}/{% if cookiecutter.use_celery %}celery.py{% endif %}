@@ -1,6 +1,7 @@
 import logging
 import os
 
+import structlog
 from celery import Celery
 {% if cookiecutter.monitoring %}
 from celery.signals import setup_logging, worker_process_shutdown
@@ -8,7 +9,6 @@ from celery.signals import setup_logging, worker_process_shutdown
 from django.conf import settings
 from django_structlog.celery.steps import DjangoStructLogInitStep
 from more_itertools import chunked
-import structlog
 {% if cookiecutter.monitoring %}
 from prometheus_client import Gauge, multiprocess
 {% endif %}
