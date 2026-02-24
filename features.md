@@ -42,7 +42,7 @@
 
 ## Deployment
 
-- [2-stage docker image build](https://docs.docker.com/develop/develop-images/multistage-build/) for clean app image (both debian-based and alpine-based base images are supported)
+- [2-stage docker image build](https://docs.docker.com/develop/develop-images/multistage-build/) for clean app image
 - Easy deployment based on `git push production master`
 - Redeployment doesn't stop `db`, `redis` and `nginx` containers -> non-interrupted deployments
 - Migrations are done during deployment, before application startup -> application won't be run on unmigrated database
