@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 ARG BASE_IMAGE=python:3.14-slim
-=======
-ARG BASE_IMAGE=python:3.11-slim
->>>>>>> 963c80d (Disable alpine support)
 
 FROM $BASE_IMAGE AS base-image
 LABEL builder=true
