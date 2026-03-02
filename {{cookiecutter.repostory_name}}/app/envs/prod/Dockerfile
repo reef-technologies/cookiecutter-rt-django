@@ -14,7 +14,7 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git build-essential libffi-dev
 RUN --mount=type=cache,target=/root/.cache/uv \
 	uv sync --frozen --no-install-project --no-dev --no-editable
 COPY ./app/src/ ./app/envs/prod/entrypoint.sh ./app/envs/prod/gunicorn.conf.py ./app/envs/prod/celery-entrypoint.sh ./app/envs/prod/prometheus-cleanup.sh /root/src/
