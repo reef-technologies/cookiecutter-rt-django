@@ -29,6 +29,7 @@ dependencies = [
     "redis~=7.1.1",
     "sentry-sdk~=2.52.0",
     "ipython~=9.10.0",
+    "parso>=0.8.5",  # for python3.14 support
     "more-itertools~=10.8.0",
     {% if cookiecutter.monitoring %}
     "psutil~=7.2.2",
