@@ -1,0 +1,12 @@
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from django.conf import settings
+
+
+class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    def populate_user(self, request, sociallogin, data):
+        user = super().populate_user(request, sociallogin, data)
+        if user.email.endswith("@" + settings.SOCIALACCOUNT_STAFF_EMAIL_DOMAIN):
+            is_verified = sociallogin.account.extra_data.get("email_verified", False)
+            assert is_verified, "Email must be verified to be granted staff access"
+            user.is_staff = True
+        return user

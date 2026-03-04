@@ -114,6 +114,7 @@ DATABASE_POOL_URL=
 CHANNELS_BACKEND_URL=redis://redis:6379/1
 
 {% if cookiecutter.use_allauth %}
+SOCIALACCOUNT_STAFF_EMAIL_DOMAIN={{ cookiecutter.allauth_staff_email_domain }}
 {% for provider in cookiecutter.allauth_providers.split(",")|map("trim") %}
 {{ provider.upper() }}_LOGIN_CLIENT_ID=
 {{ provider.upper() }}_LOGIN_SECRET=

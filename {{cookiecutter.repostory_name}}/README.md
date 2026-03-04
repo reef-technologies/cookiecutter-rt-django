@@ -142,6 +142,11 @@ If an SSO provider supports the OIDC protocol, it can be set up as a generic OID
 2. Allauth "social users" are just an extension to regular django users. When someone logs in via allauth, a django user model will also be created for them.
 3. A "profile" page is available at `/accounts/`
 
+{% if cookiecutter.allauth_staff_email_domain %}
+## Granting staff access to allauth users
+If "social user"'s email belongs to `SOCIALACCOUNT_STAFF_EMAIL_DOMAIN`, they will be granted staff access on account creation.
+{% endif %}
+
 {% endif %}
 
 {% if cookiecutter.use_celery %}
