@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.admin.sites import site
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import include, path{% if cookiecutter.use_rest_framework %}, re_path{% endif %}
 
 {% if cookiecutter.use_rest_framework %}
@@ -25,6 +25,9 @@ from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
 {% endif %}
 urlpatterns = [
     path("alive/", lambda _: HttpResponse(b"ok")),
+    {% if cookiecutter.use_allauth %}
+    path("admin/login/", lambda _: HttpResponseRedirect(settings.LOGIN_URL)),
+    {% endif %}
     path("admin/", site.urls),
     {% if cookiecutter.use_rest_framework %}
     re_path(r"^api/(?P<version>v0)/", include(api_router.urls)),

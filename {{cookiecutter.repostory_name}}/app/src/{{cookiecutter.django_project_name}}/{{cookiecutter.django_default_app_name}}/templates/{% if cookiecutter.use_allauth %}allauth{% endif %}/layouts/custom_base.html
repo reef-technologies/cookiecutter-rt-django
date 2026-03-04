@@ -1,0 +1,17 @@
+{% raw %}
+{% extends "allauth/layouts/base.html" %}
+{% load static %}
+{% block extra_head %}
+    <link rel="stylesheet" href="/static/admin/css/base.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/admin/css/responsive.css">
+
+    <link rel="stylesheet" href="{% static "allauth/custom.css" %}">
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        {{ block.super }}
+    </div>
+{% endblock %}
+{% endraw %}
