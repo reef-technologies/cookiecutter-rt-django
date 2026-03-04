@@ -507,6 +507,8 @@ if SENTRY_DSN := env("SENTRY_DSN"):
 {% if cookiecutter.use_allauth %}
 LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = "/"
+ALLAUTH_TRUSTED_PROXY_COUNT = 1
+ALLAUTH_TRUSTED_CLIENT_IP_HEADER = "X-Real-IP"
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
