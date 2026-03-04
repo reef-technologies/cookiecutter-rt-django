@@ -17,7 +17,7 @@ services:
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
     {% endif %}
     volumes:
-      - backend-static:${STATIC_ROOT}
+      - backend-static:/var/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:${MEDIA_ROOT}
     {% if cookiecutter.monitoring %}

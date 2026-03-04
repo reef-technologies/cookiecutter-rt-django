@@ -30,8 +30,7 @@ PROMETHEUS_EXPORT_MIGRATIONS=1
 {% endif %}
 HTTPS_REDIRECT=1
 
-STATIC_ROOT=/root/src/static
-MEDIA_ROOT=/root/src/media
+MEDIA_ROOT=/var/media
 
 HTTPS_PROXY_HEADER=X_SCHEME
 

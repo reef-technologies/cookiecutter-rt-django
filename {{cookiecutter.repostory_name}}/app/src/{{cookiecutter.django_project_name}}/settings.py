@@ -324,7 +324,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
-STATIC_ROOT = env("STATIC_ROOT")
+STATIC_ROOT = "/var/static"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = env("MEDIA_ROOT")
 
