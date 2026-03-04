@@ -1,0 +1,4 @@
+{% raw %}
+{% extends "allauth/layouts/custom_base.html" %}
+{% block content %}{% endblock %}
+{% endraw %}

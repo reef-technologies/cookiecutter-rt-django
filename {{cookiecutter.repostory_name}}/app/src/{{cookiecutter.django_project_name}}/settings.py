@@ -93,6 +93,14 @@ INSTALLED_APPS = [
     {% if cookiecutter.use_fingerprinting %}
     "fingerprint",
     {% endif %}
+    {% if cookiecutter.use_rest_framework %}
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+    {% endif %}
+    "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
+
     {% if cookiecutter.use_allauth %}
     "allauth",
     "allauth.account",
@@ -101,13 +109,6 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.{{ provider }}",
     {% endfor %}
     {% endif %}
-    {% if cookiecutter.use_rest_framework %}
-    "rest_framework",
-    "rest_framework.authtoken",
-    "drf_spectacular",
-    "drf_spectacular_sidecar",
-    {% endif %}
-    "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}",
 ]
 
 {% if cookiecutter.monitoring %}
@@ -507,6 +508,7 @@ if SENTRY_DSN := env("SENTRY_DSN"):
 {% if cookiecutter.use_allauth %}
 LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = "/"
+ACCOUNT_ADAPTER = "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}.adapters.AccountAdapter"
 ALLAUTH_TRUSTED_PROXY_COUNT = 1
 ALLAUTH_TRUSTED_CLIENT_IP_HEADER = "X-Real-IP"
 ACCOUNT_LOGIN_METHODS = {"email"}
@@ -515,6 +517,8 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
 ACCOUNT_CHANGE_EMAIL = False
 ACCOUNT_MAX_EMAIL_ADDRESSES = 1
+SOCIALACCOUNT_ADAPTER = "{{cookiecutter.django_project_name}}.{{cookiecutter.django_default_app_name}}.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_STAFF_EMAIL_DOMAIN = env("SOCIALACCOUNT_STAFF_EMAIL_DOMAIN")
 SOCIALACCOUNT_PROVIDERS = {
     {% for provider in cookiecutter.allauth_providers.split(",")|map("trim") %}
     "{{ provider }}": {
