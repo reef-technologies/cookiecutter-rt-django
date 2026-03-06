@@ -176,12 +176,13 @@ To flush add tasks in specific queue, use
 {% if cookiecutter.log_aggregating %}
 # Log aggregating
 
-Generate new access credentials to Loki server...
+Generate new access credentials to Loki server.
+- Server group should be taken from Grafana's `client_server_group` options (so that we can automatically show logs in Grafana).
+- Env is usually `prod`
 ```sh
-# cluster name may be "rt" and env may be "prod"
-uvx cadm exec prometheus -- /home/ubuntu/apps/prometheus-grafana-monitoring/scripts/add_loki_target.sh <cluster-name> {{ cookiecutter.repostory_name }} <env>
+uvx cadm exec prometheus -- /home/ubuntu/apps/prometheus-grafana-monitoring/scripts/add_loki_target.sh <client_server_group> {{ cookiecutter.repostory_name }} <env>
 ```
-... and put them in `.env` file's `LOKI_USER` and `LOKI_PASSWORD` fields.
+Then put the output in `.env` file's `LOKI_USER` and `LOKI_PASSWORD` fields.
 
 More on configuration [here](https://github.com/reef-technologies/prometheus-grafana-monitoring?tab=readme-ov-file#adding-log-aggregation-targets).
 {% endif %}
