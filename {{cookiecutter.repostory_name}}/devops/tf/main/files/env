@@ -32,8 +32,6 @@ HTTPS_REDIRECT=1
 
 MEDIA_ROOT=/var/media
 
-HTTPS_PROXY_HEADER=X_SCHEME
-
 {% if cookiecutter.csp_enabled %}
 CSP_EXCLUDE_URL_PREFIXES=  # URLs starting with these prefixes will not receive CSP headers (e.g., '/admin')
 CSP_DEFAULT_SRC="'none'"  # the default fallback for other resource directives
