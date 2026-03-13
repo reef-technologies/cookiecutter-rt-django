@@ -464,7 +464,6 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "console" if DEBUG else "json",
-            "filters": ["exclude_pidbox_notifications"],
         },
     },
     "root": {

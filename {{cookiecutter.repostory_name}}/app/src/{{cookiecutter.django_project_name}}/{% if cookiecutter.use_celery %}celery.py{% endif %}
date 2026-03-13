@@ -40,6 +40,7 @@ def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pr
     if logfile:
         config["handlers"]["console"]["class"] = "logging.FileHandler"
         config["handlers"]["console"]["filename"] = logfile
+    config["handlers"]["console"].setdefault("filters", []).append("exclude_pidbox_notifications")
     logging.config.dictConfig(config)
     structlog.configure(**STRUCTLOG_CONFIGURATION)
 
