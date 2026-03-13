@@ -21,7 +21,7 @@ C_FORCE_ROOT=1 nice celery multi start $WORKERS $OPTIONS \
 # shellcheck disable=2064
 trap "celery multi stop $WORKERS $OPTIONS; exit 0" INT TERM
 
-tail -f /var/log/celery-*.log &
+tail -q -f /var/log/celery-*.log &
 
 # check celery status periodically to exit if it crashed
 while true; do

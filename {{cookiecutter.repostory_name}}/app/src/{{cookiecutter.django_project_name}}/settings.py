@@ -19,6 +19,7 @@ from kombu import Queue
 {% if cookiecutter.use_allauth %}
 from django.urls import reverse_lazy
 {% endif %}
+from django.utils.log import CallbackFilter
 
 root = environ.Path(__file__) - 2
 
@@ -406,19 +407,63 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 
+
+class StructlogEnvProcessor:
+    """ Add env vars to structlog event dict, so that they become part of all log messages. """
+
+    def __init__(self, vars: list[str]):
+        self.env_data = {
+            var.lower(): value
+            for var in vars
+            if (value := env(var, default=None))
+        }
+
+    def __call__(self, logger, method_name, event_dict):
+        return event_dict | self.env_data
+
+
+LOGGING_ENV_VARS_PROCESSOR = StructlogEnvProcessor(vars=["INSTANCE_ID_SUBST"])
+
+LOGGING_CALLSITE_PARAMETERS_PROCESSOR = structlog.processors.CallsiteParameterAdder([
+    structlog.processors.CallsiteParameter.PATHNAME,
+    structlog.processors.CallsiteParameter.FUNC_NAME,
+    structlog.processors.CallsiteParameter.LINENO,
+])
+
+LOGGING_FOREIGN_PRE_CHAIN = [
+    structlog.stdlib.add_log_level,
+    LOGGING_ENV_VARS_PROCESSOR,
+    structlog.processors.TimeStamper(fmt='iso'),
+    structlog.processors.format_exc_info,
+    LOGGING_CALLSITE_PARAMETERS_PROCESSOR,
+]
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "main": {
+        "console": {
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.dev.ConsoleRenderer(),
+            "foreign_pre_chain": LOGGING_FOREIGN_PRE_CHAIN,
+        },
+        "json": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
+            "foreign_pre_chain": LOGGING_FOREIGN_PRE_CHAIN,
+        },
+    },
+    "filters": {
+        "exclude_pidbox_notifications": {
+            # these are notifications about Flower pinging workers
+            "()": CallbackFilter,
+            "callback": lambda record: "pidbox received method" not in record.getMessage(),
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "main",
+            "formatter": "console" if DEBUG else "json",
         },
     },
     "root": {
@@ -426,35 +471,23 @@ LOGGING = {
         "level": "DEBUG",
     },
     "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "django_structlog.*": {
-            "handlers": ["console"],
-            "level": "INFO",
-        },
-        "celery": {
-            "handlers": ["console"],
-            "level": "INFO",
-        },
-        "celery.task": {
-            "handlers": ["console"],
-            "level": "INFO",
-        },
-        "celery.redirected": {
-            "handlers": ["console"],
-            "level": "INFO",
+        **{
+            package_name: {
+                "handlers": ["console"],
+                "level": "INFO",
+            }
+            for package_name in (
+                "django",
+                "django_structlog.*",
+                "celery",
+                "celery.task",
+                "celery.redirected",
+                "parso",  # fix spamming DEBUG-level logs in manage.py shell and shell_plus.
+            )
         },
         "psycopg.pq": {
             # only logs unavailable libs during psycopg initialization
             "propagate": False,
-        },
-        # Fix spamming DEBUG-level logs in manage.py shell and shell_plus.
-        "parso": {
-            "handlers": ["console"],
-            "level": "INFO",
         },
     },
 }
@@ -466,6 +499,8 @@ STRUCTLOG_CONFIGURATION = dict(
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
+        LOGGING_ENV_VARS_PROCESSOR,
+        LOGGING_CALLSITE_PARAMETERS_PROCESSOR,
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
