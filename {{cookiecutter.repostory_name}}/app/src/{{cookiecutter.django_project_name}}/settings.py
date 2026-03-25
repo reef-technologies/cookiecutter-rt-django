@@ -432,6 +432,7 @@ LOGGING_CALLSITE_PARAMETERS_PROCESSOR = structlog.processors.CallsiteParameterAd
 
 LOGGING_FOREIGN_PRE_CHAIN = [
     structlog.stdlib.add_log_level,
+    structlog.stdlib.add_logger_name,
     LOGGING_ENV_VARS_PROCESSOR,
     structlog.processors.TimeStamper(fmt='iso'),
     structlog.processors.format_exc_info,
