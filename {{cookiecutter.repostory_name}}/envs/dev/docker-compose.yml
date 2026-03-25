@@ -56,6 +56,8 @@ services:
       - backups:/var/backups
     depends_on:
       - db
+    profiles:
+      - backups
 
 volumes:
   backups:
