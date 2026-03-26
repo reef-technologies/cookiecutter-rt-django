@@ -20,6 +20,24 @@ uv run manage.py migrate
 uv run manage.py runserver
 ```
 
+# Commits and releases (Commitizen)
+
+[Commitizen](https://commitizen-tools.github.io) may be used to create commits and releases in a standardized way.
+It is not required for creating commits and releases, but it is handy for bumping versions and generating changelogs.
+
+```sh
+# install the tool once
+uv tool install commitizen==4.13.9
+
+# create a conventional commit
+# https://commitizen-tools.github.io/commitizen/commands/commit/
+cz commit
+
+# make a release (bump version, update changelog, create a tag)
+# https://commitizen-tools.github.io/commitizen/commands/bump/
+cz bump
+```
+
 # Setup production environment (git deployment)
 
 <details>

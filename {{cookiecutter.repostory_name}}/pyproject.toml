@@ -1,7 +1,7 @@
 [project]
 name = "{{cookiecutter.repostory_name}}"
 requires-python = "==3.14.*"
-version = "0"
+version = "0.0.0"
 dependencies = [
     "Django~=5.2.0",
     {% if cookiecutter.csp_enabled %}
@@ -83,6 +83,18 @@ type_check = [
     "types-python-dateutil",
     "types-requests",
 ]
+commits_check = [
+    "commitizen==4.13.9",
+    "requests~=2.33.0",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "v$version"
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+changelog_incremental = true
 
 [tool.ruff]
 src = ["app/src"]

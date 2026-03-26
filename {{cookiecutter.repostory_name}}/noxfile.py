@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from contextlib import suppress
 import functools
 import os
 import subprocess
 import tempfile
 from pathlib import Path
-
 import nox
+from nox.command import CommandFailed
 
 CI = os.environ.get("CI") is not None
 
@@ -147,6 +148,18 @@ def type_check(session):
 
 
 @nox.session(python=PYTHON_VERSION)
+def check_missing_migrations(session):
+    install(session, "check_missing_migrations")
+    session.run(
+        "django-admin",
+        "makemigrations",
+        "--dry-run",
+        "--check",
+        env={"DJANGO_SETTINGS_MODULE": "{{ cookiecutter.django_project_name }}.settings"},
+    )
+
+
+@nox.session(python=PYTHON_VERSION)
 def test(session):
     install(session, "test")
     with session.chdir(str(APP_ROOT)):
@@ -162,3 +175,107 @@ def test(session):
             "{{cookiecutter.django_project_name}}",
             *session.posargs,
         )
+
+
+VERSION_TAG_PATTERN = "v[0-9]+.[0-9]+.[0-9]+"
+
+
+def _get_last_tag(session: nox.Session) -> str | None:
+    with suppress(CommandFailed):
+        return session.run(["git", "describe", "--tags", "--abbrev=0", "--match", VERSION_TAG_PATTERN, "HEAD^"], silent=True).strip()
+
+
+def _get_base_branch() -> str:
+    if os.environ.get("GITHUB_ACTIONS"):
+        return os.environ["GITHUB_BASE_REF"]
+    return "master"
+
+
+def _get_current_branch(session: nox.Session) -> str:
+    if os.environ.get("GITHUB_ACTIONS"):
+        return os.environ["GITHUB_HEAD_REF"]
+    return session.run("git", "branch", "--show-current", silent=True).strip()
+
+
+def _get_current_tag(session: nox.Session) -> str | None:
+    with suppress(CommandFailed):
+        return session.run(["git", "describe", "--tags", "--abbrev=0", "--match", VERSION_TAG_PATTERN, "--exact-match"], silent=True).strip()
+
+
+def _get_github_commit_url() -> str:
+    return f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/commit/{os.environ['GITHUB_SHA']}"
+
+
+def _truncate(text: str, *, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+
+    lines = text.splitlines(keepends=True)
+    accumulated_length = 0
+    for i, line in enumerate(lines):
+        accumulated_length += len(line)
+        if accumulated_length > limit:
+            return "".join(lines[:i]) + "\n… (truncated)\n"
+
+    assert False
+
+
+@nox.session(python=PYTHON_VERSION)
+def check_commits(session: nox.Session):
+    """
+    Verify:
+    - commits match the Conventional Commits format
+    - branches are squashed before merging
+    - no merge commits, FF or rebase only
+    """
+
+    install(session, "commits_check")
+
+    # check that commits since last tag (or all commits if no tags) match the Conventional Commits format
+    command = ["cz", "check"]
+    if last_tag := _get_last_tag(session):
+        command += ["--rev-range", f"{last_tag}..HEAD"]
+    session.run(command)
+
+    # check that there are no merge commits, FF or rebase only
+    if merge_commits := session.run(["git", "rev-list", "--merges", f"{last_tag}..HEAD" if last_tag else "HEAD"], silent=True).strip():
+        session.error(f"Merge commits found:\n{merge_commits}")
+
+    # check that if on a branch, it has been squashed before merging
+    base_branch = _get_base_branch()
+    current_branch = _get_current_branch(session)
+    if current_branch and current_branch != base_branch:
+        num_commits = int(session.run(["git", "rev-list", "--count", f"{base_branch}..HEAD"], silent=True).strip())
+        if num_commits > 1:
+            session.error(f"Branch '{current_branch}' has {num_commits} commits since diverging from '{base_branch}'. Please squash your commits before merging.")
+
+
+@nox.session(python=PYTHON_VERSION)
+def publish_changelog(session: nox.Session):
+    import requests
+
+    if not _get_current_tag(session):
+        return
+
+    try:
+        slack_channel = os.environ["SLACK_CHANGELOG_CHANNEL"]
+        slack_webhook_url = os.environ["SLACK_WEBHOOK_URL"]
+    except KeyError:
+        session.error("SLACK_CHANGELOG_CHANNEL and SLACK_WEBHOOK_URL environment variables are required to publish changelog to Slack. Skipping.")
+
+    install(session, "commits_check")
+
+    command = ["cz", "changelog", "--dry-run"]
+    if last_tag := _get_last_tag(session):
+        command += ["--start-rev", last_tag]
+    changelog = session.run(command, silent=True)
+
+    # Slack block `mrkdwn` text limit is 3000 chars; keep under it
+    changelog_trimmed = _truncate(changelog, limit=2500)
+    payload = {
+        "channel": slack_channel,
+        "text": f"```{changelog_trimmed}```",
+    }
+
+    response = requests.post(slack_webhook_url, json=payload, timeout=15)
+    response.raise_for_status()
