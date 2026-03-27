@@ -24,6 +24,9 @@ if [ -n "$SERVICES" ]; then
 fi
 # start the app container only in order to perform migrations
 docker compose run --rm app sh -c "python manage.py wait_for_database --timeout 10; python manage.py migrate"
+{% if cookiecutter.monitoring %}
+docker compose run --rm app sh prometheus-cleanup.sh
+{% endif %}
 
 # start everything
 docker compose up -d

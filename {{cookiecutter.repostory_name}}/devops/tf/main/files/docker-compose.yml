@@ -15,6 +15,7 @@ services:
       # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
       # Don't forget to also mount the prometheus-metrics volume in other containers too.
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
+      - PROMETHEUS_USE_FLOCK=1  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
     {% endif %}
     volumes:
       - backend-static:/var/static
