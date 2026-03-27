@@ -182,7 +182,7 @@ VERSION_TAG_PATTERN = "v[0-9]+.[0-9]+.[0-9]+"
 
 def _get_last_tag(session: nox.Session) -> str | None:
     with suppress(CommandFailed):
-        return session.run(["git", "describe", "--tags", "--abbrev=0", "--match", VERSION_TAG_PATTERN, "HEAD^"], silent=True).strip()
+        return session.run("git", "describe", "--tags", "--abbrev=0", "--match", VERSION_TAG_PATTERN, "HEAD^", silent=True, external=True).strip()
 
 
 def _get_base_branch() -> str:
@@ -194,16 +194,12 @@ def _get_base_branch() -> str:
 def _get_current_branch(session: nox.Session) -> str:
     if os.environ.get("GITHUB_ACTIONS"):
         return os.environ["GITHUB_HEAD_REF"]
-    return session.run("git", "branch", "--show-current", silent=True).strip()
+    return session.run("git", "branch", "--show-current", silent=True, external=True).strip()
 
 
 def _get_current_tag(session: nox.Session) -> str | None:
     with suppress(CommandFailed):
-        return session.run(["git", "describe", "--tags", "--abbrev=0", "--match", VERSION_TAG_PATTERN, "--exact-match"], silent=True).strip()
-
-
-def _get_github_commit_url() -> str:
-    return f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/commit/{os.environ['GITHUB_SHA']}"
+        return session.run("git", "describe", "--tags", "--abbrev=0", "--match", VERSION_TAG_PATTERN, "--exact-match", silent=True, external=True).strip()
 
 
 def _truncate(text: str, *, limit: int) -> str:
@@ -235,17 +231,17 @@ def check_commits(session: nox.Session):
     command = ["cz", "check"]
     if last_tag := _get_last_tag(session):
         command += ["--rev-range", f"{last_tag}..HEAD"]
-    session.run(command)
+    session.run(*command)
 
     # check that there are no merge commits, FF or rebase only
-    if merge_commits := session.run(["git", "rev-list", "--merges", f"{last_tag}..HEAD" if last_tag else "HEAD"], silent=True).strip():
+    if merge_commits := session.run("git", "rev-list", "--merges", f"{last_tag}..HEAD" if last_tag else "HEAD", silent=True, external=True).strip():
         session.error(f"Merge commits found:\n{merge_commits}")
 
     # check that if on a branch, it has been squashed before merging
     base_branch = _get_base_branch()
     current_branch = _get_current_branch(session)
     if current_branch and current_branch != base_branch:
-        num_commits = int(session.run(["git", "rev-list", "--count", f"{base_branch}..HEAD"], silent=True).strip())
+        num_commits = int(session.run("git", "rev-list", "--count", f"{base_branch}..HEAD", silent=True, external=True).strip())
         if num_commits > 1:
             session.error(f"Branch '{current_branch}' has {num_commits} commits since diverging from '{base_branch}'. Please squash your commits before merging.")
 
@@ -268,7 +264,7 @@ def publish_changelog(session: nox.Session):
     command = ["cz", "changelog", "--dry-run"]
     if last_tag := _get_last_tag(session):
         command += ["--start-rev", last_tag]
-    changelog = session.run(command, silent=True)
+    changelog = session.run(*command, silent=True)
 
     # Slack block `mrkdwn` text limit is 3000 chars; keep under it
     changelog_trimmed = _truncate(changelog, limit=2500)

@@ -35,7 +35,7 @@ cz commit
 
 # make a release (bump version, update changelog, create a tag)
 # https://commitizen-tools.github.io/commitizen/commands/bump/
-cz bump
+cz bump && uv lock
 ```
 
 # Setup production environment (git deployment)

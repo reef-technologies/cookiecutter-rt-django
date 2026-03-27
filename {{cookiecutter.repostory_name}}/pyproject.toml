@@ -7,7 +7,7 @@ dependencies = [
     {% if cookiecutter.csp_enabled %}
     "django-csp~=4.0",
     {% endif %}
-    "django-constance[database]~=4.3.4",
+    "django-constance~=4.3.4",
     "django-cors-headers~=4.9.0",
     "django-environ~=0.12.0",
     "django-extensions~=4.1",

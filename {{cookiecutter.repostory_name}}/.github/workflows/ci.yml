@@ -17,6 +17,7 @@ jobs:
         with:
           # checkout pull request HEAD commit instead of merge commit
           ref: {% raw %}${{ github.event.pull_request.head.sha }}{% endraw %}
+
           fetch-depth: 0
           fetch-tags: true
       - uses: ./.github/actions/setup-uv-nox
