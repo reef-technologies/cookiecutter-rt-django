@@ -1,0 +1,11 @@
+name: Setup uv and nox
+description: Install uv and nox for CI
+
+runs:
+  using: "composite"
+  steps:
+    - uses: astral-sh/setup-uv@v7
+      with:
+        version: "0.10.x"
+    - run: uv tool install --with pyyaml nox==2026.2.9
+      shell: bash
