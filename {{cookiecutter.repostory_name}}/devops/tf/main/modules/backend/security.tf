@@ -31,11 +31,11 @@ resource "aws_security_group" "internal" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description      = "allow traffic to ssh from internet"
+    description      = "allow traffic to ssh from jb and jb2"
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = ["51.254.203.61/32"]
+    cidr_blocks      = ["51.254.203.61/32", "46.62.159.127/32"]
   }
 
   ingress {
