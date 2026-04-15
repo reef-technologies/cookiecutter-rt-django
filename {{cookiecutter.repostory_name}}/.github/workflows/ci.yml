@@ -10,43 +10,52 @@ env:
   ENV_FILL_MISSING_VALUES: 1
 
 jobs:
+  conventional_commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # checkout pull request HEAD commit instead of merge commit
+          ref: {% raw %}${{ github.event.pull_request.head.sha }}{% endraw %}
+
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: ./.github/actions/setup-uv-nox
+      - name: Check following commits convention
+        run: uvx nox -vs check_commits
 {% if cookiecutter.ci_use_linter %}
   linter:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.10.x"
-      - name: Install nox
-        run: uv tool install --with pyyaml nox
+      - uses: ./.github/actions/setup-uv-nox
       - name: Run linters
         run: uvx nox -vs lint
+      - name: Check for missing migrations
+        run: uvx nox -vs check_missing_migrations
 {% endif %}
   test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.10.x"
+      - uses: ./.github/actions/setup-uv-nox
       - name: Prepare environment
         run: ./setup-dev.sh
       - name: Run dockerized services
         run: docker compose up -d --wait
       - name: Run migrations
         run: cd app/src && uv run python manage.py wait_for_database --timeout 120 && uv run python manage.py migrate
-      - name: Install nox
-        run: uv tool install --with pyyaml nox
       - name: Run unit tests
         run: uvx nox -vs test
       - name: Stop dockerized services
         if: success() || failure()
         run: docker compose down -v
+  publish_changelog:
+    needs: [conventional_commits, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-uv-nox
+      - name: Publish changelog
+        run: uvx nox -vs publish_changelog
