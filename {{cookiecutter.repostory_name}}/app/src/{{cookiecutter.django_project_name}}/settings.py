@@ -113,7 +113,8 @@ INSTALLED_APPS = [
 ]
 
 {% if cookiecutter.monitoring %}
-PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS")
+# Migrations export is disabled due to a [bug in the library](https://github.com/django-commons/django-prometheus/issues/498)
+PROMETHEUS_EXPORT_MIGRATIONS = False
 {% if cookiecutter.monitor_view_execution_time_in_djagno %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
