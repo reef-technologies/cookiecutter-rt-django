@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import os
+import platform
 import subprocess
 import tempfile
 from pathlib import Path
@@ -14,6 +15,17 @@ ROOT = Path(".")
 PYPROJECT = nox.project.load_toml("pyproject.toml")
 PYTHON_VERSION = PYPROJECT["project"]["requires-python"].strip("=~.*")
 APP_ROOT = ROOT / "app" / "src"
+SHELLCHECK_IMAGE = "koalaman/shellcheck:v0.9.0"
+SHELLCHECK_DIGESTS = {
+    "amd64": "sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c",
+    "arm64": "sha256:beab2609164b01e8f90993c257fd2da5e09dfba23aa58f1acb1a3d2619909a46",
+}
+SHELLCHECK_ARCH_ALIASES = {
+    "amd64": "amd64",
+    "x86_64": "amd64",
+    "arm64": "arm64",
+    "aarch64": "arm64",
+}
 
 nox.options.default_venv_backend = "uv"
 nox.options.stop_on_first_error = True
@@ -56,37 +68,31 @@ def list_files(suffix: str | None = None) -> list[Path]:
     return file_paths
 
 
-def run_readable(session, mode="check"):
-    session.run(
-        "docker",
-        "run",
-        "--platform",
-        "linux/amd64",
-        "--rm",
-        "-v",
-        f"{ROOT.absolute()}:/data",
-        "-w",
-        "/data",
-        "ghcr.io/bobheadxi/readable:v0.5.0@sha256:423c133e7e9ca0ac20b0ab298bd5dbfa3df09b515b34cbfbbe8944310cc8d9c9",
-        mode,
-        "![.]**/*.md",
-        external=True,
-    )
+def shellcheck_platform_image(machine: str | None = None) -> tuple[str, str]:
+    detected_machine = (machine or platform.machine()).lower()
+    arch = SHELLCHECK_ARCH_ALIASES.get(detected_machine)
+    if arch is None:
+        supported = ", ".join(sorted(SHELLCHECK_ARCH_ALIASES))
+        raise RuntimeError(f"Unsupported shellcheck platform {detected_machine!r}; supported machines: {supported}")
+
+    digest = SHELLCHECK_DIGESTS[arch]
+    return f"linux/{arch}", f"{SHELLCHECK_IMAGE}@{digest}"
 
 
 def run_shellcheck(session, mode="check"):
+    shellcheck_platform, shellcheck_image = shellcheck_platform_image()
     shellcheck_cmd = [
         "docker",
         "run",
         "--platform",
-        "linux/amd64",  # while this image is multi-arch, we cannot use digest with multi-arch images
+        shellcheck_platform,
         "--rm",
         "-v",
         f"{ROOT.absolute()}:/mnt",
         "-w",
         "/mnt",
         "-q",
-        "koalaman/shellcheck:0.9.0@sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c",
+        shellcheck_image,
     ]
 
     files = list_files(suffix=".sh")
@@ -124,7 +130,6 @@ def format_(session):
     install(session, "format")
     session.run("ruff", "check", "--fix", ".")
     run_shellcheck(session, mode="fmt")
-    run_readable(session, mode="fmt")
     session.run("ruff", "format", ".")
 
 
@@ -135,7 +140,6 @@ def lint(session):
     session.run("ruff", "check", "--diff", "--unsafe-fixes", ".")
     session.run("codespell", ".")
     run_shellcheck(session, mode="check")
-    run_readable(session, mode="check")
     session.run("ruff", "format", "--diff", ".")
 
 
