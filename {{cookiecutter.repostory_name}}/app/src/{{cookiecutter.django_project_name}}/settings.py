@@ -115,7 +115,7 @@ INSTALLED_APPS = [
 
 {% if cookiecutter.monitoring %}
 PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS")
-{% if cookiecutter.monitor_view_execution_time_in_djagno %}
+{% if cookiecutter.monitor_view_execution_time_in_django %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
     0.016,
@@ -137,7 +137,7 @@ PROMETHEUS_LATENCY_BUCKETS = (
 {% endif %}
 
 MIDDLEWARE = [
-    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
+    {% if cookiecutter.monitor_view_execution_time_in_django and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     {% endif %}
     "django.middleware.security.SecurityMiddleware",
@@ -154,7 +154,7 @@ MIDDLEWARE = [
     {% if cookiecutter.use_allauth %}
     "allauth.account.middleware.AccountMiddleware",
     {% endif %}
-    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
+    {% if cookiecutter.monitor_view_execution_time_in_django and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {% endif %}
 ]

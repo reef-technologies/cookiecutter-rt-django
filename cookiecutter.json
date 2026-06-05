@@ -4,7 +4,7 @@
     "django_project_name": "project",
     "django_default_app_name": "core",
     "monitoring": true,
-    "monitor_view_execution_time_in_djagno": true,
+    "monitor_view_execution_time_in_django": true,
     "monitor_tcpstat": true,
     "log_aggregating": true,
     "log_aggregator_url": "https://loki.reef.pl",
