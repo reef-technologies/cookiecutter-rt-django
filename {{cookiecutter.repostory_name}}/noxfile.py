@@ -127,7 +127,7 @@ def run_shellcheck(session, mode="check"):
 @nox.session(name="format", python=PYTHON_VERSION)
 def format_(session):
     """Lint the code and apply fixes in-place whenever possible."""
-    install(session, "format")
+    install(session, "lint")
     session.run("ruff", "check", "--fix", ".")
     run_shellcheck(session, mode="fmt")
     session.run("ruff", "format", ".")

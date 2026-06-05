@@ -14,29 +14,45 @@ jobs:
   linter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
         with:
-          version: "0.10.x"
+          version: "0.11.17"
       - name: Install nox
         run: uv tool install --with pyyaml nox
       - name: Run linters
         run: uvx nox -vs lint
 {% endif %}
+{% if cookiecutter.ci_use_typechecker %}
+  type_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          version: "0.11.17"
+      - name: Install nox
+        run: uv tool install --with pyyaml nox
+      - name: Run type checker
+        run: uvx nox -vs type_check
+{% endif %}
   test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
         with:
-          version: "0.10.x"
+          version: "0.11.17"
       - name: Prepare environment
         run: ./setup-dev.sh
       - name: Run dockerized services
