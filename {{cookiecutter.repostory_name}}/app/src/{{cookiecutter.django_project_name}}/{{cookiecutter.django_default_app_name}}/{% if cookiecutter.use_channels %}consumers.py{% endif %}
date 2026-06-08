@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Annotated, ClassVar, Union
+from typing import Annotated, Any, ClassVar, Union
 
 import structlog
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -23,7 +23,7 @@ class DefaultConsumer(AsyncWebsocketConsumer):
         with bound_contextvars(text_data=text_data, bytes_data=bytes_data):
             log.debug("message received")
             try:
-                message: BaseModel = self.MESSAGE_MODEL.validate_json(text_data)
+                message: BaseModel = self.MESSAGE_MODEL.validate_json(text_data)  # type: ignore[arg-type]
             except ValidationError as exc:
                 errors = exc.errors()
                 log.debug("message parsing failed", errors=errors)
@@ -36,7 +36,9 @@ class DefaultConsumer(AsyncWebsocketConsumer):
     async def handle_heartbeat(self, message: Heartbeat) -> None:
         await self.send(text_data=message.json())
 
-    MESSAGE_HANDLERS: ClassVar[dict[BaseModel, Callable]] = {
+    MESSAGE_HANDLERS: ClassVar[dict[type[BaseModel], Callable[..., Any]]] = {
         Heartbeat: handle_heartbeat,
     }
-    MESSAGE_MODEL = TypeAdapter(Annotated[Union[*MESSAGE_HANDLERS.keys()], Field(discriminator="type")])
+    MESSAGE_MODEL: ClassVar[TypeAdapter[Any]] = TypeAdapter(
+        Annotated[Union[*MESSAGE_HANDLERS.keys()], Field(discriminator="type")]
+    )

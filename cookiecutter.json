@@ -4,7 +4,7 @@
     "django_project_name": "project",
     "django_default_app_name": "core",
     "monitoring": true,
-    "monitor_view_execution_time_in_djagno": true,
+    "monitor_view_execution_time_in_django": true,
     "monitor_tcpstat": true,
     "log_aggregating": true,
     "log_aggregator_url": "https://loki.reef.pl",
@@ -35,6 +35,7 @@
     "aws_staging_domain_name": "staging.{{ cookiecutter.aws_domain_name }}",
     "aws_ec2_ssh_key": "",
     "ci_use_linter": true,
+    "ci_use_typechecker": true,
     "ci_use_spellchecker": true,
     "_copy_without_render": [
       ".github/workflows/cruft-updates.yml"

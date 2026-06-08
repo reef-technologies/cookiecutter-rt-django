@@ -54,5 +54,5 @@ def send_mail(
         attachments=[create_attachment(file) for file in attachments],
     )
     message.content_subtype = "html"
-    message.mixed_subtype = "related"
+    message.mixed_subtype = "related"  # type: ignore[attr-defined]
     message.send()

@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta
 {% endif %}
 from functools import wraps
+from typing import Any
 
 import environ
 import structlog
@@ -114,7 +115,7 @@ INSTALLED_APPS = [
 
 {% if cookiecutter.monitoring %}
 PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS")
-{% if cookiecutter.monitor_view_execution_time_in_djagno %}
+{% if cookiecutter.monitor_view_execution_time_in_django %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
     0.016,
@@ -136,7 +137,7 @@ PROMETHEUS_LATENCY_BUCKETS = (
 {% endif %}
 
 MIDDLEWARE = [
-    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
+    {% if cookiecutter.monitor_view_execution_time_in_django and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     {% endif %}
     "django.middleware.security.SecurityMiddleware",
@@ -153,7 +154,7 @@ MIDDLEWARE = [
     {% if cookiecutter.use_allauth %}
     "allauth.account.middleware.AccountMiddleware",
     {% endif %}
-    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
+    {% if cookiecutter.monitor_view_execution_time_in_django and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {% endif %}
 ]
@@ -167,8 +168,8 @@ if DEBUG_TOOLBAR := env.bool("DEBUG_TOOLBAR"):
 if CORS_ENABLED := env.bool("CORS_ENABLED"):
     INSTALLED_APPS.append("corsheaders")
     MIDDLEWARE = ["corsheaders.middleware.CorsMiddleware"] + MIDDLEWARE
-    CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
-    CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES")
+    CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+    CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[])
     CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -359,7 +360,7 @@ REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 {% endif %}
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-CONSTANCE_CONFIG = {
+CONSTANCE_CONFIG: dict[str, tuple[Any, str, type]] = {
     # "PARAMETER": (default-value, "Help text", type),
 }
 
@@ -439,6 +440,10 @@ LOGGING_FOREIGN_PRE_CHAIN = [
     LOGGING_CALLSITE_PARAMETERS_PROCESSOR,
 ]
 
+
+def _exclude_pidbox_notifications(record: logging.LogRecord) -> bool:
+    return "pidbox received method" not in record.getMessage()
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -458,7 +463,7 @@ LOGGING = {
         "exclude_pidbox_notifications": {
             # these are notifications about Flower pinging workers
             "()": CallbackFilter,
-            "callback": lambda record: "pidbox received method" not in record.getMessage(),
+            "callback": _exclude_pidbox_notifications,
         },
     },
     "handlers": {
@@ -493,7 +498,7 @@ LOGGING = {
     },
 }
 
-STRUCTLOG_CONFIGURATION = dict(
+STRUCTLOG_CONFIGURATION: dict[str, Any] = dict(
     processors=[
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
