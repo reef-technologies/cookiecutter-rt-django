@@ -173,11 +173,15 @@ To flush add tasks in specific queue, use
 
 {% endif %}
 
-{% if cookiecutter.log_aggregating %}
-# Log aggregating
+{% if cookiecutter.observability %}
+# Observability (logs, metrics, traces)
+
+Logs go to Grafana Loki, metrics to Prometheus/Mimir and OpenTelemetry traces to Grafana Tempo. Grafana Alloy runs alongside the app in `docker-compose` and ships logs to Loki plus traces to Tempo; metrics are collected by Prometheus and forwarded to Mimir. `trace_id`/`span_id` are injected into structured logs and nginx access logs so a request can be followed across all three signals.
+
+## Loki & Tempo credentials
 
 Generate new access credentials to Loki server.
-- `<CLUSTER` is usually `rt`
+- `<CLUSTER>` is usually `rt`
 - `<SERVER_GROUP>` should be taken from Grafana's `client_server_group` options (so that we can automatically show logs in Grafana).
 - `<ENVIRONMENT>` is usually `prod`
 ```sh
@@ -185,7 +189,33 @@ uvx cadm exec prometheus -- "cd /home/ubuntu/apps/prometheus-grafana-monitoring/
 ```
 Then put the output in `.env` file's `LOKI_USER` and `LOKI_PASSWORD` fields.
 
+**Tempo uses the same credentials.** The `.htpasswd` file on the monitoring server is [shared between Loki, Mimir and Tempo](https://github.com/reef-technologies/prometheus-grafana-monitoring?tab=readme-ov-file#adding-monitored-targets-multi-tenancy-way), so set `TEMPO_USER` and `TEMPO_PASSWORD` in `.env` to the same values as `LOKI_USER` / `LOKI_PASSWORD`.
+
 More on configuration [here](https://github.com/reef-technologies/prometheus-grafana-monitoring?tab=readme-ov-file#adding-log-aggregation-targets).
+
+## OpenTelemetry environment variables
+
+The following variables describe the deployed service in traces, metrics and logs. Most are set in `.env`; `GIT_SHA` is baked into the application Docker image at build time.
+
+- `OTEL_SERVICE_NAMESPACE` — namespace of the project, defaults to the repository name. Shared by every service of one project (app, celery, celery-beat, nginx).
+- `OTEL_DEPLOYMENT_ENVIRONMENT` — `development` / `staging` / `production`. Used for filtering in Grafana.
+- `OTEL_SERVICE_INSTANCE_ID` — optional stable id for a worker. If left empty, every worker generates a fresh random UUID at startup, which is fine for autoscaled instances.
+- `GIT_SHA` — version of the running code, exposed as `service.version`. `deploy.sh` computes it from `git rev-parse --short HEAD`, passes it as the Docker build arg `GIT_SHA`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. For manual builds, export `GIT_SHA` before `docker compose build`; otherwise it defaults to `unknown`.
+
+`OTEL_EXPORTER_OTLP_ENDPOINT` points at the local Alloy collector (`http://alloy:4318` in docker-compose). Do not point the app directly at `tempo.reef.pl` — Alloy handles batching, tail-sampling and auth.
+
+## Local development
+
+Tracing is **disabled by default in dev** via `OTEL_SDK_DISABLED=true` in `envs/dev/.env.template`. The OpenTelemetry bootstrap returns before loading auto-instrumentations or starting the SDK, so there is zero traffic to any collector. To debug traces locally either:
+
+- set `OTEL_SDK_DISABLED=false` and run a local Alloy + Tempo (or any OTLP-compatible collector listening on `localhost:4318`), or
+- temporarily point `OTEL_EXPORTER_OTLP_ENDPOINT` at a shared dev collector.
+
+Local tracing is initialized by the gunicorn worker hooks, so it works only when the app is run through gunicorn. The default `uv run manage.py runserver` development command does not start the OpenTelemetry SDK/exporter.
+
+## Trace ↔ log correlation in Grafana
+
+Every structlog record and every nginx access log line carries the active `trace_id` and `span_id`. In Grafana the Loki data source is configured with a derived field on `trace_id` that links to the Tempo data source, so you can jump from a log line to the full trace in one click (and from a Tempo span back to the related logs).
 {% endif %}
 
 {% if cookiecutter.monitoring %}

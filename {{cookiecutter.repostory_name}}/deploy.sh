@@ -7,7 +7,10 @@ if [ ! -f ".env" ]; then
     exit 1;
 fi
 
-docker compose build
+GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || printf "%s" "unknown")
+export GIT_SHA
+
+docker compose build --build-arg GIT_SHA="$GIT_SHA"
 
 docker compose up -d db  # in case it hasn't been launched before
 # backup db before any database changes

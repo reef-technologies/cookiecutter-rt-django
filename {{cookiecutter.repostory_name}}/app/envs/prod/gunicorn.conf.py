@@ -4,6 +4,9 @@ import environ
 {% if cookiecutter.monitoring %}
 from prometheus_client import multiprocess
 {% endif %}
+{% if cookiecutter.observability %}
+from {{cookiecutter.django_project_name}}.otel import setup_sdk_after_fork
+{% endif %}
 
 env = environ.Env()
 
@@ -28,4 +31,10 @@ worker_class = "uvicorn.workers.UvicornWorker"
 {% if cookiecutter.monitoring %}
 def child_exit(server, worker):
     multiprocess.mark_process_dead(worker.pid)
+{% endif %}
+
+
+{% if cookiecutter.observability %}
+def post_fork(server, worker):
+    setup_sdk_after_fork(service_name="app")
 {% endif %}

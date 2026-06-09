@@ -24,6 +24,7 @@ PYTHON_VERSION = PYPROJECT["project"]["requires-python"].strip("=~.*")
 # tested default config overrides
 CRUFT_TESTED_CONFIG_MATRIX = {
     "default": {},
+    "observability_off": {"observability": False},
 }
 CRUFT_TESTED_CONFIGS = os.getenv("CRUFT_TESTED_CONFIGS", ",".join(CRUFT_TESTED_CONFIG_MATRIX)).split(",")
 

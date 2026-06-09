@@ -55,6 +55,12 @@ write_files:
 
 
       aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin "$AWS_ECR_BASE_URL"
+      docker pull "$AWS_ECR_BASE_URL/$AWS_ECR_TAG"
+      export GIT_SHA=$(docker image inspect "$AWS_ECR_BASE_URL/$AWS_ECR_TAG" | jq -r '.[0].Config.Labels.git_commit_hash // empty')
+      if [ -n "$GIT_SHA" ]; then
+          sed -i '/^GIT_SHA=/d' .env
+          echo "GIT_SHA=$GIT_SHA" >> .env
+      fi
       docker compose up -d
 
 runcmd:

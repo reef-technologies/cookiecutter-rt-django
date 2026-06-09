@@ -68,9 +68,16 @@
   - zstd compression for efficient storage & excellent speed for both backup and restore
 - Scripted and repeatable procedure for restoring the system from a backup
 - [Sentry](https://sentry.io) error tracking preconfigured
-- Grafana for metrics and log aggregation (Grafana Loki)
-  - Prometheus for data collection
+- Grafana for metrics, logs and traces (Grafana Loki + Tempo)
+  - Prometheus for metrics collection
   - Grafana Loki for log aggregation with Alloy for log shipping
+  - [OpenTelemetry](https://opentelemetry.io) traces shipped through Alloy to Grafana Tempo, with auto-instrumentation for Django, Celery, psycopg, redis, requests and urllib3
+  - `trace_id`/`span_id` automatically injected into structured logs for one-click correlation between Loki and Tempo
+  - Tail-sampling at collector level:
+    keeps all errors, 5xx responses, slow traces (>1s) and mutating HTTP methods; baseline 5% probabilistic sample for the rest
+  - nginx tracing via `ngx_otel_module` so the full request path (nginx → gunicorn/uvicorn → DB/Redis/external HTTP) lives in a single trace
+  - Controlled by the `observability` flag (replaces the previous `log_aggregating` flag).
+    Existing projects updating via `cruft update` should answer `yes` if they had `log_aggregating: yes` and also supply `traces_aggregator_url`.
   - Generic host dashboard section optimized for both VM and physical machines
   - [Integration of framework allowing easy addition of new application-level metrics](https://github.com/reef-technologies/django-business-metrics)
   - nginx-level dashboard section for http/ws statistics

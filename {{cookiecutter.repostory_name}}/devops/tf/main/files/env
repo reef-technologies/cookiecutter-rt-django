@@ -30,6 +30,22 @@ PROMETHEUS_EXPORT_MIGRATIONS=1
 {% endif %}
 HTTPS_REDIRECT=1
 
+{% if cookiecutter.observability %}
+LOKI_URL={{cookiecutter.log_aggregator_url}}
+LOKI_REFRESH_INTERVAL=5s
+LOKI_USER=
+LOKI_PASSWORD=
+LOKI_CLIENT=
+LOKI_CLIENT_SERVER_GROUP=
+
+TEMPO_URL={{cookiecutter.traces_aggregator_url}}
+TEMPO_USER=
+TEMPO_PASSWORD=
+
+OTEL_SERVICE_NAMESPACE={{cookiecutter.repostory_name}}
+OTEL_DEPLOYMENT_ENVIRONMENT=${deployment_environment}
+{% endif %}
+
 MEDIA_ROOT=/var/media
 
 {% if cookiecutter.csp_enabled %}

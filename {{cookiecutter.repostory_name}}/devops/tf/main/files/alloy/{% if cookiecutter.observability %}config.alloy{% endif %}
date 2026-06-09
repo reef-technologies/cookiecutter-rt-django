@@ -1,0 +1,214 @@
+discovery.docker "containerlogs" {
+	host             = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containerlogs" {
+	targets = []
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_log_stream"]
+		target_label  = "logstream"
+	}
+}
+
+loki.source.docker "containerlogs" {
+	host          = "unix:///var/run/docker.sock"
+	targets       = discovery.docker.containerlogs.targets
+	forward_to    = [loki.process.parse.receiver]
+	relabel_rules = discovery.relabel.containerlogs.rules
+}
+
+loki.process "parse" {
+	forward_to = [loki.write.default.receiver]
+
+	stage.json {
+		expressions = {
+			level                       = "level",
+			logger_name                 = "logger",
+			service_namespace           = "\"service.namespace\"",
+			service_name                = "\"service.name\"",
+			service_version             = "\"service.version\"",
+			deployment_environment_name = "\"deployment.environment.name\"",
+		}
+	}
+
+	stage.labels {
+		values = {
+			level                       = "",
+			service_namespace           = "",
+			service_name                = "",
+			deployment_environment_name = "",
+		}
+	}
+}
+
+loki.write "default" {
+	endpoint {
+		url = sys.env("LOKI_URL") + "/loki/api/v1/push"
+
+		basic_auth {
+			username = sys.env("LOKI_USER")
+			password = sys.env("LOKI_PASSWORD")
+		}
+	}
+}
+
+otelcol.receiver.otlp "default" {
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+
+	output {
+		traces = [otelcol.processor.tail_sampling.traces.input]
+	}
+}
+
+otelcol.processor.tail_sampling "traces" {
+	decision_wait               = "30s"
+	num_traces                  = 100000
+	expected_new_traces_per_sec = 100
+
+	// Known Alloy v1.15.1 validator false positive: `alloy validate`
+	// reports "expected object, got object" for this attribute, while
+	// `alloy run` accepts the same config and starts successfully.
+	decision_cache = {
+		sampled_cache_size     = 1000000,
+		non_sampled_cache_size = 1000000,
+	}
+
+	// Keep tail-sampling memory focused on user and application traffic.
+	policy {
+		name = "drop-noise-http"
+		type = "drop"
+
+		drop {
+			drop_sub_policy {
+				name = "noise-http-route"
+				type = "string_attribute"
+
+				string_attribute {
+					key    = "http.route"
+					values = [
+						"^/?(alive|metrics|business-metrics|favicon[.]ico)/?$",
+						"^/?(static|media)(/.*)?$",
+						"^/?(node-exporter-metrics|cadvisor-metrics|application-metrics|nginx-metrics|celery-metrics|backup-metrics)/?$",
+					]
+					enabled_regex_matching = true
+					cache_max_size         = 256
+				}
+			}
+		}
+	}
+
+	policy {
+		name = "keep-errors"
+		type = "status_code"
+
+		status_code {
+			status_codes = ["ERROR"]
+		}
+	}
+
+	policy {
+		name = "keep-http-5xx-response"
+		type = "numeric_attribute"
+
+		numeric_attribute {
+			key       = "http.response.status_code"
+			min_value = 500
+			max_value = 599
+		}
+	}
+
+	policy {
+		name = "keep-http-5xx-legacy"
+		type = "numeric_attribute"
+
+		numeric_attribute {
+			key       = "http.status_code"
+			min_value = 500
+			max_value = 599
+		}
+	}
+
+	policy {
+		name = "keep-slow-traces"
+		type = "latency"
+
+		latency {
+			threshold_ms = 1000
+		}
+	}
+
+	policy {
+		name = "keep-mutating-http-request-method"
+		type = "string_attribute"
+
+		string_attribute {
+			key    = "http.request.method"
+			values = ["POST", "PUT", "PATCH", "DELETE"]
+		}
+	}
+
+	policy {
+		name = "keep-mutating-http-method"
+		type = "string_attribute"
+
+		string_attribute {
+			key    = "http.method"
+			values = ["POST", "PUT", "PATCH", "DELETE"]
+		}
+	}
+
+	policy {
+		name = "keep-celery"
+		type = "string_attribute"
+
+		string_attribute {
+			key    = "service.name"
+			values = ["celery", "celery-beat"]
+		}
+	}
+
+	policy {
+		name = "baseline"
+		type = "probabilistic"
+
+		probabilistic {
+			sampling_percentage = 5
+			hash_salt           = "{{cookiecutter.repostory_name}}-tail-sampling"
+		}
+	}
+
+	output {
+		traces = [otelcol.processor.batch.default.input]
+	}
+}
+
+otelcol.processor.batch "default" {
+	output {
+		traces = [otelcol.exporter.otlphttp.tempo.input]
+	}
+}
+
+otelcol.auth.basic "tempo" {
+	username = sys.env("TEMPO_USER")
+	password = sys.env("TEMPO_PASSWORD")
+}
+
+otelcol.exporter.otlphttp "tempo" {
+	client {
+		endpoint = sys.env("TEMPO_URL")
+		auth     = otelcol.auth.basic.tempo.handler
+	}
+}
