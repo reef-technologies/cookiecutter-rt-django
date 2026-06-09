@@ -24,6 +24,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy uv run python3 manage.py collectstatic --no-input --clear
 
 FROM $BASE_IMAGE AS secondary-image
+ARG GIT_SHA=unknown
 LABEL builder=false
 
 RUN apt-get update \
@@ -33,6 +34,8 @@ RUN apt-get update \
 WORKDIR /root/src/
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/root/src/.venv/bin:$PATH"
+ENV GIT_SHA="${GIT_SHA}"
+ENV OTEL_SERVICE_VERSION="${GIT_SHA}"
 
 COPY --from=base-image /root/src/ /root/src/
 CMD ["./entrypoint.sh"]

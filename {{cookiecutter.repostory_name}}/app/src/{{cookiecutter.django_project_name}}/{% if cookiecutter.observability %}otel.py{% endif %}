@@ -1,0 +1,173 @@
+"""OpenTelemetry bootstrap and structlog/OTEL bridging.
+
+OpenTelemetry setup is split across the gunicorn/celery fork boundary so the
+WSGI/Celery middleware stack is monkey-patched once in the master process
+(before any handler is built and frozen), while the SDK and its background
+exporter thread live entirely inside the worker.
+
+``BatchSpanProcessor`` runs a background thread which does not survive
+``fork()``; initialising the SDK in the master process therefore results in
+lost spans and possible deadlocks. On the other hand, instrumentors such as
+``DjangoInstrumentor`` mutate ``settings.MIDDLEWARE`` and patch the WSGI
+handler — when this is done only post-fork, gunicorn's preloaded
+``_middleware_chain`` is already cached and the OTel middleware never sees a
+request.
+
+Call ``instrument_before_fork`` from the gunicorn master / celery master
+process and ``setup_sdk_after_fork(service_name)`` from the ``post_fork`` and
+``worker_process_init`` hooks.
+"""
+
+from __future__ import annotations
+
+import os
+import uuid
+from typing import Any
+
+_NAMESPACE_DEFAULT = "{{cookiecutter.repostory_name}}"
+_ENVIRONMENT_DEFAULT = "production"
+
+_cached_instance_id: str | None = None
+
+
+def _sdk_disabled() -> bool:
+    return os.environ.get("OTEL_SDK_DISABLED", "").lower().strip() == "true"
+
+
+def _get_or_create_instance_id() -> str:
+    """Return the ``service.instance.id`` for the current process.
+
+    Resolution order:
+
+    1. ``OTEL_SERVICE_INSTANCE_ID`` env var (non-empty) — used as-is, never
+       cached because the environment is process-stable. Provides a manual
+       override.
+    2. A module-cached uuid4 generated on first call inside this process.
+
+    Because each forked worker holds its own copy of module globals, the
+    second branch yields a distinct uuid4 per worker process. The cache must
+    be cleared in ``setup_sdk_after_fork`` to prevent a value generated in the
+    pre-fork master process from being inherited by every worker.
+    """
+    global _cached_instance_id
+    if env_id := os.environ.get("OTEL_SERVICE_INSTANCE_ID"):
+        return env_id
+    if _cached_instance_id is None:
+        _cached_instance_id = str(uuid.uuid4())
+    return _cached_instance_id
+
+
+def _resource_attributes(service_name: str) -> dict[str, str]:
+    """Collect OTel resource attributes from the process environment.
+
+    Used both for the trace ``Resource`` and as the source of the per-log
+    fields injected by the structlog processor, so traces and logs share
+    a single identity. ``service_name`` is a fallback used only when
+    ``OTEL_SERVICE_NAME`` is not set. ``service.instance.id`` is a random
+    uuid4 generated once per worker process, overridable via
+    ``OTEL_SERVICE_INSTANCE_ID``.
+    """
+    attrs: dict[str, str] = {
+        "service.namespace": os.environ.get("OTEL_SERVICE_NAMESPACE", _NAMESPACE_DEFAULT),
+        "service.name": os.environ.get("OTEL_SERVICE_NAME", service_name),
+        "deployment.environment.name": os.environ.get("OTEL_DEPLOYMENT_ENVIRONMENT", _ENVIRONMENT_DEFAULT),
+        "service.instance.id": _get_or_create_instance_id(),
+    }
+    if version := os.environ.get("OTEL_SERVICE_VERSION") or os.environ.get("GIT_SHA"):
+        attrs["service.version"] = version
+    return attrs
+
+
+def instrument_before_fork() -> None:
+    """Apply auto-instrumentation patches that must be installed pre-fork.
+
+    Patches Django/Celery/DB/HTTP libraries so the WSGI handler middleware
+    chain and Celery task wrapping pick up the OTel hooks at import time.
+    The SDK is **not** initialised here — no spans are produced until
+    ``setup_sdk_after_fork`` runs.
+    """
+    if _sdk_disabled():
+        return
+
+    {% if cookiecutter.use_celery %}
+    from opentelemetry.instrumentation.celery import CeleryInstrumentor
+    {% endif %}
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
+    from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
+    from opentelemetry.instrumentation.redis import RedisInstrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+    from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
+
+    DjangoInstrumentor().instrument()
+    {% if cookiecutter.use_celery %}
+    CeleryInstrumentor().instrument()
+    {% endif %}
+    PsycopgInstrumentor().instrument(enable_commenter=True)
+    RedisInstrumentor().instrument()
+    RequestsInstrumentor().instrument()
+    URLLib3Instrumentor().instrument()
+    LoggingInstrumentor(set_logging_format=False).instrument()
+
+
+def setup_sdk_after_fork(service_name: str) -> None:
+    """Initialise the OTEL SDK and its background exporter inside the worker.
+
+    The instrumentors must already be installed (see
+    ``instrument_before_fork``); this call wires them to a real tracer
+    provider so spans start flowing to the configured OTLP endpoint.
+
+    Also clears the cached ``service.instance.id`` so that any uuid4
+    generated in the pre-fork master process is discarded and each worker
+    gets its own fresh identifier.
+    """
+    if _sdk_disabled():
+        return
+
+    global _cached_instance_id
+    _cached_instance_id = None
+
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    resource = Resource.create(_resource_attributes(service_name))
+
+    provider = TracerProvider(resource=resource)
+    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+    trace.set_tracer_provider(provider)
+
+
+def add_otel_context_to_structlog(
+    logger: Any,  # noqa: ARG001
+    method_name: str,  # noqa: ARG001
+    event_dict: dict[str, Any],
+) -> dict[str, Any]:
+    """Structlog processor injecting ``trace_id``/``span_id`` from the active span.
+
+    When the SDK is not configured the current span is the no-op span whose
+    context is invalid, and no fields are added.
+    """
+    from opentelemetry import trace
+
+    ctx = trace.get_current_span().get_span_context()
+    if ctx.is_valid:
+        event_dict["trace_id"] = format(ctx.trace_id, "032x")
+        event_dict["span_id"] = format(ctx.span_id, "016x")
+    return event_dict
+
+
+def add_otel_resource_to_structlog(
+    logger: Any,  # noqa: ARG001
+    method_name: str,  # noqa: ARG001
+    event_dict: dict[str, Any],
+) -> dict[str, Any]:
+    """Structlog processor injecting OTel resource attributes into every log.
+
+    Keeps logs and traces identified by the same ``service.*`` /
+    ``deployment.environment.name`` fields so they can be correlated in
+    backends like Loki/Tempo without relying on container metadata.
+    """
+    return _resource_attributes(service_name="unknown") | event_dict

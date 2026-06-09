@@ -8,22 +8,36 @@ services:
     env_file: ./.env
     healthcheck:
       test: ["CMD", "./healthcheck.py", "/var/run/gunicorn/gunicorn.sock"]
-    {% if cookiecutter.monitoring %}
+    {% if cookiecutter.monitoring or cookiecutter.observability %}
     environment:
+      {% if cookiecutter.monitoring %}
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
       # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
       # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
       # Don't forget to also mount the prometheus-metrics volume in other containers too.
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
       - PROMETHEUS_USE_FLOCK=1  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
+      {% endif %}
+      {% if cookiecutter.observability %}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_SERVICE_NAMESPACE=$${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_SERVICE_NAME=app
+      - OTEL_SERVICE_INSTANCE_ID=$${OTEL_SERVICE_INSTANCE_ID:-}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=$${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      {% endif %}
     {% endif %}
     volumes:
       - backend-static:/var/static
       - gunicorn-socket:/var/run/gunicorn
-      - ./media:${MEDIA_ROOT}
+      - ./media:$${MEDIA_ROOT}
     {% if cookiecutter.monitoring %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
+    {% endif %}
+    {% if cookiecutter.observability %}
+    depends_on:
+      - alloy
     {% endif %}
     logging: &app_logging
       driver: awslogs
@@ -40,20 +54,20 @@ services:
     init: true
     restart: unless-stopped
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=$${DATABASE_URL}
       - BACKUP_LOCAL_DIR=/var/backups
-      - BACKUP_LOCAL_ROTATE_KEEP_LAST=${BACKUP_LOCAL_ROTATE_KEEP_LAST}
-      - B2_BUCKET=${BACKUP_B2_BUCKET}
-      - B2_FOLDER=${BACKUP_B2_FOLDER}
-      - B2_APPLICATION_KEY_ID=${BACKUP_B2_APPLICATION_KEY_ID}
-      - B2_APPLICATION_KEY=${BACKUP_B2_APPLICATION_KEY}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
-      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
-      - EMAIL_TARGET=${EMAIL_TARGET}
-      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
-      - SENTRY_DSN=${SENTRY_DSN}
+      - BACKUP_LOCAL_ROTATE_KEEP_LAST=$${BACKUP_LOCAL_ROTATE_KEEP_LAST}
+      - B2_BUCKET=$${BACKUP_B2_BUCKET}
+      - B2_FOLDER=$${BACKUP_B2_FOLDER}
+      - B2_APPLICATION_KEY_ID=$${BACKUP_B2_APPLICATION_KEY_ID}
+      - B2_APPLICATION_KEY=$${BACKUP_B2_APPLICATION_KEY}
+      - EMAIL_HOST=$${EMAIL_HOST}
+      - EMAIL_PORT=$${EMAIL_PORT}
+      - EMAIL_HOST_USER=$${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=$${EMAIL_HOST_PASSWORD}
+      - EMAIL_TARGET=$${EMAIL_TARGET}
+      - DEFAULT_FROM_EMAIL=$${DEFAULT_FROM_EMAIL}
+      - SENTRY_DSN=$${SENTRY_DSN}
     volumes:
       - backups:/var/backups
     logging:
@@ -98,15 +112,26 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.2'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.3.0'
     restart: unless-stopped
     healthcheck:
       test: wget -q --spider http://0.0.0.0:8000/alive/ || exit 1
+    {% if cookiecutter.observability %}
+    environment:
+      - OTEL_SERVICE_NAMESPACE=$${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_SERVICE_NAME=nginx
+      - OTEL_SERVICE_INSTANCE_ID=$${OTEL_SERVICE_INSTANCE_ID:-prod-1}
+      - OTEL_SERVICE_VERSION=$${GIT_SHA:-unknown}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=$${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+    {% endif %}
     depends_on:
       - app
       {% if cookiecutter.monitoring %}
       - cadvisor
       - node-exporter
+      {% endif %}
+      {% if cookiecutter.observability %}
+      - alloy
       {% endif %}
     command: nginx -g 'daemon off;'
     ports:
@@ -165,8 +190,39 @@ services:
         awslogs-create-group: "true"
   {% endif %}
 
+  {% if cookiecutter.observability %}
+  alloy:
+    image: grafana/alloy:v1.15.1
+    restart: unless-stopped
+    environment:
+      - LOKI_URL=$${LOKI_URL}
+      - LOKI_USER=$${LOKI_USER}
+      - LOKI_PASSWORD=$${LOKI_PASSWORD}
+      - TEMPO_URL=$${TEMPO_URL}
+      - TEMPO_USER=$${TEMPO_USER}
+      - TEMPO_PASSWORD=$${TEMPO_PASSWORD}
+    volumes:
+      - ./alloy:/etc/alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy
+    command:
+      - run
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-alloy'
+        awslogs-create-group: "true"
+  {% endif %}
+
 volumes:
   backend-static:
   backups:
   gunicorn-socket:
   nodeexporter_collectors:
+  {% if cookiecutter.observability %}
+  alloy-data:
+  {% endif %}

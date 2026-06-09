@@ -129,6 +129,26 @@ In case you need to add confidential files (like a GCP credentials file) you can
 These will only be accessible to people that access to AWS or EC2 machines, not to people who have access to this repository.
 One such parameter, namely `/application/{{ cookiecutter.aws_project_name }}/{env}/secret.env` is treated specially - if it exists (it doesn't by default) its contents are appended to `.env` during EC2 machine provisioning - this is a convenient way of supplying pieces of confidential information, like external systems' access keys to `.env`.
 
+{% if cookiecutter.observability %}
+## Observability
+
+The project ships a Grafana Alloy collector as part of `docker-compose.yml`, alongside `app`, `celery` and `nginx`. Alloy receives OTLP traces from every service on `alloy:4317`/`alloy:4318`, applies tail-sampling and forwards traces to Grafana Tempo, plus tails Docker container logs and forwards them to Grafana Loki. **There is no separate EC2 instance for the collector** — it lives in the same `docker-compose` as the app.
+
+### Alloy configuration
+
+`alloy/config.alloy` is deployed as an SSM parameter at `/application/{{ cookiecutter.aws_project_name }}/{env}/alloy/config.alloy`, managed by terraform (see `devops/tf/main/modules/backend/parameters.docker-compose.tf`). Cloud init writes it to `alloy/config.alloy` next to `docker-compose.yml` on the EC2 host. Any change to `config.alloy` therefore requires a `terraform apply` plus a refresh of the EC2 instance — editing the file in place on the box is overwritten on the next provision.
+
+### Required secrets in `.env`
+
+In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`, `LOKI_CLIENT`, `LOKI_CLIENT_SERVER_GROUP`), observability uses:
+
+- `TEMPO_URL`, `TEMPO_USER`, `TEMPO_PASSWORD` — Tempo uses the **same `.htpasswd` credentials** as Loki (see the top-level project README for how to generate them via `add_loki_target.sh`).
+- `OTEL_SERVICE_NAMESPACE` — defaults to the repository name; usually fine.
+- `OTEL_DEPLOYMENT_ENVIRONMENT` — `staging` / `production`.
+- `GIT_SHA` — set automatically by the deploy pipeline. `devops/scripts/build-backend.sh` uses `GIT_SHA` from the build environment or falls back to `git rev-parse --short HEAD`, passes it as `--build-arg GIT_SHA=...`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. Cloud Init reads the value from the pulled image into `.env` so nginx reports the same `service.version`.
+
+{% endif %}
+
 ## Vulnerability scanning
 If you set up your project with `vulnerabilities_scanning` enabled, you need to create an additional SSM parameter with the name `/application/{{ cookiecutter.aws_project_name }}/{env}/.vuln.env` containing environment variables required by [vulnrelay](https://github.com/reef-technologies/vulnrelay) prior to deploying the project. Look at the `/envs/prod/.vuln.env.template` file to see the expected file format.
 

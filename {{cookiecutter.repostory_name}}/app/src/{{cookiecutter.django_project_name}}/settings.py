@@ -11,6 +11,9 @@ from functools import wraps
 
 import environ
 import structlog
+{% if cookiecutter.observability %}
+from {{cookiecutter.django_project_name}}.otel import add_otel_context_to_structlog, add_otel_resource_to_structlog
+{% endif %}
 
 {% if cookiecutter.use_celery %}
 # from celery.schedules import crontab
@@ -114,7 +117,7 @@ INSTALLED_APPS = [
 
 {% if cookiecutter.monitoring %}
 PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS")
-{% if cookiecutter.monitor_view_execution_time_in_djagno %}
+{% if cookiecutter.monitor_view_execution_time_in_django %}
 PROMETHEUS_LATENCY_BUCKETS = (
     0.008,
     0.016,
@@ -136,7 +139,7 @@ PROMETHEUS_LATENCY_BUCKETS = (
 {% endif %}
 
 MIDDLEWARE = [
-    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
+    {% if cookiecutter.monitor_view_execution_time_in_django and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     {% endif %}
     "django.middleware.security.SecurityMiddleware",
@@ -153,7 +156,7 @@ MIDDLEWARE = [
     {% if cookiecutter.use_allauth %}
     "allauth.account.middleware.AccountMiddleware",
     {% endif %}
-    {% if cookiecutter.monitor_view_execution_time_in_djagno and cookiecutter.monitoring %}
+    {% if cookiecutter.monitor_view_execution_time_in_django and cookiecutter.monitoring %}
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     {% endif %}
 ]
@@ -437,6 +440,10 @@ LOGGING_FOREIGN_PRE_CHAIN = [
     structlog.processors.TimeStamper(fmt='iso'),
     structlog.processors.format_exc_info,
     LOGGING_CALLSITE_PARAMETERS_PROCESSOR,
+    {% if cookiecutter.observability %}
+    add_otel_resource_to_structlog,
+    add_otel_context_to_structlog,
+    {% endif %}
 ]
 
 LOGGING = {
@@ -506,6 +513,10 @@ STRUCTLOG_CONFIGURATION = dict(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
+        {% if cookiecutter.observability %}
+        add_otel_resource_to_structlog,
+        add_otel_context_to_structlog,
+        {% endif %}
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
     ],
     logger_factory=structlog.stdlib.LoggerFactory(),

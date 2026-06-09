@@ -68,20 +68,32 @@ services:
     build:
       context: .
       dockerfile: app/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     image: {{cookiecutter.django_project_name}}/app
     healthcheck:
       test: ["CMD", "./healthcheck.py", "/var/run/gunicorn/gunicorn.sock"]
     init: true
     restart: unless-stopped
     env_file: ./.env
-    {% if cookiecutter.monitoring %}
+    {% if cookiecutter.monitoring or cookiecutter.observability %}
     environment:
+      {% if cookiecutter.monitoring %}
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
       # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
       # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
       # Don't forget to also mount the prometheus-metrics volume in other containers too.
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
       - PROMETHEUS_USE_FLOCK=1  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
+      {% endif %}
+      {% if cookiecutter.observability %}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_SERVICE_NAMESPACE=${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_SERVICE_NAME=app
+      - OTEL_SERVICE_INSTANCE_ID=${OTEL_SERVICE_INSTANCE_ID:-}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      {% endif %}
     {% endif %}
     volumes:
       - backend-static:/var/static
@@ -94,6 +106,9 @@ services:
     depends_on:
       - redis
       - db
+      {% if cookiecutter.observability %}
+      - alloy
+      {% endif %}
     logging:
       <<: *logging
 
@@ -111,6 +126,14 @@ services:
       - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/celery-worker
       - PROMETHEUS_USE_FLOCK=1  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
       {% endif %}
+      {% if cookiecutter.observability %}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_SERVICE_NAMESPACE=${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_SERVICE_NAME=celery
+      - OTEL_SERVICE_INSTANCE_ID=${OTEL_SERVICE_INSTANCE_ID:-}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      {% endif %}
     command: ./celery-entrypoint.sh
     {% if cookiecutter.monitoring %}
     volumes:
@@ -119,6 +142,9 @@ services:
     tmpfs: /run
     depends_on:
       - redis
+      {% if cookiecutter.observability %}
+      - alloy
+      {% endif %}
     logging:
       <<: *logging
 
@@ -129,11 +155,22 @@ services:
     env_file: ./.env
     environment:
       - DEBUG=off
+      {% if cookiecutter.observability %}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_SERVICE_NAMESPACE=${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_SERVICE_NAME=celery-beat
+      - OTEL_SERVICE_INSTANCE_ID=${OTEL_SERVICE_INSTANCE_ID:-}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      {% endif %}
     command: nice celery -A {{cookiecutter.django_project_name}} beat -l INFO --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
     volumes:
       - ./logs:/tmp/logs
     depends_on:
       - redis
+      {% if cookiecutter.observability %}
+      - alloy
+      {% endif %}
     logging:
       <<: *logging
 
@@ -159,7 +196,7 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.2'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.3.0'
     restart: unless-stopped
     healthcheck:
       test: [
@@ -172,6 +209,13 @@ services:
       timeout: 10s
     environment:
       - NGINX_HOST=${NGINX_HOST}
+      {% if cookiecutter.observability %}
+      - OTEL_SERVICE_NAMESPACE=${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_SERVICE_NAME=nginx
+      - OTEL_SERVICE_INSTANCE_ID=${OTEL_SERVICE_INSTANCE_ID:-prod-1}
+      - OTEL_SERVICE_VERSION=${GIT_SHA:-unknown}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      {% endif %}
     volumes:
       - ./nginx/templates:/etc/nginx/templates
       - ./nginx/config_helpers:/etc/nginx/config_helpers
@@ -239,14 +283,17 @@ services:
       <<: *logging
   {% endif %}
 
-  {% if cookiecutter.log_aggregating %}
+  {% if cookiecutter.observability %}
   alloy:
-    image: grafana/alloy:v1.8.3
+    image: grafana/alloy:v1.15.1
     restart: unless-stopped
     environment:
       - LOKI_URL=${LOKI_URL}
       - LOKI_USER=${LOKI_USER}
       - LOKI_PASSWORD=${LOKI_PASSWORD}
+      - TEMPO_URL=${TEMPO_URL}
+      - TEMPO_USER=${TEMPO_USER}
+      - TEMPO_PASSWORD=${TEMPO_PASSWORD}
     volumes:
       - ./alloy:/etc/alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -286,4 +333,6 @@ volumes:
   backups:
   gunicorn-socket:
   nodeexporter_collectors:
+  {% if cookiecutter.observability %}
   alloy-data:
+  {% endif %}

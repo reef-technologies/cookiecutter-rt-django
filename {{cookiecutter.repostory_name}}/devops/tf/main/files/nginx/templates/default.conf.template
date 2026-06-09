@@ -1,3 +1,38 @@
+{% if cookiecutter.observability %}
+otel_exporter {
+    endpoint alloy:4317;
+}
+otel_service_name "${OTEL_SERVICE_NAME}";
+otel_resource_attr service.namespace "${OTEL_SERVICE_NAMESPACE}";
+otel_resource_attr service.instance.id "${OTEL_SERVICE_INSTANCE_ID}";
+otel_resource_attr service.version "${OTEL_SERVICE_VERSION}";
+otel_resource_attr deployment.environment.name "${OTEL_DEPLOYMENT_ENVIRONMENT}";
+otel_trace on;
+otel_trace_context propagate;
+
+log_format json_combined escape=json '{'
+    '"time":"$time_iso8601",'
+    '"remote_addr":"$remote_addr",'
+    '"request":"$request",'
+    '"status":$status,'
+    '"body_bytes_sent":$body_bytes_sent,'
+    '"http_referer":"$http_referer",'
+    '"http_user_agent":"$http_user_agent",'
+    '"request_time":$request_time,'
+    '"upstream_response_time":"$upstream_response_time",'
+    '"request_id":"$request_id",'
+    '"trace_id":"$otel_trace_id",'
+    '"span_id":"$otel_span_id",'
+    '"host":"$host",'
+    '"server_name":"$server_name",'
+    '"service.namespace":"${OTEL_SERVICE_NAMESPACE}",'
+    '"service.name":"${OTEL_SERVICE_NAME}",'
+    '"service.instance.id":"${OTEL_SERVICE_INSTANCE_ID}",'
+    '"service.version":"${OTEL_SERVICE_VERSION}",'
+    '"deployment.environment.name":"${OTEL_DEPLOYMENT_ENVIRONMENT}"'
+'}';
+{% endif %}
+
 upstream gunicorn {
     server unix:/var/run/gunicorn/gunicorn.sock fail_timeout=0;
 }
@@ -10,25 +45,37 @@ server {
     include /etc/nginx/config_helpers/brotli.conf;
     include /etc/nginx/config_helpers/gzip.conf;
 
-    access_log                /dev/stdout;
+    access_log                /dev/stdout{% if cookiecutter.observability %} json_combined{% endif %};
     error_log                 /dev/stderr info;
 
     client_max_body_size 100M;
 
     location /static/ {
+        {% if cookiecutter.observability %}
+        otel_trace off;
+        {% endif %}
         root /srv/;
     }
 
     location /media/ {
+        {% if cookiecutter.observability %}
+        otel_trace off;
+        {% endif %}
         root /srv/;
     }
 
     {% if cookiecutter.monitoring %}
     location /metrics {
+        {% if cookiecutter.observability %}
+        otel_trace off;
+        {% endif %}
         return 404;
     }
 
     location /business-metrics {
+        {% if cookiecutter.observability %}
+        otel_trace off;
+        {% endif %}
         return 404;
     }
     {% endif %}
@@ -60,6 +107,10 @@ server {
     server_name monitoring;
     listen      10443           ssl http2;
 
+    {% if cookiecutter.observability %}
+    otel_trace off;
+    {% endif %}
+
     include /etc/nginx/config_helpers/brotli.conf;
     include /etc/nginx/config_helpers/gzip.conf;
 
@@ -70,7 +121,7 @@ server {
     ssl_client_certificate /etc/monitoring_certs/monitoring-ca.crt;
     ssl_verify_client on;
 
-    access_log                /dev/stdout;
+    access_log                /dev/stdout{% if cookiecutter.observability %} json_combined{% endif %};
     error_log                 /dev/stderr info;
 
     location /node-exporter-metrics/ {
