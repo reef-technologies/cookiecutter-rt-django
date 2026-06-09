@@ -56,8 +56,13 @@ git push production master
 
 ```sh
 # remote server
-cd ~/repos/{{ cookiecutter.repostory_name }}.git
+cd ~/domains/{{ cookiecutter.repostory_name }}
+sudo bin/prepare-os.sh
+./setup-prod.sh
 
+# adjust the `.env` file
+
+cd ~/repos/{{ cookiecutter.repostory_name }}.git
 cat <<'EOT' > hooks/post-receive
 #!/bin/bash
 unset GIT_INDEX_FILE
@@ -78,13 +83,9 @@ done
 EOT
 
 chmod +x hooks/post-receive
-./hooks/post-receive
+echo "<oldrev> <newrev> refs/heads/master" | ./hooks/post-receive
+
 cd ~/domains/{{ cookiecutter.repostory_name }}
-sudo bin/prepare-os.sh
-./setup-prod.sh
-
-# adjust the `.env` file
-
 mkdir letsencrypt
 ./letsencrypt_setup.sh
 ./deploy.sh

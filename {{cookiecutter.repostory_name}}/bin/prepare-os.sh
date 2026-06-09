@@ -17,7 +17,7 @@ if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SEN
     exit 0;
 fi
 
-PLATFORM="$(uname -i)"
+PLATFORM="$(uname -m)"
 if [ "${PLATFORM}" != "x86_64" ] && [ "${PLATFORM}" != "aarch64" ]; then
   echo "Unsupported hardware platform: ${PLATFORM}"
   exit 1
