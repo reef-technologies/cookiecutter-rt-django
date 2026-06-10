@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [master, main]
 
-env:
-  ENV_FILL_MISSING_VALUES: 1
-
 jobs:
 {% if cookiecutter.ci_use_linter %}
   linter:
@@ -49,6 +46,9 @@ jobs:
   test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -67,6 +67,17 @@ jobs:
         run: uv tool install --with pyyaml nox
       - name: Run unit tests
         run: uvx nox -vs test
+      - name: Coverage comment on PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: MishaKav/pytest-coverage-comment@dd5b80bde6d16941f336518e92929e89069d8451  # v1.7.2
+        with:
+          pytest-xml-coverage-path: ./app/src/coverage.xml
+          coverage-path-prefix: app/src/{{cookiecutter.django_project_name}}/
+          title: Coverage Report
+          badge-title: Coverage
+          hide-badge: false
+          hide-report: false
+          report-only-changed-files: false
       - name: Stop dockerized services
         if: success() || failure()
         run: docker compose down -v
