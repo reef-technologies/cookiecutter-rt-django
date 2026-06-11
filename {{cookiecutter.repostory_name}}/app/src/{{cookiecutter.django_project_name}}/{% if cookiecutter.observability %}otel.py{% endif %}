@@ -26,14 +26,19 @@ from typing import Any
 
 import environ
 
-_NAMESPACE_DEFAULT = "{{cookiecutter.repostory_name}}"
-_ENVIRONMENT_DEFAULT = "production"
-
 env = environ.Env()
 
-
-def _sdk_disabled() -> bool:
-    return env.bool("OTEL_SDK_DISABLED", default=False)
+# django-environ logs every lookup at DEBUG level through stdlib logging, so
+# reading env vars inside structlog processors recurses through the logging
+# stack (processor -> env lookup -> log record -> processor -> ...). All env
+# access must therefore happen once at import time; the environment is
+# process-stable so nothing is lost.
+_SDK_DISABLED = env.bool("OTEL_SDK_DISABLED", default=False)
+_SERVICE_NAMESPACE = env.str("OTEL_SERVICE_NAMESPACE", default="{{cookiecutter.repostory_name}}")
+_SERVICE_NAME_OVERRIDE = env.str("OTEL_SERVICE_NAME", default="")
+_DEPLOYMENT_ENVIRONMENT = env.str("OTEL_DEPLOYMENT_ENVIRONMENT", default="production")
+_SERVICE_INSTANCE_ID_OVERRIDE = env.str("OTEL_SERVICE_INSTANCE_ID", default="")
+_SERVICE_VERSION = env.str("OTEL_SERVICE_VERSION", default="") or env.str("GIT_SHA", default="")
 
 
 @functools.cache
@@ -53,7 +58,7 @@ def _get_or_create_instance_id() -> str:
     generated in the pre-fork master process from being inherited by every
     worker.
     """
-    return env.str("OTEL_SERVICE_INSTANCE_ID", default="") or str(uuid.uuid4())
+    return _SERVICE_INSTANCE_ID_OVERRIDE or str(uuid.uuid4())
 
 
 def _resource_attributes(service_name: str) -> dict[str, str]:
@@ -67,13 +72,13 @@ def _resource_attributes(service_name: str) -> dict[str, str]:
     ``OTEL_SERVICE_INSTANCE_ID``.
     """
     attrs: dict[str, str] = {
-        "service.namespace": env.str("OTEL_SERVICE_NAMESPACE", default=_NAMESPACE_DEFAULT),
-        "service.name": env.str("OTEL_SERVICE_NAME", default=service_name),
-        "deployment.environment.name": env.str("OTEL_DEPLOYMENT_ENVIRONMENT", default=_ENVIRONMENT_DEFAULT),
+        "service.namespace": _SERVICE_NAMESPACE,
+        "service.name": _SERVICE_NAME_OVERRIDE or service_name,
+        "deployment.environment.name": _DEPLOYMENT_ENVIRONMENT,
         "service.instance.id": _get_or_create_instance_id(),
     }
-    if version := env.str("OTEL_SERVICE_VERSION", default="") or env.str("GIT_SHA", default=""):
-        attrs["service.version"] = version
+    if _SERVICE_VERSION:
+        attrs["service.version"] = _SERVICE_VERSION
     return attrs
 
 
@@ -85,7 +90,7 @@ def instrument_before_fork() -> None:
     The SDK is **not** initialised here — no spans are produced until
     ``setup_sdk_after_fork`` runs.
     """
-    if _sdk_disabled():
+    if _SDK_DISABLED:
         return
 
     {% if cookiecutter.use_celery %}
@@ -120,7 +125,7 @@ def setup_sdk_after_fork(service_name: str) -> None:
     generated in the pre-fork master process is discarded and each worker
     gets its own fresh identifier.
     """
-    if _sdk_disabled():
+    if _SDK_DISABLED:
         return
 
     _get_or_create_instance_id.cache_clear()
