@@ -12,6 +12,8 @@ Currently, `cookiecutter-rt-django` has no explicit versioning amd we purely rel
 
 ## [Unreleased]
 
+* **BREAKING** Replaced the `log_aggregating` cookiecutter option with `observability`. Existing projects updating with `cruft update` should set `observability` to `true` if they used log aggregation before, and provide the new `traces_aggregator_url` value plus `TEMPO_URL`, `TEMPO_USER` and `TEMPO_PASSWORD` in production environments.
+* **BREAKING** Renamed the `monitor_view_execution_time_in_djagno` cookiecutter option to `monitor_view_execution_time_in_django`; update existing `cruft.json` files or `cruft update --variables-to-update` overrides accordingly.
 * **BREAKING** Switched from `pdm` to [`uv`](https://docs.astral.sh/uv/) for Python dependency management.
 * **BREAKING** Switched from `docker-compose` v1 script to `docker compose` v2 plugin (https://docs.docker.com/compose/cli-command/)
 * **BREAKING** Added formatting with ruff.

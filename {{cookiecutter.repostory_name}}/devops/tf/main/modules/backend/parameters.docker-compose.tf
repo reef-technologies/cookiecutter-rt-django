@@ -11,3 +11,11 @@ resource "aws_ssm_parameter" "compose" {
     ecr_image     = var.ecr_image
   })
 }
+
+{% if cookiecutter.observability %}
+resource "aws_ssm_parameter" "alloy_config" {
+  name  = "/application/${var.name}/${var.env}/alloy/config.alloy"
+  type  = "SecureString"
+  value = file("../../files/alloy/config.alloy")
+}
+{% endif %}

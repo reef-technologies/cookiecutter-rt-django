@@ -40,5 +40,8 @@ SECRET_KEY=${SECRET_KEY}
 
 EOF
 
+GIT_SHA=$(git --work-tree=$${DEPLOY_DIR} --git-dir=$${REPO_DIR} rev-parse --short HEAD 2>/dev/null || printf "%s" "unknown")
+export GIT_SHA
+
 cd $${DEPLOY_DIR} && docker compose up --build --detach
 echo "finishing custom cloud-init"
