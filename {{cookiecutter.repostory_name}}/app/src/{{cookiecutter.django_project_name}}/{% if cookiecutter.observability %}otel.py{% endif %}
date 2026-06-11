@@ -20,41 +20,40 @@ process and ``setup_sdk_after_fork(service_name)`` from the ``post_fork`` and
 
 from __future__ import annotations
 
-import os
+import functools
 import uuid
 from typing import Any
+
+import environ
 
 _NAMESPACE_DEFAULT = "{{cookiecutter.repostory_name}}"
 _ENVIRONMENT_DEFAULT = "production"
 
-_cached_instance_id: str | None = None
+env = environ.Env()
 
 
 def _sdk_disabled() -> bool:
-    return os.environ.get("OTEL_SDK_DISABLED", "").lower().strip() == "true"
+    return env.bool("OTEL_SDK_DISABLED", default=False)
 
 
+@functools.cache
 def _get_or_create_instance_id() -> str:
     """Return the ``service.instance.id`` for the current process.
 
     Resolution order:
 
-    1. ``OTEL_SERVICE_INSTANCE_ID`` env var (non-empty) — used as-is, never
-       cached because the environment is process-stable. Provides a manual
-       override.
-    2. A module-cached uuid4 generated on first call inside this process.
+    1. ``OTEL_SERVICE_INSTANCE_ID`` env var (non-empty) — provides a manual
+       override; caching it is safe because the environment is
+       process-stable.
+    2. A uuid4 generated on first call inside this process.
 
-    Because each forked worker holds its own copy of module globals, the
-    second branch yields a distinct uuid4 per worker process. The cache must
-    be cleared in ``setup_sdk_after_fork`` to prevent a value generated in the
-    pre-fork master process from being inherited by every worker.
+    Because each forked worker holds its own copy of the ``functools.cache``
+    state, the second branch yields a distinct uuid4 per worker process. The
+    cache must be cleared in ``setup_sdk_after_fork`` to prevent a value
+    generated in the pre-fork master process from being inherited by every
+    worker.
     """
-    global _cached_instance_id
-    if env_id := os.environ.get("OTEL_SERVICE_INSTANCE_ID"):
-        return env_id
-    if _cached_instance_id is None:
-        _cached_instance_id = str(uuid.uuid4())
-    return _cached_instance_id
+    return env.str("OTEL_SERVICE_INSTANCE_ID", default="") or str(uuid.uuid4())
 
 
 def _resource_attributes(service_name: str) -> dict[str, str]:
@@ -68,12 +67,12 @@ def _resource_attributes(service_name: str) -> dict[str, str]:
     ``OTEL_SERVICE_INSTANCE_ID``.
     """
     attrs: dict[str, str] = {
-        "service.namespace": os.environ.get("OTEL_SERVICE_NAMESPACE", _NAMESPACE_DEFAULT),
-        "service.name": os.environ.get("OTEL_SERVICE_NAME", service_name),
-        "deployment.environment.name": os.environ.get("OTEL_DEPLOYMENT_ENVIRONMENT", _ENVIRONMENT_DEFAULT),
+        "service.namespace": env.str("OTEL_SERVICE_NAMESPACE", default=_NAMESPACE_DEFAULT),
+        "service.name": env.str("OTEL_SERVICE_NAME", default=service_name),
+        "deployment.environment.name": env.str("OTEL_DEPLOYMENT_ENVIRONMENT", default=_ENVIRONMENT_DEFAULT),
         "service.instance.id": _get_or_create_instance_id(),
     }
-    if version := os.environ.get("OTEL_SERVICE_VERSION") or os.environ.get("GIT_SHA"):
+    if version := env.str("OTEL_SERVICE_VERSION", default="") or env.str("GIT_SHA", default=""):
         attrs["service.version"] = version
     return attrs
 
@@ -124,8 +123,7 @@ def setup_sdk_after_fork(service_name: str) -> None:
     if _sdk_disabled():
         return
 
-    global _cached_instance_id
-    _cached_instance_id = None
+    _get_or_create_instance_id.cache_clear()
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
