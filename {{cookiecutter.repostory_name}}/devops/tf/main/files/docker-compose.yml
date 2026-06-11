@@ -1,5 +1,17 @@
 version: '3.7'
 
+{% if cookiecutter.observability %}
+x-otel-common-envs: &otel-common-envs
+  OTEL_SERVICE_NAMESPACE: $${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+  OTEL_DEPLOYMENT_ENVIRONMENT: $${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+
+x-otel-app-envs: &otel-app-envs
+  <<: *otel-common-envs
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_SERVICE_INSTANCE_ID: $${OTEL_SERVICE_INSTANCE_ID:-}
+{% endif %}
+
 services:
   app:
     image: ${ecr_base_url}/${ecr_image}
@@ -13,18 +25,14 @@ services:
       {% if cookiecutter.monitoring %}
       # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
       # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
-      # - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir/other-container
+      # PROMETHEUS_MULTIPROC_DIR: /prometheus-multiproc-dir/other-container
       # Don't forget to also mount the prometheus-metrics volume in other containers too.
-      - PROMETHEUS_MULTIPROC_DIR=/prometheus-multiproc-dir
-      - PROMETHEUS_USE_FLOCK=1  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
+      PROMETHEUS_MULTIPROC_DIR: /prometheus-multiproc-dir
+      PROMETHEUS_USE_FLOCK: "1"  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
       {% endif %}
       {% if cookiecutter.observability %}
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
-      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-      - OTEL_SERVICE_NAMESPACE=$${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
-      - OTEL_SERVICE_NAME=app
-      - OTEL_SERVICE_INSTANCE_ID=$${OTEL_SERVICE_INSTANCE_ID:-}
-      - OTEL_DEPLOYMENT_ENVIRONMENT=$${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      <<: *otel-app-envs
+      OTEL_SERVICE_NAME: app
       {% endif %}
     {% endif %}
     volumes:
@@ -118,11 +126,10 @@ services:
       test: wget -q --spider http://0.0.0.0:8000/alive/ || exit 1
     {% if cookiecutter.observability %}
     environment:
-      - OTEL_SERVICE_NAMESPACE=$${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
-      - OTEL_SERVICE_NAME=nginx
-      - OTEL_SERVICE_INSTANCE_ID=$${OTEL_SERVICE_INSTANCE_ID:-prod-1}
-      - OTEL_SERVICE_VERSION=$${GIT_SHA:-unknown}
-      - OTEL_DEPLOYMENT_ENVIRONMENT=$${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      <<: *otel-common-envs
+      OTEL_SERVICE_NAME: nginx
+      OTEL_SERVICE_INSTANCE_ID: $${OTEL_SERVICE_INSTANCE_ID:-prod-1}
+      OTEL_SERVICE_VERSION: $${GIT_SHA:-unknown}
     {% endif %}
     depends_on:
       - app
