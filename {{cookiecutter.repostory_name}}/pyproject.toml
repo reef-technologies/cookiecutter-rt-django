@@ -74,6 +74,7 @@ distribution = false
 [dependency-groups]
 test = [
     'pytest',
+    'pytest-cov',
     'pytest-django',
     'pytest-xdist',
     {% if cookiecutter.use_channels %}
@@ -122,3 +123,26 @@ ignore = [
 [tool.codespell]
 skip = '*.min.js,*.lock,*/monitoring_certs/*'
 ignore-words-list = 'datas'
+
+[tool.coverage.run]
+source = ["{{cookiecutter.django_project_name}}"]
+branch = true
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/management/commands/*",
+    "{{cookiecutter.django_project_name}}/settings.py",
+    "{{cookiecutter.django_project_name}}/asgi.py",
+    "{{cookiecutter.django_project_name}}/wsgi.py",
+    {% if cookiecutter.observability %}
+    "{{cookiecutter.django_project_name}}/otel.py",
+    {% endif %}
+    {% if cookiecutter.use_celery %}
+    "{{cookiecutter.django_project_name}}/celery.py",
+    {% endif %}
+    "manage.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

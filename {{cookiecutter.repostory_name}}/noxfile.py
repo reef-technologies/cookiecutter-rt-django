@@ -163,6 +163,10 @@ def test(session):
             "-vv",
             "-n",
             "auto",
+            "--cov={{cookiecutter.django_project_name}}",
+            "--cov-config=../../pyproject.toml",
+            "--cov-report=term-missing",
+            "--cov-report=xml",
             "{{cookiecutter.django_project_name}}",
             *session.posargs,
         )
