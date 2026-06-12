@@ -44,3 +44,11 @@ resource "aws_route53_record" "cert-validation" {
   type            = each.value.type
   zone_id         = data.aws_route53_zone.self.zone_id
 }
+
+# Block until ACM finishes DNS validation (status ISSUED). Without this the ALB
+# listener would try to attach a still-PENDING certificate and fail with
+# UnsupportedCertificate on the first apply.
+resource "aws_acm_certificate_validation" "self" {
+  certificate_arn         = aws_acm_certificate.self.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert-validation : record.fqdn]
+}

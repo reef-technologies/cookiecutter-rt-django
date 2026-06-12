@@ -29,6 +29,18 @@ resource "aws_ssm_parameter" "certs" {
   name    = "/application/${var.name}/${var.env}/nginx/monitoring_certs/${local.certs[count.index].name}"
   type    = "SecureString"
   value   = file(local.certs[count.index].content)
+
+  {% if cookiecutter.monitoring %}
+  lifecycle {
+    precondition {
+      # nginx loads these certs for the monitoring mTLS server and refuses to
+      # start on a malformed PEM, so a leftover "replace-me" placeholder takes
+      # the whole deploy down. Fail fast with a clear message instead.
+      condition     = length(regexall("replace-me", file(local.certs[count.index].content))) == 0
+      error_message = "Monitoring certificate ${local.certs[count.index].name} still contains the 'replace-me' placeholder. Fill devops/tf/main/files/nginx/monitoring_certs/*.txt with real PEMs before deploying (see README_AWS.md > Monitoring certificates)."
+    }
+  }
+  {% endif %}
 }
 
 resource "aws_ssm_parameter" "helpers" {

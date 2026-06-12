@@ -13,6 +13,29 @@ x-otel-app-envs: &otel-app-envs
 {% endif %}
 
 services:
+  redis:
+    {% if cookiecutter.use_valkey %}
+    image: mirror.gcr.io/valkey/valkey:8.1-alpine
+    command: valkey-server --appendonly yes
+    healthcheck:
+      test: valkey-cli ping
+    {% else %}
+    image: mirror.gcr.io/redis:6-alpine
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: redis-cli ping
+    {% endif %}
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-redis'
+        awslogs-create-group: "true"
+
   app:
     image: ${ecr_base_url}/${ecr_image}
     init: true
@@ -43,10 +66,11 @@ services:
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
     {% endif %}
-    {% if cookiecutter.observability %}
     depends_on:
+      - redis
+      {% if cookiecutter.observability %}
       - alloy
-    {% endif %}
+      {% endif %}
     logging: &app_logging
       driver: awslogs
       options:
@@ -55,10 +79,96 @@ services:
         tag: '$${INSTANCE_ID_SUBST}-app'
         awslogs-create-group: "true"
 
+  {% if cookiecutter.use_celery %}
+  celery-worker:
+    image: ${ecr_base_url}/${ecr_image}
+    init: true
+    healthcheck:
+      test: celery -A {{cookiecutter.django_project_name}} status > /dev/null || exit 1
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      DEBUG: "off"
+      {% if cookiecutter.monitoring %}
+      PROMETHEUS_MULTIPROC_DIR: /prometheus-multiproc-dir/celery-worker
+      PROMETHEUS_USE_FLOCK: "1"  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
+      {% endif %}
+      {% if cookiecutter.observability %}
+      <<: *otel-app-envs
+      OTEL_SERVICE_NAME: celery
+      {% endif %}
+    command: ./celery-entrypoint.sh
+    {% if cookiecutter.monitoring %}
+    volumes:
+      - ./prometheus-metrics/celery-worker:/prometheus-multiproc-dir/celery-worker
+    {% endif %}
+    tmpfs: /run
+    depends_on:
+      - redis
+      {% if cookiecutter.observability %}
+      - alloy
+      {% endif %}
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-celery-worker'
+        awslogs-create-group: "true"
+
+  celery-beat:
+    image: ${ecr_base_url}/${ecr_image}
+    init: true
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      DEBUG: "off"
+      {% if cookiecutter.observability %}
+      <<: *otel-app-envs
+      OTEL_SERVICE_NAME: celery-beat
+      {% endif %}
+    command: nice celery -A {{cookiecutter.django_project_name}} beat -l INFO --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
+    volumes:
+      - ./logs:/tmp/logs
+    depends_on:
+      - redis
+      {% if cookiecutter.observability %}
+      - alloy
+      {% endif %}
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-celery-beat'
+        awslogs-create-group: "true"
+
+  {% if cookiecutter.use_flower %}
+  celery-flower:
+    image: ${ecr_base_url}/${ecr_image}
+    healthcheck:
+      test: wget --user "$${CELERY_FLOWER_USER}" --password "$${CELERY_FLOWER_PASSWORD}" -qO- 127.0.0.1:5555 > /dev/null || exit 1
+    init: true
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - DEBUG=off
+      - FLOWER_TASK_RUNTIME_METRIC_BUCKETS=1,2,3,5,10,20,30,45,60,120,180,240,300,600,inf
+    command: celery --app={{cookiecutter.django_project_name}} --broker="$${CELERY_BROKER_URL}" flower --basic_auth="$${CELERY_FLOWER_USER}:$${CELERY_FLOWER_PASSWORD}"
+    depends_on:
+      - celery-worker
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: /aws/ec2/${name}-${env}
+        tag: '$${INSTANCE_ID_SUBST}-celery-flower'
+        awslogs-create-group: "true"
+  {% endif %}
+  {% endif %}
+
   backups:
-    build:
-      context: backups/
-      dockerfile: Dockerfile
+    image: ${ecr_base_url}/${ecr_backups_image}
     init: true
     restart: unless-stopped
     environment:
@@ -228,6 +338,7 @@ services:
 volumes:
   backend-static:
   backups:
+  redis-data:
   gunicorn-socket:
   nodeexporter_collectors:
   {% if cookiecutter.observability %}
