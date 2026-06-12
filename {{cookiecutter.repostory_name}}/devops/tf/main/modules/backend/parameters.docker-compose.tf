@@ -3,6 +3,9 @@ data "aws_partition" "self" {}
 resource "aws_ssm_parameter" "compose" {
   name = "/application/${var.name}/${var.env}/docker-compose.yml"
   type = "SecureString"
+  # The compose file is larger than the 4 KB standard-tier limit once all
+  # services are enabled, so use the advanced tier (8 KB).
+  tier  = "Advanced"
   value = templatefile("../../files/docker-compose.yml", {
     name              = var.name
     env               = var.env

@@ -12,6 +12,11 @@ x-otel-app-envs: &otel-app-envs
   OTEL_SERVICE_INSTANCE_ID: $${OTEL_SERVICE_INSTANCE_ID:-}
 {% endif %}
 
+# Shared awslogs options; each service only sets its own tag.
+x-awslogs-options: &awslogs-options
+  awslogs-region: ${region}
+  awslogs-group: /aws/ec2/${name}-${env}
+
 services:
   redis:
     {% if cookiecutter.use_valkey %}
@@ -31,10 +36,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-redis'
-        awslogs-create-group: "true"
 
   app:
     image: ${ecr_base_url}/${ecr_image}
@@ -46,12 +49,8 @@ services:
     {% if cookiecutter.monitoring or cookiecutter.observability %}
     environment:
       {% if cookiecutter.monitoring %}
-      # Add this variable to all containers that should dump Prometheus metrics.  Each container besides this one
-      # should use a different subdirectory of /prometheus-multiproc-dir, e.g.
-      # PROMETHEUS_MULTIPROC_DIR: /prometheus-multiproc-dir/other-container
-      # Don't forget to also mount the prometheus-metrics volume in other containers too.
       PROMETHEUS_MULTIPROC_DIR: /prometheus-multiproc-dir
-      PROMETHEUS_USE_FLOCK: "1"  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
+      PROMETHEUS_USE_FLOCK: "1"
       {% endif %}
       {% if cookiecutter.observability %}
       <<: *otel-app-envs
@@ -63,7 +62,6 @@ services:
       - gunicorn-socket:/var/run/gunicorn
       - ./media:$${MEDIA_ROOT}
     {% if cookiecutter.monitoring %}
-      # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
     {% endif %}
     depends_on:
@@ -74,10 +72,8 @@ services:
     logging: &app_logging
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-app'
-        awslogs-create-group: "true"
 
   {% if cookiecutter.use_celery %}
   celery-worker:
@@ -91,7 +87,7 @@ services:
       DEBUG: "off"
       {% if cookiecutter.monitoring %}
       PROMETHEUS_MULTIPROC_DIR: /prometheus-multiproc-dir/celery-worker
-      PROMETHEUS_USE_FLOCK: "1"  # this needs to be added to each and every container running this same image/codebase, otherwise things will break
+      PROMETHEUS_USE_FLOCK: "1"
       {% endif %}
       {% if cookiecutter.observability %}
       <<: *otel-app-envs
@@ -111,10 +107,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-celery-worker'
-        awslogs-create-group: "true"
 
   celery-beat:
     image: ${ecr_base_url}/${ecr_image}
@@ -138,10 +132,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-celery-beat'
-        awslogs-create-group: "true"
 
   {% if cookiecutter.use_flower %}
   celery-flower:
@@ -160,10 +152,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-celery-flower'
-        awslogs-create-group: "true"
   {% endif %}
   {% endif %}
 
@@ -266,10 +256,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-nginx'
-        awslogs-create-group: "true"
     {% if cookiecutter.monitoring %}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -288,10 +276,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-vulnrelay'
-        awslogs-create-group: "true"
   watchtower:
     image: containrrr/watchtower
     restart: unless-stopped
@@ -301,10 +287,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-vulnrelay'
-        awslogs-create-group: "true"
   {% endif %}
 
   {% if cookiecutter.observability %}
@@ -329,10 +313,8 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
+        <<: *awslogs-options
         tag: '$${INSTANCE_ID_SUBST}-alloy'
-        awslogs-create-group: "true"
   {% endif %}
 
 volumes:
