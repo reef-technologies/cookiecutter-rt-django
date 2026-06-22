@@ -17,11 +17,21 @@ if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SEN
     exit 0;
 fi
 
-PLATFORM="$(uname -i)"
-if [ "${PLATFORM}" != "x86_64" ] && [ "${PLATFORM}" != "aarch64" ]; then
-  echo "Unsupported hardware platform: ${PLATFORM}"
-  exit 1
-fi
+HOST_ARCH="$(uname -m)"
+case "${HOST_ARCH}" in
+  x86_64)
+    PLATFORM="x86_64"
+    DOCKER_APT_ARCH="amd64"
+    ;;
+  aarch64)
+    PLATFORM="aarch64"
+    DOCKER_APT_ARCH="arm64"
+    ;;
+  *)
+    echo "Unsupported hardware platform: ${HOST_ARCH}"
+    exit 1
+    ;;
+esac
 
 WORK_DIR="$(mktemp -d)"
 if [ ! "${WORK_DIR}" ] || [ ! -d "${WORK_DIR}" ]; then
@@ -50,7 +60,7 @@ fi
 
 if [ ! -x "${DOCKER_BIN}" ] || [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    add-apt-repository -y "deb [arch=${DOCKER_APT_ARCH}] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get -y install docker-ce docker-compose-plugin
     usermod -aG docker "$USER"
