@@ -181,11 +181,10 @@ Logs go to Grafana Loki, metrics to Prometheus/Mimir and OpenTelemetry traces to
 ## Loki & Tempo credentials
 
 Generate new access credentials to Loki server.
-- `<CLUSTER>` is usually `rt`
-- `<SERVER_GROUP>` should be taken from Grafana's `client_server_group` options (so that we can automatically show logs in Grafana).
+- `<SERVER_GROUP>` should be taken from Grafana's `client_server_group` options (so that we can automatically show logs in Grafana); Example: `rt_rat`
 - `<ENVIRONMENT>` is usually `prod`
 ```sh
-uvx cadm exec prometheus -- "cd /home/ubuntu/apps/prometheus-grafana-monitoring/scripts && ./add_loki_target.sh <CLUSTER> <SERVER_GROUP> <ENVIRONMENT>"
+uvx cadm exec prometheus -- "cd /home/ubuntu/apps/prometheus-grafana-monitoring/scripts && ./add_loki_target.sh <SERVER_GROUP> <ENVIRONMENT>"
 ```
 Then put the output in `.env` file's `LOKI_USER` and `LOKI_PASSWORD` fields.
 
