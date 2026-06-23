@@ -5,7 +5,10 @@ set -eux
 sudo ufw allow proto tcp from 172.16.0.0/16 to any port 9100  # nginx getting node-exporter metrics
 
 DOCKER_BIN="$(command -v docker || true)"
-DOCKER_COMPOSE_INSTALLED="$(docker compose version || true)"
+DOCKER_COMPOSE_INSTALLED=""
+if docker compose version >/dev/null 2>&1; then
+  DOCKER_COMPOSE_INSTALLED=1
+fi
 SENTRY_CLI="$(command -v sentry-cli || true)"
 B2_CLI="$(command -v b2 || true)"
 AWS_CLI="$(command -v aws || true)"
@@ -61,7 +64,7 @@ if [ ! -x "${B2_CLI}" ]; then
   chmod a+x /usr/local/bin/b2
 fi
 
-if [ ! -x "${DOCKER_BIN}" ] || [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
+if [ ! -x "${DOCKER_BIN}" ] || [ -z "${DOCKER_COMPOSE_INSTALLED}" ]; then
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
     add-apt-repository -y "deb [arch=${DOCKER_APT_ARCH}] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
