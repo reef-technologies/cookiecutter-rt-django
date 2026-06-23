@@ -53,7 +53,7 @@ trap cleanup EXIT
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y apt-transport-https ca-certificates curl software-properties-common python3-pip rng-tools
+apt-get install -y apt-transport-https ca-certificates curl python3-pip rng-tools
 
 if [ ! -x "${SENTRY_CLI}" ]; then
   curl -sL https://sentry.io/get-cli/ | bash
@@ -65,8 +65,17 @@ if [ ! -x "${B2_CLI}" ]; then
 fi
 
 if [ ! -x "${DOCKER_BIN}" ] || [ -z "${DOCKER_COMPOSE_INSTALLED}" ]; then
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    add-apt-repository -y "deb [arch=${DOCKER_APT_ARCH}] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+    cat <<EOF >/etc/apt/sources.list.d/docker.sources
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(lsb_release -cs)
+Components: stable
+Architectures: ${DOCKER_APT_ARCH}
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
     apt-get update
     apt-get -y install docker-ce docker-compose-plugin
     if [ -n "${DOCKER_GROUP_USER}" ] && [ "${DOCKER_GROUP_USER}" != "root" ]; then
