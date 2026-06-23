@@ -50,7 +50,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl software-properties-common python3-pip rng-tools
