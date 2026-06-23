@@ -10,7 +10,10 @@ SENTRY_CLI="$(command -v sentry-cli || true)"
 B2_CLI="$(command -v b2 || true)"
 AWS_CLI="$(command -v aws || true)"
 JQ_BIN="$(command -v jq || true)"
-USER="$(id -un 1000)"
+DOCKER_GROUP_USER="${SUDO_USER:-}"
+if [ -z "${DOCKER_GROUP_USER}" ]; then
+  DOCKER_GROUP_USER="$(id -un 1000 2>/dev/null || true)"
+fi
 
 if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SENTRY_CLI}" ] && [ -x "${B2_CLI}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
     echo "\e[32mEverything required is already installed\e[0m";
@@ -63,7 +66,9 @@ if [ ! -x "${DOCKER_BIN}" ] || [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
     add-apt-repository -y "deb [arch=${DOCKER_APT_ARCH}] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get -y install docker-ce docker-compose-plugin
-    usermod -aG docker "$USER"
+    if [ -n "${DOCKER_GROUP_USER}" ] && [ "${DOCKER_GROUP_USER}" != "root" ]; then
+        usermod -aG docker "${DOCKER_GROUP_USER}"
+    fi
 fi
 
 if [ ! -x "${JQ_BIN}" ]; then
