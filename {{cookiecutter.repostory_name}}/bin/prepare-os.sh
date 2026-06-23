@@ -2,26 +2,42 @@
 # Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
 set -eux
 
-sudo ufw allow proto tcp from 172.0.0.0/8 to any port 9100  # nginx getting node-exporter metrics
+sudo ufw allow proto tcp from 172.16.0.0/16 to any port 9100  # nginx getting node-exporter metrics
 
 DOCKER_BIN="$(command -v docker || true)"
-DOCKER_COMPOSE_INSTALLED="$(docker compose version || true)"
+DOCKER_COMPOSE_INSTALLED=""
+if docker compose version >/dev/null 2>&1; then
+  DOCKER_COMPOSE_INSTALLED=1
+fi
 SENTRY_CLI="$(command -v sentry-cli || true)"
 B2_CLI="$(command -v b2 || true)"
 AWS_CLI="$(command -v aws || true)"
 JQ_BIN="$(command -v jq || true)"
-USER="$(id -un 1000)"
+DOCKER_GROUP_USER="${SUDO_USER:-}"
+if [ -z "${DOCKER_GROUP_USER}" ]; then
+  DOCKER_GROUP_USER="$(id -un 1000 2>/dev/null || true)"
+fi
 
 if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SENTRY_CLI}" ] && [ -x "${B2_CLI}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
     echo "\e[32mEverything required is already installed\e[0m";
     exit 0;
 fi
 
-PLATFORM="$(uname -i)"
-if [ "${PLATFORM}" != "x86_64" ] && [ "${PLATFORM}" != "aarch64" ]; then
-  echo "Unsupported hardware platform: ${PLATFORM}"
-  exit 1
-fi
+HOST_ARCH="$(uname -m)"
+case "${HOST_ARCH}" in
+  x86_64)
+    PLATFORM="x86_64"
+    DOCKER_APT_ARCH="amd64"
+    ;;
+  aarch64)
+    PLATFORM="aarch64"
+    DOCKER_APT_ARCH="arm64"
+    ;;
+  *)
+    echo "Unsupported hardware platform: ${HOST_ARCH}"
+    exit 1
+    ;;
+esac
 
 WORK_DIR="$(mktemp -d)"
 if [ ! "${WORK_DIR}" ] || [ ! -d "${WORK_DIR}" ]; then
@@ -34,10 +50,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y apt-transport-https ca-certificates curl software-properties-common python3-pip rng-tools
+apt-get install -y apt-transport-https ca-certificates curl python3-pip rng-tools
 
 if [ ! -x "${SENTRY_CLI}" ]; then
   curl -sL https://sentry.io/get-cli/ | bash
@@ -48,12 +64,23 @@ if [ ! -x "${B2_CLI}" ]; then
   chmod a+x /usr/local/bin/b2
 fi
 
-if [ ! -x "${DOCKER_BIN}" ] || [ ! -x "${DOCKER_COMPOSE_INSTALLED}" ]; then
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+if [ ! -x "${DOCKER_BIN}" ] || [ -z "${DOCKER_COMPOSE_INSTALLED}" ]; then
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+    cat <<EOF >/etc/apt/sources.list.d/docker.sources
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(lsb_release -cs)
+Components: stable
+Architectures: ${DOCKER_APT_ARCH}
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
     apt-get update
     apt-get -y install docker-ce docker-compose-plugin
-    usermod -aG docker "$USER"
+    if [ -n "${DOCKER_GROUP_USER}" ] && [ "${DOCKER_GROUP_USER}" != "root" ]; then
+        usermod -aG docker "${DOCKER_GROUP_USER}"
+    fi
 fi
 
 if [ ! -x "${JQ_BIN}" ]; then
