@@ -124,6 +124,12 @@ ignore = [
 skip = '*.min.js,*.lock,*/monitoring_certs/*'
 ignore-words-list = 'datas'
 
+[tool.uv]
+constraint-dependencies = [
+    "urllib3>=2.7.0",
+    "idna>=3.15",
+]
+
 [tool.coverage.run]
 source = ["{{cookiecutter.django_project_name}}"]
 branch = true
