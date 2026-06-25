@@ -38,4 +38,5 @@ ENV GIT_SHA="${GIT_SHA}"
 ENV OTEL_SERVICE_VERSION="${GIT_SHA}"
 
 COPY --from=base-image /root/src/ /root/src/
+COPY --from=base-image /var/static/ /var/static/
 CMD ["./entrypoint.sh"]

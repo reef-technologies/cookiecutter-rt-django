@@ -71,7 +71,10 @@ resource "aws_db_instance" "self" {
   max_allocated_storage  = 20
   storage_encrypted      = true
   engine                 = "postgres"
-  engine_version         = "16.8"
+  # Pin only the major version and let RDS pick a supported minor. Pinning a full
+  # minor (e.g. "16.8") breaks the first `terraform apply` once AWS retires it.
+  engine_version         = "16"
+  auto_minor_version_upgrade = true
   instance_class         = var.instance_type
   username               = "master"
   db_name                = "backend"

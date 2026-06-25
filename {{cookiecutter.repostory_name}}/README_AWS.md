@@ -15,6 +15,90 @@ If you want to deploy your app to an AWS environment, you need to do following s
 - deploy `tf/core` (contains stuff common to all environments in given AWS Account)
 - deploy chosen `tf/main/envs/<selected_env>` (by default staging and prod are generated)
 
+## Prerequisites
+
+Before the first `terraform apply` of an environment, make sure the following are in place.
+A fresh checkout will **not** deploy without them.
+
+### A registered, delegated domain with a Route53 hosted zone
+
+The deployment provisions an ACM certificate validated through DNS and an `A` record on the
+load balancer, both inside a **public Route53 hosted zone on the same AWS account**. You need:
+
+- a domain that is **registered and correctly delegated** to that hosted zone (the placeholder
+  `fake-domain.com` in the tfvars will not work);
+- the matching values in `devops/tf/main/envs/<env>/terraform.tfvars`: `base_domain_name`
+  (the zone apex, e.g. `example.com`) and `domain_name` (the app FQDN, e.g. `staging.api.example.com`).
+
+Verify the zone exists and delegation is healthy:
+
+```
+aws route53 list-hosted-zones
+dig +short NS <base_domain_name> @8.8.8.8   # must return the awsdns.* servers of your zone
+```
+
+If the NS records don't point at your hosted zone, ACM validation will hang forever with no
+clear error - fix delegation first.
+
+### An EC2 SSH public key
+
+`ec2_ssh_key` in `terraform.tfvars` must contain the **public** key material
+(`ssh-ed25519 AAAA...`), not a path and not the private key. It is required - an empty string
+passes `terraform plan` but then `aws_key_pair` fails on apply. Generate one with:
+
+```
+ssh-keygen -t ed25519 -f ~/.ssh/<project>-<env> -N ""
+cat ~/.ssh/<project>-<env>.pub   # paste this line into ec2_ssh_key
+```
+
+### SSH access (allowed source IPs)
+
+SSH (port 22) and the monitoring mTLS endpoint (port 10443) are locked down by source IP.
+The defaults are the Reef jump-boxes; if you deploy from elsewhere you get **no SSH access** at
+all. Override the allowlists in `terraform.tfvars`:
+
+```
+ssh_allowed_cidrs        = ["<your.ip.addr.ess>/32"]
+monitoring_allowed_cidrs = ["<monitoring.host>/32"]
+```
+
+Note that SSH is a convenience, not the primary debugging channel - see [Diagnostics](#diagnostics).
+
+{% if cookiecutter.monitoring %}
+### Monitoring certificates
+
+nginx serves a mutual-TLS monitoring endpoint (port 10443) and **will not start** until it is
+given valid certificates. The repository ships placeholders containing `replace-me` in
+`devops/tf/main/files/nginx/monitoring_certs/`:
+
+- `monitoring-ca.crt.txt` - the CA certificate
+- `monitoring.crt.txt` - the server certificate
+- `monitoring.key.txt` - the server private key
+
+Replace each placeholder with a real PEM **before** the first `terraform apply` (a precondition
+fails the apply with a clear message if any still contains `replace-me`). Two ways to do it:
+
+- **Production:** generate a cert-key pair via
+  [prometheus-grafana-monitoring](https://github.com/reef-technologies/prometheus-grafana-monitoring)
+  (see its README). It produces `cert.crt`, `cert.key` and `ca.crt`; paste them into the
+  `.txt` files mapped as `cert.crt -> monitoring.crt.txt`, `cert.key -> monitoring.key.txt`,
+  `ca.crt -> monitoring-ca.crt.txt`.
+- **Quick self-signed pair for testing:**
+
+  ```
+  # CA
+  openssl req -x509 -newkey rsa:2048 -nodes -keyout ca.key -out monitoring-ca.crt.txt \
+    -subj "/CN=<project>-monitoring-ca" -days 365
+  # server key + cert signed by the CA
+  openssl req -newkey rsa:2048 -nodes -keyout monitoring.key.txt -out server.csr -subj "/CN=monitoring"
+  openssl x509 -req -in server.csr -CA monitoring-ca.crt.txt -CAkey ca.key -CAcreateserial \
+    -out monitoring.crt.txt -days 365
+  ```
+
+  Paste the resulting PEM blocks (including the `-----BEGIN/END-----` lines) into the matching
+  `.txt` files.
+{% endif %}
+
 ## Required software
 
 *AWS CLI*
@@ -106,7 +190,7 @@ directories.
 Directory *core* contains infrastructure code, which needs to be created BEFORE pushing docker image.
 It is responsible for creating docker registries, which you can use, to push docker images to.
 
-Code places in *main* is the rest of the infrastructure, which is created after pushing docker image.
+Code placed in *main* is the rest of the infrastructure, which is created after pushing docker image.
 
 Each of the environment (and core) can be applied by executing:
 
@@ -147,17 +231,123 @@ In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`, `LOKI_C
 - `OTEL_DEPLOYMENT_ENVIRONMENT` — `staging` / `production`.
 - `GIT_SHA` — set automatically by the deploy pipeline. `devops/scripts/build-backend.sh` uses `GIT_SHA` from the build environment or falls back to `git rev-parse --short HEAD`, passes it as `--build-arg GIT_SHA=...`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. Cloud Init reads the value from the pulled image into `.env` so nginx reports the same `service.version`.
 
+### Running without Loki/Tempo credentials
+
+`LOKI_URL`/`TEMPO_URL` default to Reef's internal aggregators (`loki.reef.pl` / `tempo.reef.pl`)
+and the credentials are generated by an internal tool.
+
+> **Heads-up:** `alloy/config.alloy` configures Tempo with basic auth, and Alloy **refuses to
+> start** (it crash-loops with `no credential source provided`) when `TEMPO_USER`/`TEMPO_PASSWORD`
+> are empty. This does **not** take the app down - `app` and `nginx` only `depends_on` Alloy for
+> start order, so the rest of the stack stays healthy and **container logs still reach
+> CloudWatch** - but traces/log shipping to Loki/Tempo won't work and the `alloy` container keeps
+> restarting.
+
+Outside Reef you have two options:
+
+- Provide real Loki/Tempo credentials in the env (`LOKI_USER`/`LOKI_PASSWORD`,
+  `TEMPO_USER`/`TEMPO_PASSWORD`) so Alloy starts and ships data.
+- Disable observability entirely by regenerating the project with `observability=false` - this
+  drops the `alloy` service and the OTEL wiring from the compose file.
+
 {% endif %}
 
+{% if cookiecutter.vulnerabilities_scanning %}
 ## Vulnerability scanning
-If you set up your project with `vulnerabilities_scanning` enabled, you need to create an additional SSM parameter with the name `/application/{{ cookiecutter.aws_project_name }}/{env}/.vuln.env` containing environment variables required by [vulnrelay](https://github.com/reef-technologies/vulnrelay) prior to deploying the project. Look at the `/envs/prod/.vuln.env.template` file to see the expected file format.
 
-For variable values, please refer to the [instructions in the internal handbook](https://github.com/reef-technologies/internal-handbook/blob/master/vuln_management.md)
+This project was generated with `vulnerabilities_scanning` enabled, so you **must** create an
+additional SSM parameter named `/application/{{ cookiecutter.aws_project_name }}/{env}/.vuln.env`
+with the environment variables required by [vulnrelay](https://github.com/reef-technologies/vulnrelay)
+**before** deploying. Terraform does not create this parameter for you. Look at the
+`/envs/prod/.vuln.env.template` file to see the expected file format.
+
+> **Important:** the `.vuln.env` file is referenced via `env_file:` in `docker-compose.yml`, so
+> if the SSM parameter is missing the **entire `docker compose up` fails** on the EC2 host and the
+> machine never becomes healthy - not just the `vulnrelay` container. Create it (even with dummy
+> values for a test deploy) before applying the environment. With dummy DefectDojo values the
+> `vulnrelay` container restart-loops, which is harmless to the rest of the stack.
+
+For variable values, please refer to the [instructions in the internal handbook](https://github.com/reef-technologies/internal-handbook/blob/master/vuln_management.md).
+
+To stand up a test deploy without real DefectDojo credentials:
+
+```
+printf 'ENV=staging\nDD_URL=https://defectdojo.invalid\nDD_API_KEY=dummy-not-configured\nDD_PRODUCT={{ cookiecutter.aws_project_name }}\nSENTRY_DSN=\n' \
+  | aws ssm put-parameter --name /application/{{ cookiecutter.aws_project_name }}/staging/.vuln.env \
+      --type SecureString --value file:///dev/stdin --overwrite
+```
+{% endif %}
 
 ## Deploying apps
 
 The docker containers are built with code you have locally, including any changes.
 Building requires docker.
-To successfully run `deploy-to-aws.sh` you first need to do `./setup.prod.sh`.
+To successfully run `deploy-to-aws.sh` you first need to do `./setup-prod.sh`.
 It uses the aws credentials stored as `AWS_PROFILE` variable.
 If you don't set this variable, the `default` will be used.
+
+`deploy-to-aws.sh` is meant for **subsequent** deploys - it builds the image, pushes it and
+triggers an instance refresh of the running Auto Scaling Group. For the very **first** deploy
+of an environment follow the ordered sequence in [First deploy](#first-deploy) below
+(the script tolerates a missing ASG, but the infrastructure has to be applied in the right order).
+
+## First deploy
+
+The first deploy of an environment has a strict order, because the EC2 machine pulls the
+application image from ECR the moment it boots - the image (including the `:latest` tag) has to
+exist *before* the environment is applied. Do **not** run `deploy-to-aws.sh` first.
+
+1. **Make sure the [Prerequisites](#prerequisites) are satisfied** (domain/zone, SSH key{% if cookiecutter.monitoring %}, monitoring certificates{% endif %}{% if cookiecutter.vulnerabilities_scanning %}, `.vuln.env` SSM parameter{% endif %}).
+
+2. **State bucket** (once per AWS account):
+
+   ```
+   aws s3 mb --region {{ cookiecutter.aws_region }} s3://{{ cookiecutter.aws_infra_bucket }}
+   ```
+
+3. **`tf/core`** - creates the ECR repositories (app + backups, for every env):
+
+   ```
+   cd devops/tf/core && terraform init && terraform apply
+   ```
+
+4. **Build and push the images** (this pushes both `:latest` and the SHA tag, for the app and the
+   backups image - the booting machine needs `:latest`):
+
+   ```
+   ./setup-prod.sh
+   ./devops/scripts/build-backend.sh <env>     # <env> = staging or prod
+   ```
+
+5. **Apply the environment** - this is what actually creates the VPC, RDS, ALB, ASG, DNS, etc.:
+
+   ```
+   cd devops/tf/main/envs/<env> && terraform init && terraform apply
+   ```
+
+From now on, redeploying code is just `./deploy-to-aws.sh <env>` (build + push + instance refresh)
+or pushing to a `deploy-<env>` branch (see the CD workflow).
+
+## Diagnostics
+
+The primary debugging channel is **CloudWatch Logs**, not SSH (SSH is restricted to
+`ssh_allowed_cidrs`). Useful commands:
+
+```
+# container logs (one log stream per container, grouped per machine)
+aws logs tail /aws/ec2/{{ cookiecutter.aws_project_name }}-<env> --follow
+
+# cloud-init / boot output of the machine
+aws ec2 get-console-output --instance-id <id> --latest --output text
+
+# is the app healthy behind the load balancer?
+TG=$(aws elbv2 describe-target-groups --names {{ cookiecutter.aws_project_name }}-<env> \
+  --query 'TargetGroups[0].TargetGroupArn' --output text)
+aws elbv2 describe-target-health --target-group-arn "$TG"
+
+# certificate status (must be ISSUED before the ALB listener can use it)
+aws acm describe-certificate --certificate-arn <arn> --query 'Certificate.Status'
+```
+
+The CloudWatch log group `/aws/ec2/<project>-<env>` is created by terraform with a 30-day
+retention and is removed on `terraform destroy`.

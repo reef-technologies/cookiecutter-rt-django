@@ -35,7 +35,7 @@ resource "aws_security_group" "internal" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = ["51.254.203.61/32", "46.62.159.127/32"]
+    cidr_blocks      = var.ssh_allowed_cidrs
   }
 
   ingress {
@@ -43,7 +43,7 @@ resource "aws_security_group" "internal" {
     from_port        = 10443
     to_port          = 10443
     protocol         = "tcp"
-    cidr_blocks      = ["138.68.147.48/32", "95.179.202.73/32"]
+    cidr_blocks      = var.monitoring_allowed_cidrs
   }
 
   ingress {

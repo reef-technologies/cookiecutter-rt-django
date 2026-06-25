@@ -47,6 +47,10 @@ resource "aws_autoscaling_group" "self" {
   min_size            = 1
   vpc_zone_identifier = [var.subnets[0]]
 
+  # Make sure the CloudWatch log group exists before any instance boots, so the
+  # awslogs driver never has to create it (avoids the first-boot CreateLogGroup race).
+  depends_on = [aws_cloudwatch_log_group.ec2]
+
   launch_template {
     id = aws_launch_template.self.id
     version = "$Latest"

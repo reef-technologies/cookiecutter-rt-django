@@ -21,8 +21,9 @@ data "aws_ami" "base_ami" {
 }
 
 locals {
-  ecr_base_url = "${data.aws_caller_identity.env.account_id}.dkr.ecr.${var.region}.amazonaws.com"
-  ecr_image    = "${var.name}-${var.env}:latest"
+  ecr_base_url      = "${data.aws_caller_identity.env.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+  ecr_image         = "${var.name}-${var.env}:latest"
+  ecr_backups_image = "${var.name}-${var.env}-backups:latest"
 }
 
 module "networking" {
@@ -60,8 +61,9 @@ module "backend" {
   region           = var.region
   env              = var.env
 
-  ecr_base_url     = local.ecr_base_url
-  ecr_image        = local.ecr_image
+  ecr_base_url      = local.ecr_base_url
+  ecr_image         = local.ecr_image
+  ecr_backups_image = local.ecr_backups_image
 
   base_domain_name = var.base_domain_name
   domain_name      = var.domain_name
@@ -77,4 +79,7 @@ module "backend" {
   health_check_type = var.autoscaling_health_check_type
   account_id        = data.aws_caller_identity.env.account_id
   database          = module.database
+
+  ssh_allowed_cidrs        = var.ssh_allowed_cidrs
+  monitoring_allowed_cidrs = var.monitoring_allowed_cidrs
 }

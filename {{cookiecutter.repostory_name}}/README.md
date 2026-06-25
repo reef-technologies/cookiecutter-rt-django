@@ -252,8 +252,11 @@ with some_calculation_time.labels('blabla').time():
 ## AWS
 
 <details>
-Initiate the infrastructure with Terraform:
-TODO
+Initiate the infrastructure with Terraform by following the step-by-step guide in
+[README_AWS.md](README_AWS.md). In short: configure your AWS profile, create the state bucket,
+apply `tf/core` (ECR), build and push the image (including the `:latest` tag), then apply
+`tf/main/envs/<env>`. See [README_AWS.md > First deploy](README_AWS.md#first-deploy) for the
+exact, ordered sequence and the prerequisites (domain, SSH key, certificates).
 
 To push a new version of the application to AWS, just push to a branch named `deploy-$(ENVIRONMENT_NAME)`.
 Typical values for `$(ENVIRONMENT_NAME)` are `prod` and `staging`.
