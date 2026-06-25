@@ -25,6 +25,7 @@
     "csp_enabled": false,
     "nginx_compression_enabled": false,
     "nginx_tls_early_data_enabled": false,
+    "deployment_type": ["aws", "direct", "vultr"],
     "aws_use_packer": false,
     "aws_project_name": "{{ cookiecutter.repostory_name }}",
     "aws_infra_bucket": "{{ cookiecutter.aws_project_name }}-{{ random_ascii_string(6)|lower }}",

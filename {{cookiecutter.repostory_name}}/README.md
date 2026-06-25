@@ -19,6 +19,7 @@ uv run manage.py wait_for_database --timeout 10
 uv run manage.py migrate
 uv run manage.py runserver
 ```
+{% if cookiecutter.deployment_type == 'direct' %}
 
 # Setup production environment (git deployment)
 
@@ -100,6 +101,7 @@ git push --force production local-branch-to-deploy:master
 ```
 
 </details>
+{% endif %}
 
 {% if cookiecutter.use_allauth %}
 # External auth (OAuth, OpenID connect etc.)
@@ -246,8 +248,10 @@ with some_calculation_time.labels('blabla').time():
 ```
 
 {% endif %}
+{% if cookiecutter.deployment_type in ['aws', 'vultr'] %}
 
 # Cloud deployment
+{% if cookiecutter.deployment_type == 'aws' %}
 
 ## AWS
 
@@ -267,6 +271,8 @@ See `.github/workflows/cd.yml` to find out the secret names.
 
 For more details see [README_AWS.md](README_AWS.md)
 </details>
+{% endif %}
+{% if cookiecutter.deployment_type == 'vultr' %}
 
 ## Vultr
 
@@ -279,6 +285,8 @@ Initiate the infrastructure with Terraform and cloud-init:
 
 For more details see [README_vultr.md](README_vultr.md).
 </details>
+{% endif %}
+{% endif %}
 
 # Backups
 
