@@ -542,6 +542,11 @@ if SENTRY_DSN := env("SENTRY_DSN"):
     sentry_sdk.init(  # type: ignore
         dsn=SENTRY_DSN,
         environment=ENV,
+        ignore_errors=[
+            KeyboardInterrupt,
+            SystemExit,
+            BrokenPipeError,
+        ],
         integrations=[
             DjangoIntegration(),
             {% if cookiecutter.use_celery %}

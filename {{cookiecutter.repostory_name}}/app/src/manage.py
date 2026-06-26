@@ -5,6 +5,8 @@ import sys
 
 def main():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "{{cookiecutter.django_project_name}}.settings")
+    if len(sys.argv) > 1 and sys.argv[1] in {"shell", "shell_plus"}:
+        os.environ["SENTRY_DSN"] = ""
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
