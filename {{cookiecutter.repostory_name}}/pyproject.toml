@@ -125,6 +125,8 @@ skip = '*.min.js,*.lock,*/monitoring_certs/*'
 ignore-words-list = 'datas'
 
 [tool.uv]
+exclude-newer = "14 days"
+exclude-newer-package = { django = false, cryptography = false }
 constraint-dependencies = [
     "urllib3>=2.7.0",
     "idna>=3.15",

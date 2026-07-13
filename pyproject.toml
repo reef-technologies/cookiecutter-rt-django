@@ -50,6 +50,7 @@ skip = '*.min.js,*.lock'
 ignore-words-list = 'datas'
 
 [tool.uv]
+exclude-newer = "14 days"
 constraint-dependencies = [
     "urllib3>=2.7.0",
     "idna>=3.15",
