@@ -2,6 +2,15 @@
 # Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
 set -eux
 
+install -d -m 0755 /etc/systemd/journald.conf.d
+cat >/etc/systemd/journald.conf.d/99-limits.conf <<'EOF'
+[Journal]
+SystemMaxUse=2G
+MaxRetentionSec=1month
+Compress=yes
+EOF
+systemctl restart systemd-journald
+
 sudo ufw allow proto tcp from 172.16.0.0/16 to any port 9100  # nginx getting node-exporter metrics
 
 DOCKER_BIN="$(command -v docker || true)"
