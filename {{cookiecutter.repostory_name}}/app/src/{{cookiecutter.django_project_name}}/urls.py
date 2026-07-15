@@ -44,8 +44,6 @@ urlpatterns = [
     {% endif %}
     {% if cookiecutter.use_allauth %}
     path("accounts/", include("allauth.urls")),
-    {% else %}
-    path("", include("django.contrib.auth.urls")),
     {% endif %}
 ]
 
