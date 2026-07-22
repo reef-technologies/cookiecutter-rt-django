@@ -38,6 +38,112 @@ loki.process "parse" {
 		}
 	}
 
+	stage.match {
+		selector = `{logstream="stderr", container=~".*nginx.*"}`
+
+		// Split the line into its fixed prefix (level/pid/tid/connection) and
+		// the free-text message. The message may itself contain commas (e.g.
+		// "limiting requests, excess: ..."), so it runs lazily up to the first
+		// structured context field — which nginx always introduces with
+		// ", client: " — or to end of line when there is no context at all.
+		stage.regex {
+			expression = `^(?P<timestamp>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?P<level>[a-z]+)\] (?P<pid>\d+)#(?P<tid>\d+): (?:\*(?P<cid>\d+) )?(?P<message>.+?)(?:, client: .*)?$`
+		}
+
+		// nginx appends optional ", key: value" context fields in a fixed order
+		// but with variable presence; pull each out independently so they become
+		// first-class JSON fields instead of one opaque blob.
+		stage.regex {
+			expression = `, client: (?P<client>[^,]+)`
+		}
+
+		stage.regex {
+			expression = `, server: (?P<server>[^,]+)`
+		}
+
+		stage.regex {
+			expression = `, request: "(?P<request>[^"]*)"`
+		}
+
+		stage.regex {
+			expression = `, upstream: "(?P<upstream>[^"]*)"`
+		}
+
+		stage.regex {
+			expression = `, host: "(?P<host>[^"]*)"`
+		}
+
+		stage.regex {
+			expression = `, referrer: "(?P<referrer>[^"]*)"`
+		}
+
+		stage.timestamp {
+			source = "timestamp"
+			format = "2006/01/02 15:04:05"
+		}
+
+		// nginx writes the error timestamp as "2006/01/02 15:04:05" with no zone,
+		// while the access log emits $time_iso8601. Reformat to the same ISO-8601
+		// shape (numeric offset, never "Z") so the reassembled body mirrors it.
+		// Parsed in Alloy's local zone, matching the local time nginx logged.
+		stage.template {
+			source   = "iso_time"
+			template = `{% raw %}{{ if .timestamp }}{{ (toDate "2006/01/02 15:04:05" .timestamp).Format "2006-01-02T15:04:05-07:00" }}{{ end }}{% endraw %}`
+		}
+
+		stage.template {
+			source   = "logger_name"
+			template = "nginx.error"
+		}
+
+		stage.template {
+			source   = "service_namespace"
+			template = sys.env("OTEL_SERVICE_NAMESPACE")
+		}
+
+		stage.template {
+			source   = "deployment_environment_name"
+			template = sys.env("OTEL_DEPLOYMENT_ENVIRONMENT")
+		}
+
+		stage.template {
+			source   = "service_instance_id"
+			template = sys.env("OTEL_SERVICE_INSTANCE_ID")
+		}
+
+		stage.template {
+			source   = "service_version"
+			template = sys.env("OTEL_SERVICE_VERSION")
+		}
+
+		stage.template {
+			source   = "service_name"
+			template = coalesce(sys.env("OTEL_SERVICE_NAME"), "nginx")
+		}
+
+		// Reassemble the plain-text nginx error line into a JSON body so it
+		// renders structured in Loki, mirroring the access-log json_combined shape.
+		// Optional context fields are emitted only when nginx supplied them.
+		// Lines that don't match the dated error format (e.g. startup "nginx:
+		// [emerg] ..." messages or multi-line continuations) lack a timestamp;
+		// for those we pass the original line through verbatim instead of
+		// overwriting it with an empty JSON skeleton.
+		stage.template {
+			source   = "line"
+			template = `{% raw %}{{ if .timestamp }}{"time":"{{ .iso_time }}","level":{{ .level | toJson }},"logger":"nginx.error","pid":{{ .pid | toJson }},"tid":{{ .tid | toJson }}{{ if .cid }},"connection":{{ .cid | toJson }}{{ end }},"message":{{ .message | toJson }}{{ if .client }},"client":{{ .client | toJson }}{{ end }}{{ if .server }},"server":{{ .server | toJson }}{{ end }}{{ if .request }},"request":{{ .request | toJson }}{{ end }}{{ if .upstream }},"upstream":{{ .upstream | toJson }}{{ end }}{{ if .host }},"host":{{ .host | toJson }}{{ end }}{{ if .referrer }},"referrer":{{ .referrer | toJson }}{{ end }},"service.namespace":{{ .service_namespace | toJson }},"service.name":{{ .service_name | toJson }},"service.instance.id":{{ .service_instance_id | toJson }},"service.version":{{ .service_version | toJson }},"deployment.environment.name":{{ .deployment_environment_name | toJson }}}{{ else }}{{ .Entry }}{{ end }}{% endraw %}`
+		}
+
+		stage.output {
+			source = "line"
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			logger_name = "",
+		}
+	}
+
 	stage.labels {
 		values = {
 			level                       = "",

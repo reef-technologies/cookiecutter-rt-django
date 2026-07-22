@@ -53,6 +53,8 @@ server {
     otel_trace off;
     {% endif %}
 
+    access_log                /dev/stdout{% if cookiecutter.observability %} json_combined{% endif %};
+
     return 444;
 }
 
@@ -62,6 +64,7 @@ server {
     {% if cookiecutter.observability %}
     otel_trace off;
     {% endif %}
+    access_log                /dev/stdout{% if cookiecutter.observability %} json_combined{% endif %};
     return 301 https://${NGINX_HOST}$request_uri;
 }
 
@@ -80,6 +83,8 @@ server {
     {% if cookiecutter.observability %}
     otel_trace off;
     {% endif %}
+
+    access_log                /dev/stdout{% if cookiecutter.observability %} json_combined{% endif %};
 
     return 444;
 }
