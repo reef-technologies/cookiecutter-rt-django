@@ -208,6 +208,11 @@ services:
       - TEMPO_URL=$${TEMPO_URL}
       - TEMPO_USER=$${TEMPO_USER}
       - TEMPO_PASSWORD=$${TEMPO_PASSWORD}
+      - OTEL_SERVICE_NAME=$${OTEL_SERVICE_NAME:-nginx}
+      - OTEL_SERVICE_NAMESPACE=$${OTEL_SERVICE_NAMESPACE:-{{cookiecutter.repostory_name}}}
+      - OTEL_DEPLOYMENT_ENVIRONMENT=$${OTEL_DEPLOYMENT_ENVIRONMENT:-production}
+      - OTEL_SERVICE_INSTANCE_ID=$${OTEL_SERVICE_INSTANCE_ID:-prod-1}
+      - OTEL_SERVICE_VERSION=$${GIT_SHA:-unknown}
     volumes:
       - ./alloy:/etc/alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
