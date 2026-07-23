@@ -379,6 +379,9 @@ Then run desired nox session:
 
 ```sh
 uvx nox -s lint
+{% if cookiecutter.ci_use_typechecker %}
+uvx nox -s type_check
+{% endif %}
 uvx nox -s test
 ```
 
