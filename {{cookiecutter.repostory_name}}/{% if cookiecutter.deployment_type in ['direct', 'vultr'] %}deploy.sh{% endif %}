@@ -12,7 +12,10 @@ export GIT_SHA
 
 docker compose build --build-arg GIT_SHA="$GIT_SHA"
 
-docker compose up -d db  # in case it hasn't been launched before
+# start local db if defined (skipped when DATABASE_URL points at an external server)
+if docker compose config --services | grep -qx db; then
+    docker compose up -d db
+fi
 # backup db before any database changes
 docker compose run --rm backups ./backup-db.sh
 
