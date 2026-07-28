@@ -561,6 +561,8 @@ if SENTRY_DSN := env("SENTRY_DSN"):
     )
     ignore_logger("django.security.DisallowedHost")
     ignore_logger("django_structlog.celery.receivers")
+    # DjangoIntegration already captures unhandled request exceptions.
+    ignore_logger("django_structlog.middlewares.request")
 
 {% if cookiecutter.use_allauth %}
 LOGIN_URL = reverse_lazy("account_login")
