@@ -51,7 +51,10 @@ ignore-words-list = 'datas'
 
 [tool.uv]
 exclude-newer = "14 days"
+exclude-newer-package = { gitpython = false }
 constraint-dependencies = [
     "urllib3>=2.7.0",
     "idna>=3.15",
+    "gitpython>=3.1.58",
+    "pygments>=2.20.0",
 ]
