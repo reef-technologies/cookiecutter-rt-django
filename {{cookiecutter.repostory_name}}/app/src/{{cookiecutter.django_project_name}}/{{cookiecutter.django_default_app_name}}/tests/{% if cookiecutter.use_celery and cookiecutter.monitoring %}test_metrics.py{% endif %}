@@ -1,0 +1,17 @@
+from kombu import Queue
+
+from {{cookiecutter.django_project_name}}.celery import CeleryQueueLenCollector
+
+
+def test_celery_queue_len_collector_reads_redis_at_collect_time(monkeypatch, settings):
+    settings.CELERY_TASK_QUEUES = (Queue("celery"), Queue("worker"))
+    monkeypatch.setattr(
+        "{{cookiecutter.django_project_name}}.celery.get_num_tasks_in_queue",
+        {"celery": 0, "worker": 2}.__getitem__,
+    )
+
+    metrics = list(CeleryQueueLenCollector().collect())
+
+    assert len(metrics) == 1
+    samples = {(s.labels["queue"], s.value) for s in metrics[0].samples}
+    assert samples == {("celery", 0.0), ("worker", 2.0)}

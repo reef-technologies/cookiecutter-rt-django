@@ -3,16 +3,13 @@ import os
 
 from pathlib import Path
 import prometheus_client
-{% if cookiecutter.use_celery %}
-from django.conf import settings
-{% endif %}
 from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
 from prometheus_client import REGISTRY, multiprocess
 from prometheus_client.multiprocess import FlockMultiProcessCollector
 
 {% if cookiecutter.use_celery %}
-from ..celery import get_num_tasks_in_queue, num_tasks_in_queue
+from ..celery import CeleryQueueLenCollector
 {% endif %}
 
 
@@ -22,14 +19,13 @@ if multiproc_dir := os.environ.get("PROMETHEUS_MULTIPROC_DIR"):
 else:
     registry = REGISTRY
 
+{% if cookiecutter.use_celery %}
+registry.register(CeleryQueueLenCollector())
+{% endif %}
+
 
 def metrics_view(request):
     """Exports metrics as a Django view"""
-
-    {% if cookiecutter.use_celery %}
-    for queue in settings.CELERY_TASK_QUEUES:
-        num_tasks_in_queue.labels(queue.name).set(get_num_tasks_in_queue(queue.name))
-    {% endif %}
 
     if multiproc_dir:
         multiproc_path = Path(multiproc_dir)
