@@ -79,6 +79,10 @@
   - Controlled by the `observability` flag (replaces the previous `log_aggregating` flag).
     Existing projects updating via `cruft update` should answer `yes` if they had `log_aggregating: yes` and also supply `traces_aggregator_url`.
   - Generic host dashboard section optimized for both VM and physical machines
+  - PostgreSQL monitoring via [postgres\_exporter](https://github.com/prometheus-community/postgres_exporter), enabled with `monitoring`:
+    instance health and resource usage from the default collectors, per-query calls/time/rows from `pg_stat_statements`
+    (preloaded on the bundled `db`), read through a dedicated read-only `postgres_exporter` role.
+    Exposed on the mTLS monitoring port as `/postgres-metrics/` and on `localhost:9187` in dev.
   - [Integration of framework allowing easy addition of new application-level metrics](https://github.com/reef-technologies/django-business-metrics)
   - nginx-level dashboard section for http/ws statistics
   - Active monitoring dashboard (http ping)

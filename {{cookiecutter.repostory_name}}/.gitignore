@@ -5,7 +5,7 @@
 /docker-compose.yml
 /.idea/
 /redis/
-/db/
+/db/data/
 /letsencrypt/
 .env
 .vuln.env
