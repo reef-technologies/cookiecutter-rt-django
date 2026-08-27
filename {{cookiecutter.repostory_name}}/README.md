@@ -97,7 +97,7 @@ Only `master` branch is used to redeploy an application.
 If one wants to deploy other branch, force may be used to push desired branch to remote's `master`:
 
 ```sh
-git push --force production local-branch-to-deploy:master
+git push --force-with-lease production local-branch-to-deploy:master
 ```
 
 </details>
