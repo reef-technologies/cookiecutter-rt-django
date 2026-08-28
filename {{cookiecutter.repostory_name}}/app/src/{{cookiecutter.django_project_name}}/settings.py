@@ -12,6 +12,7 @@ from typing import Any
 
 import environ
 import structlog
+from structlog_sentry import SentryProcessor
 {% if cookiecutter.observability %}
 from {{cookiecutter.django_project_name}}.otel import add_otel_context_to_structlog, add_otel_resource_to_structlog
 {% endif %}
@@ -434,6 +435,14 @@ LOGGING_CALLSITE_PARAMETERS_PROCESSOR = structlog.processors.CallsiteParameterAd
     structlog.processors.CallsiteParameter.LINENO,
 ])
 
+SENTRY_DSN = env("SENTRY_DSN")
+
+LOGGING_SENTRY_PROCESSOR = SentryProcessor(
+    active=bool(SENTRY_DSN),
+    level=logging.INFO,
+    event_level=logging.ERROR,
+)
+
 LOGGING_FOREIGN_PRE_CHAIN = [
     structlog.stdlib.add_log_level,
     structlog.stdlib.add_logger_name,
@@ -516,6 +525,7 @@ STRUCTLOG_CONFIGURATION: dict[str, Any] = dict(
         LOGGING_CALLSITE_PARAMETERS_PROCESSOR,
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.StackInfoRenderer(),
+        LOGGING_SENTRY_PROCESSOR,
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
         {% if cookiecutter.observability %}
@@ -529,8 +539,24 @@ STRUCTLOG_CONFIGURATION: dict[str, Any] = dict(
 )
 structlog.configure(**STRUCTLOG_CONFIGURATION)
 
+
+def _drop_structlog_duplicates(entry: dict, hint: dict) -> dict | None:
+    """Drop Sentry entries already reported by LOGGING_SENTRY_PROCESSOR.
+
+    structlog events also reach stdlib logging, but with `exc_info` already rendered to a string by
+    `format_exc_info`. The Sentry logging integration would report them a second time, without a
+    stacktrace and with the whole event dict (timestamp included) as the message, which makes Sentry
+    treat every single occurrence as a separate issue. structlog marks such records by setting the
+    `_logger` attribute on them.
+    """
+    record = hint.get("log_record")
+    if isinstance(record, logging.LogRecord) and hasattr(record, "_logger"):
+        return None
+    return entry
+
+
 # Sentry
-if SENTRY_DSN := env("SENTRY_DSN"):
+if SENTRY_DSN:
     import sentry_sdk
     {% if cookiecutter.use_celery %}
     from sentry_sdk.integrations.celery import CeleryIntegration
@@ -542,6 +568,8 @@ if SENTRY_DSN := env("SENTRY_DSN"):
     sentry_sdk.init(  # type: ignore
         dsn=SENTRY_DSN,
         environment=ENV,
+        before_send=_drop_structlog_duplicates,
+        before_breadcrumb=_drop_structlog_duplicates,
         ignore_errors=[
             KeyboardInterrupt,
             SystemExit,
