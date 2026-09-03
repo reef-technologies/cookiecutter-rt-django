@@ -7,14 +7,14 @@ exist (e.g. after `cruft update` on a deployed project).
 
 ## Applying to an existing database
 
-Run the statements from `01-monitoring.sh` by hand, using the password from
-`POSTGRES_EXPORTER_PASSWORD` in `.env`:
+Run the statements from `01-monitoring.sh` by hand, using the role name and password
+from `POSTGRES_EXPORTER_USER` / `POSTGRES_EXPORTER_PASSWORD` in `.env`:
 
 ```sh
 docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'EOSQL'
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-CREATE ROLE postgres_exporter WITH LOGIN PASSWORD '<POSTGRES_EXPORTER_PASSWORD>';
-GRANT pg_monitor TO postgres_exporter;
+CREATE ROLE <POSTGRES_EXPORTER_USER> WITH LOGIN PASSWORD '<POSTGRES_EXPORTER_PASSWORD>';
+GRANT pg_monitor TO <POSTGRES_EXPORTER_USER>;
 EOSQL
 ```
 

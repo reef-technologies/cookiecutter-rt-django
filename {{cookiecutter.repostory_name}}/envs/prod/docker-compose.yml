@@ -47,6 +47,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       {% if cookiecutter.monitoring %}
+      - POSTGRES_EXPORTER_USER=${POSTGRES_EXPORTER_USER:-postgres_exporter}
       - POSTGRES_EXPORTER_PASSWORD=${POSTGRES_EXPORTER_PASSWORD}
       {% endif %}
     volumes:
@@ -310,7 +311,7 @@ services:
       # the bundled postgres container does not speak TLS; lib/pq defaults to sslmode=require
       - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
       # read-only monitoring role (pg_monitor) created by db/init/01-monitoring.sh
-      - DATA_SOURCE_USER=postgres_exporter
+      - DATA_SOURCE_USER=${POSTGRES_EXPORTER_USER:-postgres_exporter}
       - DATA_SOURCE_PASS=${POSTGRES_EXPORTER_PASSWORD}
     command:
       # per-query calls / time / rows from pg_stat_statements
