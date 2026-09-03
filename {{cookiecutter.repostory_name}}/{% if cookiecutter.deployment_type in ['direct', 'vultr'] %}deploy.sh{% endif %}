@@ -34,5 +34,9 @@ docker compose run --rm app sh prometheus-cleanup.sh
 # start everything
 docker compose up -d
 
+# nginx resolves upstream container names once at config load; containers
+# recreated above (e.g. postgres-exporter) get new IPs, so re-resolve
+docker compose exec nginx nginx -s reload || true
+
 # Clean up older dangling images without killing recent build cache
 docker image prune -f --filter "until=168h" || true
