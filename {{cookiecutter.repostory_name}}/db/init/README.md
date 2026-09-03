@@ -1,24 +1,20 @@
 # db/init
 
-Scripts in this directory are mounted into the `db` container at
-`/docker-entrypoint-initdb.d/` and run **once**, when the postgres data directory is
-first initialised. They do not run again on restarts or on databases that already
-exist (e.g. after `cruft update` on a deployed project).
+Scripts here run **once**, when the postgres data directory is first initialised
+(they are mounted at `/docker-entrypoint-initdb.d/`). They never run again — not on
+restarts, and not on an already-deployed database.
 
 ## The exporter role is opt-in
 
-`01-monitoring.sh` always creates the `pg_stat_statements` extension, but creates the
-dedicated exporter role only when `POSTGRES_EXPORTER_PASSWORD` is set at first
-initialisation. Without it, the postgres-exporter container falls back to connecting
-as `POSTGRES_USER`, so monitoring works with no role setup. Set
-`POSTGRES_EXPORTER_USER` / `POSTGRES_EXPORTER_PASSWORD` in `.env` (and create the
-role, below, if the database already exists) to separate monitoring load from
-application load in `pg_stat_statements`.
+`01-monitoring.sh` always creates the `pg_stat_statements` extension. The dedicated
+exporter role is only created when `POSTGRES_EXPORTER_PASSWORD` is set; left blank,
+the postgres-exporter container connects as `POSTGRES_USER` and everything still
+works. Set `POSTGRES_EXPORTER_USER` / `POSTGRES_EXPORTER_PASSWORD` in `.env` to
+separate monitoring load from application load in the stats.
 
 ## Applying to an existing database
 
-Run the statements from `01-monitoring.sh` by hand, using the role name and password
-from `POSTGRES_EXPORTER_USER` / `POSTGRES_EXPORTER_PASSWORD` in `.env`:
+Run the same statements by hand, substituting the values from `.env`:
 
 ```sh
 docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'EOSQL'
@@ -28,18 +24,14 @@ GRANT pg_monitor TO <POSTGRES_EXPORTER_USER>;
 EOSQL
 ```
 
-`CREATE EXTENSION` only succeeds if `pg_stat_statements` is in
-`shared_preload_libraries`, which the compose file sets on the `db` command — the
-container must have been restarted with that config first
-(`docker compose up -d --force-recreate db`).
+`CREATE EXTENSION` requires the `db` container to be running with
+`pg_stat_statements` in `shared_preload_libraries` (set in the compose file) — if it
+predates that config, recreate it first: `docker compose up -d --force-recreate db`.
 
-## Separating database usage by consumer
+## One role per consumer
 
-`pg_stat_statements` and `pg_stat_activity` attribute queries to the **database
-role** that ran them, and the PostgreSQL dashboard groups by that role. If you want
-to tell apart the application's own load from other consumers — e.g. a Grafana
-instance running SQL directly against this database — give each consumer its own
-role instead of sharing the application user. Projects can add further first-boot
-scripts to this directory (`02-*.sh`, …) to create such roles; keep them read-only
-(`GRANT SELECT`, `default_transaction_read_only = on`) and give them a
-`statement_timeout`.
+`pg_stat_statements` and `pg_stat_activity` attribute queries to the database role
+that ran them, and the dashboard groups by role. To tell the application's load
+apart from another consumer (e.g. a Grafana instance querying this database
+directly), give that consumer its own role — read-only, with a
+`statement_timeout` — via an additional `02-*.sh` script here or by hand.
