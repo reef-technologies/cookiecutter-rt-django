@@ -6,13 +6,12 @@ set -euo pipefail
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
     -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 
-# The dedicated exporter role is opt-in: without POSTGRES_EXPORTER_PASSWORD the
+# The dedicated exporter role is opt-in: unless BOTH exporter variables are set, the
 # exporter falls back to the application user (see the compose file), so skip it.
-if [ -z "${POSTGRES_EXPORTER_PASSWORD:-}" ]; then
-    echo "01-monitoring.sh: POSTGRES_EXPORTER_PASSWORD not set; skipping monitoring role creation (exporter will use POSTGRES_USER)"
+if [ -z "${POSTGRES_EXPORTER_USER:-}" ] || [ -z "${POSTGRES_EXPORTER_PASSWORD:-}" ]; then
+    echo "01-monitoring.sh: POSTGRES_EXPORTER_USER and POSTGRES_EXPORTER_PASSWORD not both set; skipping monitoring role creation (exporter will use POSTGRES_USER)"
     exit 0
 fi
-POSTGRES_EXPORTER_USER="${POSTGRES_EXPORTER_USER:-postgres_exporter}"
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     -- read-only monitoring role for postgres-exporter; pg_monitor grants access to

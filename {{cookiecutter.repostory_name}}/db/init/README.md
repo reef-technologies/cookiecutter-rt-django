@@ -7,9 +7,9 @@ restarts, and not on an already-deployed database.
 ## The exporter role is opt-in
 
 `01-monitoring.sh` always creates the `pg_stat_statements` extension. The dedicated
-exporter role is only created when `POSTGRES_EXPORTER_PASSWORD` is set; left blank,
-the postgres-exporter container connects as `POSTGRES_USER` and everything still
-works. Set `POSTGRES_EXPORTER_USER` / `POSTGRES_EXPORTER_PASSWORD` in `.env` to
+exporter role is only created when both `POSTGRES_EXPORTER_USER` and
+`POSTGRES_EXPORTER_PASSWORD` are set; left blank, the postgres-exporter container
+connects as `POSTGRES_USER` and everything still works. Set both in `.env` to
 separate monitoring load from application load in the stats.
 
 ## Applying to an existing database

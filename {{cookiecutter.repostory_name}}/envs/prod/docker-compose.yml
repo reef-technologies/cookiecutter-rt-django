@@ -47,7 +47,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       {% if cookiecutter.monitoring %}
-      - POSTGRES_EXPORTER_USER=${POSTGRES_EXPORTER_USER:-postgres_exporter}
+      - POSTGRES_EXPORTER_USER=${POSTGRES_EXPORTER_USER}
       - POSTGRES_EXPORTER_PASSWORD=${POSTGRES_EXPORTER_PASSWORD}
       {% endif %}
     volumes:
