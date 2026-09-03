@@ -5,6 +5,16 @@ Scripts in this directory are mounted into the `db` container at
 first initialised. They do not run again on restarts or on databases that already
 exist (e.g. after `cruft update` on a deployed project).
 
+## The exporter role is opt-in
+
+`01-monitoring.sh` always creates the `pg_stat_statements` extension, but creates the
+dedicated exporter role only when `POSTGRES_EXPORTER_PASSWORD` is set at first
+initialisation. Without it, the postgres-exporter container falls back to connecting
+as `POSTGRES_USER`, so monitoring works with no role setup. Set
+`POSTGRES_EXPORTER_USER` / `POSTGRES_EXPORTER_PASSWORD` in `.env` (and create the
+role, below, if the database already exists) to separate monitoring load from
+application load in `pg_stat_statements`.
+
 ## Applying to an existing database
 
 Run the statements from `01-monitoring.sh` by hand, using the role name and password
