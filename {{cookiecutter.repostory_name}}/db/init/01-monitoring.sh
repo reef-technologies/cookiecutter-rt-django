@@ -4,15 +4,16 @@
 set -euo pipefail
 {% if cookiecutter.monitoring %}
 : "${POSTGRES_EXPORTER_PASSWORD:?POSTGRES_EXPORTER_PASSWORD must be set (see .env)}"
+POSTGRES_EXPORTER_USER="${POSTGRES_EXPORTER_USER:-postgres_exporter}"
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
     -- read-only monitoring role for postgres-exporter; pg_monitor grants access to
     -- pg_stat_* views, including full query text in pg_stat_statements
-    CREATE ROLE postgres_exporter WITH LOGIN PASSWORD '$POSTGRES_EXPORTER_PASSWORD';
-    GRANT pg_monitor TO postgres_exporter;
-    GRANT CONNECT ON DATABASE "$POSTGRES_DB" TO postgres_exporter;
+    CREATE ROLE "$POSTGRES_EXPORTER_USER" WITH LOGIN PASSWORD '$POSTGRES_EXPORTER_PASSWORD';
+    GRANT pg_monitor TO "$POSTGRES_EXPORTER_USER";
+    GRANT CONNECT ON DATABASE "$POSTGRES_DB" TO "$POSTGRES_EXPORTER_USER";
 EOSQL
 {% else %}
 echo "monitoring disabled: no database initialisation to do"
