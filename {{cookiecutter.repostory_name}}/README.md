@@ -87,7 +87,7 @@ sudo bin/prepare-os.sh
 # adjust the `.env` file
 
 mkdir letsencrypt
-./letsencrypt_setup.sh
+./letsencrypt_setup.sh  # or ./selfsign_setup.sh; see "TLS certificates" below
 ./deploy.sh
 ```
 
@@ -101,6 +101,55 @@ git push --force-with-lease production local-branch-to-deploy:master
 ```
 
 </details>
+
+# TLS certificates
+
+`nginx/templates/default.conf.template` reads four files, and the `nginx` service bind-mounts `./letsencrypt/etc` into `/etc/letsencrypt` to supply them:
+
+| Path inside the container | Path on the host |
+|---|---|
+| `/etc/letsencrypt/dhparams/dhparam.pem` | `letsencrypt/etc/dhparams/dhparam.pem` |
+| `/etc/letsencrypt/live/$NGINX_HOST/fullchain.pem` | `letsencrypt/etc/live/$NGINX_HOST/fullchain.pem` |
+| `/etc/letsencrypt/live/$NGINX_HOST/privkey.pem` | `letsencrypt/etc/live/$NGINX_HOST/privkey.pem` |
+| `/etc/letsencrypt/live/$NGINX_HOST/chain.pem` | `letsencrypt/etc/live/$NGINX_HOST/chain.pem` |
+
+**Two scripts produce exactly those four files, so the choice between them changes nothing else in the deployment.** `letsencrypt/` is gitignored, and `NGINX_HOST` must be set in `.env` before either runs: it names the `live/` directory the certificate is written to, and nginx substitutes it into `server_name`.
+{% if cookiecutter.monitoring %}
+
+The monitoring vhost on port `10443` is independent of both. It uses the mutually authenticated pair under `nginx/monitoring_certs/` described in that directory's README, and neither script touches it.
+{% endif %}
+
+## Let's Encrypt (default)
+
+`./letsencrypt_setup.sh` issues a publicly trusted certificate through certbot's standalone HTTP-01 challenge. It needs `NGINX_HOST` to resolve publicly to this host with port 80 reachable from the internet, and it binds port 80 itself — so on a deployment that is already serving, stop `nginx` for the duration of the run.
+
+## Self-signed
+
+`./selfsign_setup.sh` issues a self-signed certificate instead, for deployments where ACME is not an option: no public DNS name, port 80 unreachable, or a host that is internal by design. It needs nothing but Docker and a `NGINX_HOST` value, and it takes the hostname from `.env` the same way, emitting an `IP:` rather than a `DNS:` subject alternative name when that value is an address literal.
+
+```sh
+mkdir -p letsencrypt
+./selfsign_setup.sh
+docker compose up -d --force-recreate nginx
+```
+
+Like certbot's `certonly`, it keeps a certificate that is still valid rather than reissuing one, so rerunning the deployment steps will not invalidate the certificate clients were told to trust. Reissue deliberately with `./selfsign_setup.sh --force`. The Diffie-Hellman parameter is generated once and survives a reissue.
+
+Three consequences, none of which apply to the Let's Encrypt path:
+
+- **Every client has to be told to trust it.** Nothing chains to a public root, so each caller needs the certificate in its trust store, `curl --cacert letsencrypt/etc/live/$NGINX_HOST/fullchain.pem`, or verification disabled. The script prints the certificate's SHA-256 fingerprint so that what a client trusts can be checked against what the server actually serves.
+- **HSTS makes the switch one-way in a browser.** The main vhost sends `Strict-Transport-Security: max-age=31536000`. A browser that has already reached this hostname over a publicly trusted certificate will refuse to offer a click-through warning for a self-signed one, for up to a year and regardless of what the server now sends. Only a hostname no browser has visited over HTTPS is unaffected.
+- **Nothing renews it.** The certificate is valid for ten years and no certbot timer will replace it.
+
+Verify what is being served, from a host that can reach the deployment:
+
+```sh
+openssl s_client -connect "$NGINX_HOST:443" -servername "$NGINX_HOST" </dev/null 2>/dev/null \
+    | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
+
+# succeeds only if the served certificate is the one in this file
+curl --cacert "letsencrypt/etc/live/$NGINX_HOST/fullchain.pem" -sSI "https://$NGINX_HOST/"
+```
 {% endif %}
 
 {% if cookiecutter.use_allauth %}
