@@ -151,6 +151,7 @@ services:
       {% if cookiecutter.monitoring %}
       - cadvisor
       - node-exporter
+      - postgres-exporter
       {% endif %}
       {% if cookiecutter.observability %}
       - alloy

@@ -2,7 +2,7 @@
 # Executed by the postgres image on first initialisation of the data directory only.
 # For an existing database, run the same statements by hand — see db/init/README.md.
 set -euo pipefail
-{% if cookiecutter.monitoring %}
+
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
     -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 
@@ -17,16 +17,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
     -v exporter_user="$POSTGRES_EXPORTER_USER" \
     -v exporter_password="$POSTGRES_EXPORTER_PASSWORD" \
     -v db_name="$POSTGRES_DB" <<-'EOSQL'
+    -- read-only monitoring role for postgres-exporter; pg_monitor grants access to
+    -- pg_stat_* views, including full query text in pg_stat_statements
     CREATE ROLE :"exporter_user" WITH LOGIN PASSWORD :'exporter_password';
     GRANT pg_monitor TO :"exporter_user";
     GRANT CONNECT ON DATABASE :"db_name" TO :"exporter_user";
 EOSQL
-    -- read-only monitoring role for postgres-exporter; pg_monitor grants access to
-    -- pg_stat_* views, including full query text in pg_stat_statements
-    CREATE ROLE "$POSTGRES_EXPORTER_USER" WITH LOGIN PASSWORD '$POSTGRES_EXPORTER_PASSWORD';
-    GRANT pg_monitor TO "$POSTGRES_EXPORTER_USER";
-    GRANT CONNECT ON DATABASE "$POSTGRES_DB" TO "$POSTGRES_EXPORTER_USER";
-EOSQL
-{% else %}
-echo "monitoring disabled: no database initialisation to do"
-{% endif %}
