@@ -37,7 +37,8 @@ services:
     {% if cookiecutter.monitoring %}
     command:
       - postgres
-      # pg_stat_statements must be preloaded to record per-query timings; postgres-exporter reads it
+      # pg_stat_statements must be preloaded to record per-query timings; query it via
+      # psql locally (prod additionally exports it via postgres-exporter)
       - -c
       - shared_preload_libraries=pg_stat_statements
       - -c
@@ -47,24 +48,6 @@ services:
     {% endif %}
     ports:
       - ${POSTGRES_PORT}:5432
-
-  {% if cookiecutter.monitoring %}
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.20.1
-    environment:
-      - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
-      - DATA_SOURCE_USER=${POSTGRES_EXPORTER_USER:-${POSTGRES_USER}}
-      - DATA_SOURCE_PASS=${POSTGRES_EXPORTER_PASSWORD:-${POSTGRES_PASSWORD}}
-    command:
-      - '--collector.stat_statements'
-      # statements exported, top by total execution time; raise for busier workloads
-      - '--collector.stat_statements.limit=${POSTGRES_EXPORTER_STAT_STATEMENTS_LIMIT:-300}'
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - 127.0.0.1:9187:9187
-  {% endif %}
 
   backups:
     build:
