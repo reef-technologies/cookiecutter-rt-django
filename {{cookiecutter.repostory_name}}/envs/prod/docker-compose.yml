@@ -318,6 +318,8 @@ services:
     command:
       # per-query calls / time / rows from pg_stat_statements
       - '--collector.stat_statements'
+      # statements exported, top by total execution time; raise for busier workloads
+      - '--collector.stat_statements.limit=${POSTGRES_EXPORTER_STAT_STATEMENTS_LIMIT:-300}'
     depends_on:
       db:
         condition: service_healthy

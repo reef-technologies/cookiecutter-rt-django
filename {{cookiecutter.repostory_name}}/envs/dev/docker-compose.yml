@@ -57,6 +57,8 @@ services:
       - DATA_SOURCE_PASS=${POSTGRES_EXPORTER_PASSWORD:-${POSTGRES_PASSWORD}}
     command:
       - '--collector.stat_statements'
+      # statements exported, top by total execution time; raise for busier workloads
+      - '--collector.stat_statements.limit=${POSTGRES_EXPORTER_STAT_STATEMENTS_LIMIT:-300}'
     depends_on:
       db:
         condition: service_healthy
