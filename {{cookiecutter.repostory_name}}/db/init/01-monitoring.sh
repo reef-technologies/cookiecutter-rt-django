@@ -13,7 +13,14 @@ if [ -z "${POSTGRES_EXPORTER_USER:-}" ] || [ -z "${POSTGRES_EXPORTER_PASSWORD:-}
     exit 0
 fi
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
+    -v exporter_user="$POSTGRES_EXPORTER_USER" \
+    -v exporter_password="$POSTGRES_EXPORTER_PASSWORD" \
+    -v db_name="$POSTGRES_DB" <<-'EOSQL'
+    CREATE ROLE :"exporter_user" WITH LOGIN PASSWORD :'exporter_password';
+    GRANT pg_monitor TO :"exporter_user";
+    GRANT CONNECT ON DATABASE :"db_name" TO :"exporter_user";
+EOSQL
     -- read-only monitoring role for postgres-exporter; pg_monitor grants access to
     -- pg_stat_* views, including full query text in pg_stat_statements
     CREATE ROLE "$POSTGRES_EXPORTER_USER" WITH LOGIN PASSWORD '$POSTGRES_EXPORTER_PASSWORD';
