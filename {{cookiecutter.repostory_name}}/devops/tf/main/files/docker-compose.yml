@@ -130,6 +130,8 @@ services:
     command:
       # per-query calls / time / rows; pg_stat_statements is preloaded by default on RDS
       - '--collector.stat_statements'
+      # statements exported, top by total execution time; raise for busier workloads
+      - '--collector.stat_statements.limit=$${POSTGRES_EXPORTER_STAT_STATEMENTS_LIMIT:-300}'
     logging:
       <<: *exporter_logging
   {% endif %}
