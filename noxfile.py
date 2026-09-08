@@ -9,6 +9,7 @@ import functools
 import hashlib
 import json
 import os
+import platform
 import subprocess
 import tempfile
 from pathlib import Path
@@ -86,11 +87,14 @@ def list_files(suffix: str | None = None) -> list[Path]:
 
 
 def run_readable(session, mode="check"):
+    arch = platform.machine().lower()
+    if arch in {"arm64", "aarch64"}:
+        session.log("Skipping readable on ARM architecture")
+        return
+
     session.run(
         "docker",
         "run",
-        "--platform",
-        "linux/amd64",
         "--rm",
         "-v",
         f"{ROOT.absolute()}:/data",
@@ -104,18 +108,22 @@ def run_readable(session, mode="check"):
 
 
 def run_shellcheck(session, mode="check"):
+    arch = platform.machine().lower()
+    if arch in {"arm64", "aarch64"}:
+        image = "koalaman/shellcheck:0.9.0@sha256:f35e8987b02760d4e76fc99a68ad5c42cc10bb32f3dd2143a3cf92f1e5446a45"
+    else:
+        image = "koalaman/shellcheck:0.9.0@sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c"
+
     shellcheck_cmd = [
         "docker",
         "run",
-        "--platform",
-        "linux/amd64",  # while this image is multi-arch, we cannot use digest with multi-arch images
         "--rm",
         "-v",
         f"{ROOT.absolute()}:/mnt",
         "-w",
         "/mnt",
         "-q",
-        "koalaman/shellcheck:0.9.0@sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c",
+        image,
     ]
 
     files = list_files(suffix=".sh")
