@@ -46,8 +46,26 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      {% if cookiecutter.monitoring %}
+      - POSTGRES_EXPORTER_USER=${POSTGRES_EXPORTER_USER}
+      - POSTGRES_EXPORTER_PASSWORD=${POSTGRES_EXPORTER_PASSWORD}
+      {% endif %}
     volumes:
       - ./db/data:/var/lib/postgresql/data
+      # first-boot SQL, run only when the data directory is initialised; see db/init/README.md
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    {% if cookiecutter.monitoring %}
+    command:
+      - postgres
+      # pg_stat_statements must be preloaded to record per-query timings; postgres-exporter reads it
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.max=10000
+      # makes I/O wait time measurable in pg_stat_statements / pg_stat_database
+      - -c
+      - track_io_timing=on
+    {% endif %}
     logging:
       <<: *logging
 
@@ -231,6 +249,7 @@ services:
       {% if cookiecutter.monitoring %}
       - cadvisor
       - node-exporter
+      - postgres-exporter
       {% endif %}
     command: nginx -g 'daemon off;'
     ports:
@@ -281,6 +300,29 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       - /cgroup:/cgroup:ro
     restart: unless-stopped
+    logging:
+      <<: *logging
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.20.1
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      # the bundled postgres container does not speak TLS; lib/pq defaults to sslmode=require
+      - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
+      # Dedicated read-only role (pg_monitor) when POSTGRES_EXPORTER_USER/PASSWORD are
+      # set (created by db/init/01-monitoring.sh on a fresh database, by hand otherwise);
+      # falls back to the application user so monitoring works without any role setup.
+      - DATA_SOURCE_USER=${POSTGRES_EXPORTER_USER:-${POSTGRES_USER}}
+      - DATA_SOURCE_PASS=${POSTGRES_EXPORTER_PASSWORD:-${POSTGRES_PASSWORD}}
+    command:
+      # per-query calls / time / rows from pg_stat_statements
+      - '--collector.stat_statements'
+      # statements exported, top by total execution time; raise for busier workloads
+      - '--collector.stat_statements.limit=${POSTGRES_EXPORTER_STAT_STATEMENTS_LIMIT:-300}'
+    depends_on:
+      db:
+        condition: service_healthy
     logging:
       <<: *logging
   {% endif %}

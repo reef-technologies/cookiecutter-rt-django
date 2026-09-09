@@ -117,6 +117,23 @@ services:
     restart: unless-stopped
     logging:
       <<: *exporter_logging
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.20.1
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      # RDS: the terraform-generated env only carries DATABASE_URL, so the exporter connects as the
+      # application user. To use a dedicated read-only role instead, create it on RDS by hand
+      # (see db/init/README.md) and point DATA_SOURCE_NAME at it.
+      - DATA_SOURCE_NAME=$${DATABASE_URL}
+    command:
+      # per-query calls / time / rows; pg_stat_statements is preloaded by default on RDS
+      - '--collector.stat_statements'
+      # statements exported, top by total execution time; raise for busier workloads
+      - '--collector.stat_statements.limit=$${POSTGRES_EXPORTER_STAT_STATEMENTS_LIMIT:-300}'
+    logging:
+      <<: *exporter_logging
   {% endif %}
 
   nginx:
@@ -136,6 +153,7 @@ services:
       {% if cookiecutter.monitoring %}
       - cadvisor
       - node-exporter
+      - postgres-exporter
       {% endif %}
       {% if cookiecutter.observability %}
       - alloy
