@@ -26,10 +26,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      {% if cookiecutter.monitoring %}
-      - POSTGRES_EXPORTER_USER=${POSTGRES_EXPORTER_USER}
-      - POSTGRES_EXPORTER_PASSWORD=${POSTGRES_EXPORTER_PASSWORD}
-      {% endif %}
     volumes:
       - ./db/data:/var/lib/postgresql/data
       # first-boot SQL, run only when the data directory is initialised; see db/init/README.md
