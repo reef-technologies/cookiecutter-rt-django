@@ -63,7 +63,10 @@ def get_tasks_in_queue(queue_name: str) -> list[bytes]:
 
 def get_num_tasks_in_queue(queue_name: str) -> int:
     with app.pool.acquire(block=True) as conn:
-        return conn.default_channel.client.llen(queue_name)
+        # The consumer client may have an outstanding BRPOP response.
+        # Use Kombu's synchronous pool so LLEN reads its own response.
+        with conn.default_channel.conn_or_acquire() as client:
+            return client.llen(queue_name)
 
 {% if cookiecutter.monitoring %}
 
