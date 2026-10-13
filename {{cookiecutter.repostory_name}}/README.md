@@ -312,7 +312,7 @@ in `.env` and recreate the containers:
 docker compose up -d
 ```
 
-(`docker compose restart` is not enough: it keeps the old environment.) From then on every Python process writes a capture file to `./profiles` on the host (`/var/profiles` inside the containers). Most also log a line like `memray_autostart: profiling gunicorn -> /var/profiles/gunicorn-....bin` when they start; the celery nodes don't, because `celery multi` detaches them from their output, so check `./profiles` for their files. To stop, set the variable back to `0` and run `docker compose up -d` again.
+(`docker compose restart` is not enough: it keeps the old environment.) This is set up for the direct/VPS deployment driven by `deploy.sh`. On AWS the mount and the variable are in place, but the variable lives in the terraform-managed environment and captures land on the instance's own disk, so using it there needs extra work that isn't covered here. From then on every Python process writes a capture file to `./profiles` on the host (`/var/profiles` inside the containers). Most also log a line like `memray_autostart: profiling gunicorn -> /var/profiles/gunicorn-....bin` when they start; the celery nodes don't, because `celery multi` detaches them from their output, so check `./profiles` for their files. To stop, set the variable back to `0` and run `docker compose up -d` again.
 
 ## What gets profiled
 
@@ -338,6 +338,7 @@ This writes `memray-flamegraph-<capture>.html` next to the capture; copy it to y
 - Allocation tracking slows the process down; don't leave it on.
 - A capture stays readable if its process is killed, e.g. by Docker after `stop_grace_period`; the file is simply truncated at that point.
 - memray runs a sampling thread, so while profiling is on Python emits a `DeprecationWarning` about forking a multi-threaded process when gunicorn or celery fork. It is hidden by the default warning filters and harmless: memray reinitialises itself in the child.
+- Python's own small-object allocator is traced too (`trace_python_allocators=True` in `memray_autostart.start`), so a leak of many small objects is attributed to the line that created them rather than to whichever code happened to grow the allocator's arena. This makes captures larger and profiling slower than memray's default; it is the right trade for leak hunting.
 - Captures contain Python frames only; allocations made inside C extensions are still counted and attributed to the Python line that called them. memray can also record the C/C++ frames (`native_traces=True` in `memray_autostart.start`), but such captures must be analysed inside the same image, and the slim base image ships no debug symbols, so native frames would show as `<unknown>`.
 
 Development environments don't set `PYTHONPATH`, so the hook is inert outside the image; to try it locally, run the production `docker compose` file.

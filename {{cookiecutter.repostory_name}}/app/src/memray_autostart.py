@@ -167,7 +167,10 @@ def start(role: str) -> str:
         raise FileNotFoundError(f"{PROFILES_DIR} does not exist (is it mounted?)")
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     path = os.path.join(PROFILES_DIR, f"{role}-{socket.gethostname()}-{os.getpid()}-{stamp}.bin")
-    tracker = memray.Tracker(path, follow_fork=True)
+    # trace_python_allocators: record pymalloc's small-object allocations individually, so a
+    # leak of many small objects is attributed to the line that created them; costs bigger
+    # captures and more overhead than memray's default, which only sees pymalloc's arenas.
+    tracker = memray.Tracker(path, follow_fork=True, trace_python_allocators=True)
     tracker.__enter__()
     _tracker = tracker
     return path
