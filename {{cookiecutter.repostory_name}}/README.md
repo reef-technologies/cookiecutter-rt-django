@@ -330,7 +330,7 @@ memray is installed in the image, so reports can be generated on the server:
 docker compose exec app memray flamegraph --temporal /var/profiles/<capture>.bin
 ```
 
-This writes `memray-flamegraph-<capture>.html` next to the capture; copy it to your machine and open it in a browser. The temporal flame graph lets you select a time window and see what was allocated in it and is still alive, which is the view to use for leaks. `memray summary`, `memray stats` and `memray tree` work on the same file. Captures can also be copied to another machine with the same memray version and analysed there.
+This writes `memray-flamegraph-<capture>.html` next to the capture; copy it to your machine and open it in a browser. For a forked child's capture (`....bin.<pid>`) pass `-o <name>.html`, because the default name drops the `.<pid>` suffix and reports for two children of the same parent would overwrite each other. The temporal flame graph lets you select a time window and see what was allocated in it and is still alive, which is the view to use for leaks. `memray summary`, `memray stats` and `memray tree` work on the same file. Captures can also be copied to another machine with the same memray version and analysed there.
 
 ## Costs and caveats
 
