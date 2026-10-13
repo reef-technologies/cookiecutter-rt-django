@@ -3,10 +3,12 @@
 import os
 import sys
 
-import memray
 import pytest
 
 import memray_autostart
+
+# memray has no Windows build (pyproject excludes it there); skip this file instead of erroring
+memray = pytest.importorskip("memray")
 
 PYTHON = "/root/src/.venv/bin/python"
 BIN = "/root/src/.venv/bin"
