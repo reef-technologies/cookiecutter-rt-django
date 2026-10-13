@@ -324,13 +324,14 @@ Captures are named `<role>-<container hostname>-<pid>-<UTC timestamp>.bin`, wher
 
 ## Reading a capture
 
-memray is installed in the image, so reports can be generated on the server:
+memray is installed in the image, so reports are generated on the server. `bin/render-memory-profiles.sh` renders a temporal flame graph for every capture in `./profiles` that has no report yet, or only for the captures you name, and writes each one next to its capture as `<capture>.html`:
 
 ```sh
-docker compose exec app memray flamegraph --temporal /var/profiles/<capture>.bin
+bin/render-memory-profiles.sh
+bin/render-memory-profiles.sh gunicorn-*.bin*
 ```
 
-This writes `memray-flamegraph-<capture>.html` next to the capture; copy it to your machine and open it in a browser. For a forked child's capture (`....bin.<pid>`) pass `-o <name>.html`, because the default name drops the `.<pid>` suffix and reports for two children of the same parent would overwrite each other. The temporal flame graph lets you select a time window and see what was allocated in it and is still alive, which is the view to use for leaks. `memray summary`, `memray stats` and `memray tree` work on the same file. Captures can also be copied to another machine with the same memray version and analysed there.
+Copy the HTML to your machine and open it in a browser. The script runs `memray flamegraph --temporal -o /var/profiles/<capture>.html /var/profiles/<capture>` inside the app image; if you run that by hand for a forked child's capture (`....bin.<pid>`), keep the `-o`, because memray's default output name drops the `.<pid>` suffix and reports for two children of the same parent would overwrite each other. The temporal flame graph lets you select a time window and see what was allocated in it and is still alive, which is the view to use for leaks. `memray summary`, `memray stats` and `memray tree` work on the same file. Captures can also be copied to another machine with the same memray version and analysed there.
 
 ## Costs and caveats
 
