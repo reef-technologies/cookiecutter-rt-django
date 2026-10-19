@@ -18,12 +18,13 @@ import os
 import socket
 import sys
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import memray
 
-PROFILES_DIR = "/var/profiles"
+PROFILES_DIR = Path("/var/profiles")
 
 # `manage.py` commands that run and exit; profiling them would only litter PROFILES_DIR.
 SKIPPED_MANAGE_COMMANDS = frozenset(
@@ -158,15 +159,15 @@ def role_for(orig_argv: list[str]) -> str | None:
     return program
 
 
-def start(role: str) -> str:
+def start(role: str) -> Path:
     """Start tracking this process into a new capture file and return the file's path."""
     global _tracker
     import memray  # deferred: only the processes that are profiled pay for the import
 
-    if not os.path.isdir(PROFILES_DIR):
+    if not PROFILES_DIR.is_dir():
         raise FileNotFoundError(f"{PROFILES_DIR} does not exist (is it mounted?)")
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    path = os.path.join(PROFILES_DIR, f"{role}-{socket.gethostname()}-{os.getpid()}-{stamp}.bin")
+    path = PROFILES_DIR / f"{role}-{socket.gethostname()}-{os.getpid()}-{stamp}.bin"
     # trace_python_allocators: record pymalloc's small-object allocations individually, so a
     # leak of many small objects is attributed to the line that created them; costs bigger
     # captures and more overhead than memray's default, which only sees pymalloc's arenas.
@@ -188,15 +189,15 @@ def stop() -> None:
 
 
 def autostart() -> None:
-    """Profile this process if ``MEMORY_PROFILING`` is on and the command line qualifies."""
-    if os.environ.get("MEMORY_PROFILING", "").strip().lower() not in {"1", "true", "yes", "on"}:
+    """Profile this process when ``MEMORY_PROFILING=1`` and the command line qualifies."""
+    if os.environ.get("MEMORY_PROFILING") != "1":
         return
-    role = role_for(sys.orig_argv)
-    if role is None:
+
+    if not (role := role_for(sys.orig_argv)):
         return
+
     try:
         path = start(role)
+        print(f"memray_autostart: profiling {role} -> {path}", file=sys.stderr)
     except Exception as exc:  # profiling must never take the process down
         print(f"memray_autostart: not profiling {role}: {exc}", file=sys.stderr)
-        return
-    print(f"memray_autostart: profiling {role} -> {path}", file=sys.stderr)

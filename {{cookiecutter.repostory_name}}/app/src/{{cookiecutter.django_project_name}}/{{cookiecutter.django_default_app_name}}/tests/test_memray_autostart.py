@@ -51,7 +51,7 @@ def test_role_for(orig_argv, role):
 
 @pytest.fixture
 def profiles_dir(monkeypatch, tmp_path):
-    monkeypatch.setattr(memray_autostart, "PROFILES_DIR", str(tmp_path))
+    monkeypatch.setattr(memray_autostart, "PROFILES_DIR", tmp_path)
     yield tmp_path
     memray_autostart.stop()
 
@@ -93,7 +93,7 @@ def test_autostart_does_nothing_for_a_skipped_process(monkeypatch, profiles_dir)
 
 def test_autostart_reports_a_missing_profiles_dir_instead_of_raising(monkeypatch, tmp_path, capsys):
     monkeypatch.setenv("MEMORY_PROFILING", "1")
-    monkeypatch.setattr(memray_autostart, "PROFILES_DIR", str(tmp_path / "missing"))
+    monkeypatch.setattr(memray_autostart, "PROFILES_DIR", tmp_path / "missing")
     monkeypatch.setattr(sys, "orig_argv", [PYTHON, f"{BIN}/gunicorn", "-c", "gunicorn.conf.py"])
 
     memray_autostart.autostart()
