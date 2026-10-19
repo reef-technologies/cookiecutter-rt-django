@@ -11,18 +11,20 @@ set -eu
 cd "$(dirname "$0")/.."
 
 if [ "$#" -eq 0 ]; then
-    set -- profiles/*.bin profiles/*.bin.[0-9]*
+    set -- '*.bin' '*.bin.[0-9]*'
 fi
-names=""
-for capture in "$@"; do
-    names="$names $(basename "$capture")"
-done
 
-# shellcheck disable=SC2016,SC2086
+# shellcheck disable=SC2016
 docker compose run --rm --no-deps app sh -c '
-    for name in "$@"; do
-        [ -e "/var/profiles/$name" ] || continue
-        [ -e "/var/profiles/$name.html" ] && continue
-        memray flamegraph --temporal -o "/var/profiles/$name.html" "/var/profiles/$name"
+    for pattern in "$@"; do
+        pattern=${pattern##*/}
+        for capture in /var/profiles/$pattern; do
+            [ -f "$capture" ] || continue
+            case "$capture" in
+                *.html) continue ;;
+            esac
+            [ -e "$capture.html" ] && continue
+            memray flamegraph --temporal -o "$capture.html" "$capture"
+        done
     done
-' render-memory-profiles $names
+' render-memory-profiles "$@"
