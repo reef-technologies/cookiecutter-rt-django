@@ -103,9 +103,9 @@ services:
         tag: '{% raw %}{###{.Name}###}{% endraw %}'
 
   cadvisor:
-    image: ghcr.io/google/cadvisor:0.55.1
+    image: ghcr.io/google/cadvisor:v0.60.5
     container_name: cadvisor
-    privileged: true
+    privileged: false
     devices:
       - /dev/kmsg:/dev/kmsg
     volumes:
@@ -113,7 +113,7 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
+      - /cgroup:/cgroup:ro
     restart: unless-stopped
     logging:
       <<: *exporter_logging
