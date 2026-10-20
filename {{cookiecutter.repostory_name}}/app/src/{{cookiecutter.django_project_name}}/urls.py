@@ -21,10 +21,12 @@ from .{{cookiecutter.django_default_app_name}}.consumers import DefaultConsumer
 {% endif %}
 {% if cookiecutter.monitoring %}
 from .{{cookiecutter.django_default_app_name}}.metrics import metrics_view
-
 {% endif %}
+from .{{cookiecutter.django_default_app_name}}.security_txt import security_txt
+
 urlpatterns = [
     path("alive/", lambda _: HttpResponse(b"ok")),
+    path(".well-known/security.txt", security_txt),
     {% if cookiecutter.use_allauth %}
     path("admin/login/", lambda _: HttpResponseRedirect(settings.LOGIN_URL)),
     {% endif %}

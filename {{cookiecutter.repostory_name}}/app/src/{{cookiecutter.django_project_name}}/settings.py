@@ -345,6 +345,9 @@ if env.bool("HTTPS_REDIRECT") and not DEBUG:
 else:
     SECURE_SSL_REDIRECT = False
 
+SECURITY_TXT_CONTACTS = env.list("SECURITY_TXT_CONTACTS", default=[])
+SECURITY_TXT_EXPIRES = env("SECURITY_TXT_EXPIRES", default="")
+
 {% if cookiecutter.use_channels %}
 CHANNELS_BACKEND_URL = env("CHANNELS_BACKEND_URL")
 CHANNEL_LAYERS = {

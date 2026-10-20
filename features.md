@@ -60,6 +60,7 @@
 - Overall ssllabs security class:
   A+ 100/100/90/90 (to keep compatibility with some older clients)
 - Optional fingerprinting of users on backend and frontend sides
+- [security.txt](https://www.rfc-editor.org/rfc/rfc9116) security vulnerabilities reporting channel
 
 ## Reliability
 
