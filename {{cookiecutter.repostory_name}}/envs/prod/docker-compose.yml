@@ -292,6 +292,7 @@ services:
   cadvisor:
     image: ghcr.io/google/cadvisor:v0.60.5
     container_name: cadvisor
+    privileged: false
     devices:
       - /dev/kmsg:/dev/kmsg
     volumes:
