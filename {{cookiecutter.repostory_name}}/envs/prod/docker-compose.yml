@@ -309,8 +309,10 @@ services:
     container_name: postgres-exporter
     restart: unless-stopped
     environment:
-      # the bundled postgres container does not speak TLS; lib/pq defaults to sslmode=require
-      - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
+      # Host and port come from the environment (.env defaults to the bundled db container).
+      # That container does not speak TLS; lib/pq defaults to sslmode=require.
+      # Hosted databases that require TLS need sslmode=require here instead.
+      - DATA_SOURCE_URI=${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
       # Dedicated read-only role (pg_monitor) when POSTGRES_EXPORTER_USER/PASSWORD are
       # set (created by db/init/01-monitoring.sh on a fresh database, by hand otherwise);
       # falls back to the application user so monitoring works without any role setup.
