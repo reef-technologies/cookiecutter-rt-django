@@ -1,9 +1,14 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/{{cookiecutter.repostory_name}}/app/src"
+  - package-ecosystem: "uv"
+    directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 14
+      exclude:
+        - "gitpython"
+        - "certifi"
   - package-ecosystem: "docker"
     directory: "/{{cookiecutter.repostory_name}}/app/envs/prod"
     schedule:
