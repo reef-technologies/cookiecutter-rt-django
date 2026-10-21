@@ -12,6 +12,7 @@ Currently, `cookiecutter-rt-django` has no explicit versioning amd we purely rel
 
 ## [Unreleased]
 
+* **Security (eMudhra / emSign CA incident, [advisory](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576))**: `certifi>=2026.10.19` is now a uv constraint and is exempt from the `exclude-newer` cooldown; uv is pinned to `0.13.4` in the prod Dockerfile and CI. **Existing projects updating with `cruft update`:** run `uv lock` and commit the result — the prod image installs with `uv sync --frozen`, so rebuilding without re-locking still ships the old certifi. If your `[tool.uv]` section or CI differs from the template, apply the same changes by hand. Then rebuild and redeploy.
 * postgres-exporter connects to `${POSTGRES_HOST}:${POSTGRES_PORT}` instead of a hardcoded `db:5432`. Defaults in `.env` are unchanged (`db` / `5432`, `sslmode=disable` for the bundled container). Hosted databases that require TLS need `sslmode=require` in `DATA_SOURCE_URI`.
 * Set cAdvisor's `privileged` option explicitly to `false` in both AWS and regular production. AWS previously enabled privileged mode; check container metric collection on a staging instance before rolling out this change.
 * Fixed AWS monitoring: aligned cAdvisor with regular production (`v0.60.5` and host mounts) and exposed the existing PostgreSQL exporter at `/postgres-metrics/` on monitoring port `10443`. Apply the Terraform changes and refresh the EC2 instance to deploy the updated configuration.
