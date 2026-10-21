@@ -1,9 +1,15 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/app/src"
+  - package-ecosystem: "uv"
+    directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 14
+      exclude:
+        - "django"
+        - "cryptography"
+        - "certifi"
     open-pull-requests-limit: 0
   - package-ecosystem: "docker"
     directory: "/app/envs/prod"
