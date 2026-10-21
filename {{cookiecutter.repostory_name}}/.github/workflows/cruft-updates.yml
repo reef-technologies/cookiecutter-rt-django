@@ -20,7 +20,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          version: "0.10.x"
+          version: "0.13.x"
 
       - name: Install Cruft
         run: uv tool install cruft~=2.16.0
