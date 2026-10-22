@@ -137,7 +137,7 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.3.0'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.4.0'
     restart: unless-stopped
     healthcheck:
       test: wget -q --spider http://0.0.0.0:8000/alive/ || exit 1
@@ -217,7 +217,7 @@ services:
 
   {% if cookiecutter.observability %}
   alloy:
-    image: grafana/alloy:v1.15.1
+    image: grafana/alloy:v1.21.1
     restart: unless-stopped
     environment:
       - LOKI_URL=$${LOKI_URL}

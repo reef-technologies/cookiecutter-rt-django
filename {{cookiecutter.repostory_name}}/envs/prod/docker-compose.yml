@@ -37,7 +37,7 @@ services:
       <<: *logging
 
   db:
-    image: postgres:14.0-alpine
+    image: postgres:14-alpine
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
     restart: unless-stopped
@@ -144,6 +144,7 @@ services:
   {% if cookiecutter.use_celery %}
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
+    pull_policy: never  # built locally by the `app` service; `docker compose pull` must skip it
     init: true
     healthcheck:
       test: celery -A {{cookiecutter.django_project_name}} status > /dev/null || exit 1
@@ -175,6 +176,7 @@ services:
 
   celery-beat:
     image: {{cookiecutter.django_project_name}}/app
+    pull_policy: never  # built locally by the `app` service; `docker compose pull` must skip it
     init: true
     restart: unless-stopped
     env_file: ./.env
@@ -198,6 +200,7 @@ services:
   {% if cookiecutter.use_flower %}
   celery-flower:
     image: {{cookiecutter.django_project_name}}/app
+    pull_policy: never  # built locally by the `app` service; `docker compose pull` must skip it
     healthcheck:
       test: wget --user "${CELERY_FLOWER_USER}" --password "${CELERY_FLOWER_PASSWORD}" -qO- 127.0.0.1:5555 > /dev/null || exit 1
     init: true
@@ -218,7 +221,7 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.3.0'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.4.0'
     restart: unless-stopped
     healthcheck:
       test: [
@@ -333,7 +336,7 @@ services:
 
   {% if cookiecutter.observability %}
   alloy:
-    image: grafana/alloy:v1.15.1
+    image: grafana/alloy:v1.21.1
     restart: unless-stopped
     environment:
       - LOKI_URL=${LOKI_URL}
