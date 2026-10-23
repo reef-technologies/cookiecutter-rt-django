@@ -20,7 +20,6 @@
     "allauth_staff_email_domain": "reef.pl",
     "allauth_trust_external_emails": true,
     "allauth_providers": "google",
-    "vulnerabilities_scanning": true,
     "sentry_dsn": "",
     "csp_enabled": false,
     "nginx_compression_enabled": false,

@@ -94,9 +94,7 @@ services:
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-      {% if cookiecutter.vulnerabilities_scanning %}
       - '--collector.textfile.directory=textfile_collectors'
-      {% endif %}
     logging: &exporter_logging
       driver: journald
       options:
@@ -182,38 +180,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     {% endif %}
-  {% if cookiecutter.vulnerabilities_scanning %}
-  vulnrelay:
-    image: 'ghcr.io/reef-technologies/vulnrelay:latest'
-    container_name: vulnrelay
-    restart: unless-stopped
-    env_file: ./.vuln.env
-    environment:
-      - METRICS_DIR=/app/metrics
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - nodeexporter_collectors:/app/metrics
-    logging:
-      driver: awslogs
-      options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
-        tag: '$${INSTANCE_ID_SUBST}-vulnrelay'
-        awslogs-create-group: "true"
-  watchtower:
-    image: containrrr/watchtower
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: --interval 7200 vulnrelay
-    logging:
-      driver: awslogs
-      options:
-        awslogs-region: ${region}
-        awslogs-group: /aws/ec2/${name}-${env}
-        tag: '$${INSTANCE_ID_SUBST}-vulnrelay'
-        awslogs-create-group: "true"
-  {% endif %}
 
   {% if cookiecutter.observability %}
   alloy:
