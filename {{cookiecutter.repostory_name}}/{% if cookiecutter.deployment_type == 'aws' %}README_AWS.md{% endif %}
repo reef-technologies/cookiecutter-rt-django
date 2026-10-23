@@ -6,7 +6,7 @@ Files related to AWS deployment has been generated in `devops/` directory.
 
 By convention, projects that are meant to be deployed to AWS have a `deploy-to-aws.sh` script in the root dir and a `devops` directory.
 The script builds the docker image, uploads it and tells AWS to reload the app (causing a new ec2 machine to be spawned).
-In the `devops` directory you will find terraform configuration as well as packer files (for building the AMI).
+In the `devops` directory you will find terraform configuration.
 
 If you want to deploy your app to an AWS environment, you need to do following steps:
 
@@ -116,7 +116,6 @@ terraform apply
 ```
 
 IMPORTANT! the env variables for the apps (`.env` file) and `docker-compose.yml` are defined in terraform files, if you change any, you need to run `terraform apply` AND refresh the ec2 instance.
-The same goes for AMI built by packer.
 
 ## Adding secrets to the projects
 
