@@ -297,10 +297,9 @@ with some_calculation_time.labels('blabla').time():
 ```
 
 {% endif %}
-{% if cookiecutter.deployment_type in ['aws', 'vultr'] %}
+{% if cookiecutter.deployment_type == 'aws' %}
 
 # Cloud deployment
-{% if cookiecutter.deployment_type == 'aws' %}
 
 ## AWS
 
@@ -320,21 +319,6 @@ See `.github/workflows/cd.yml` to find out the secret names.
 
 For more details see [README_AWS.md](README_AWS.md)
 </details>
-{% endif %}
-{% if cookiecutter.deployment_type == 'vultr' %}
-
-## Vultr
-
-<details>
-Initiate the infrastructure with Terraform and cloud-init:
-
-- see Terraform template in `<project>/devops/vultr_tf/core/`
-- see scripts for interacting with Vultr API in `<project>/devops/vultr_scripts/`
-  - note these scripts need `vultr-cli` installed
-
-For more details see [README_vultr.md](README_vultr.md).
-</details>
-{% endif %}
 {% endif %}
 
 # Backups
