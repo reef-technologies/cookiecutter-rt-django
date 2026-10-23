@@ -66,7 +66,5 @@ write_files:
 runcmd:
   - chown -R ubuntu:ubuntu /home/ubuntu
   - cd /home/ubuntu/
-  {% if not cookiecutter.aws_use_packer %}
   - "[ -f ./installer.sh ] && ./installer.sh"
-  {% endif %}
   - sudo -u ubuntu ./cloud-init.sh
