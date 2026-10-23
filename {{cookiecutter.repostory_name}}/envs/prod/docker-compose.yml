@@ -283,9 +283,7 @@ services:
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
-      {% if cookiecutter.vulnerabilities_scanning %}
       - '--collector.textfile.directory=textfile_collectors'
-      {% endif %}
       {% if cookiecutter.monitor_tcpstat %}
       - '--collector.tcpstat'
       {% endif %}

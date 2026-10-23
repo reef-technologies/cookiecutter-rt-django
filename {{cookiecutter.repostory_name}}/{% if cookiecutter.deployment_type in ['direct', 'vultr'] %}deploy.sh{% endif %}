@@ -32,8 +32,8 @@ docker compose run --rm app sh -c "python manage.py wait_for_database --timeout 
 docker compose run --rm app sh prometheus-cleanup.sh
 {% endif %}
 
-# start everything
-docker compose up -d
+# start everything; drop containers of services removed from docker-compose.yml
+docker compose up -d --remove-orphans
 
 # nginx resolves upstream container names once at config load; containers
 # recreated above (e.g. postgres-exporter) get new IPs, so re-resolve
