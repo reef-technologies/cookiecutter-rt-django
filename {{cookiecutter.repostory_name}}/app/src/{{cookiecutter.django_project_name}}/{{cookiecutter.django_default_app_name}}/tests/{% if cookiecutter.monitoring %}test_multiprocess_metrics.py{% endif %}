@@ -1,0 +1,30 @@
+import os
+import subprocess
+import sys
+
+import prometheus_client
+
+from ..metrics import RecursiveFlockMultiProcessCollector, metric_folders
+
+
+def run_process_with_counter(multiproc_dir, value):
+    """Run a process that increments a counter and exits, leaving its metrics file in multiproc_dir."""
+    multiproc_dir.mkdir(exist_ok=True)
+    subprocess.run(
+        [sys.executable, "-c", f"import prometheus_client; prometheus_client.Counter('jobs', 'Jobs').inc({value})"],
+        env={**os.environ, "PROMETHEUS_MULTIPROC_DIR": str(multiproc_dir), "PROMETHEUS_USE_FLOCK": "1"},
+        check=True,
+    )
+
+
+def test_metrics_of_dead_processes_survive_cleanup(tmp_path):
+    run_process_with_counter(tmp_path, 2)
+    run_process_with_counter(tmp_path / "other-container", 3)
+    registry = prometheus_client.CollectorRegistry()
+    collector = RecursiveFlockMultiProcessCollector(registry, path=str(tmp_path))
+
+    for folder in metric_folders(tmp_path):
+        collector.cleanup(folder)
+
+    assert not list(tmp_path.glob("**/*.db")), "cleanup should merge the files of dead processes and delete them"
+    assert registry.get_sample_value("jobs_total") == 5.0

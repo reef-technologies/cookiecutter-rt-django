@@ -1,21 +1,63 @@
-import glob
+import fcntl
 import os
-
+import pickle
+from collections.abc import ValuesView
+from contextlib import ExitStack
 from pathlib import Path
+
 import prometheus_client
 from django.http import HttpResponse
 from django_prometheus.exports import ExportToDjangoView
-from prometheus_client import REGISTRY, multiprocess
-from prometheus_client.multiprocess import FlockMultiProcessCollector
+from prometheus_client import REGISTRY, Metric
+from prometheus_client.multiprocess import FlockMultiProcessCollector, reduce_metrics
 
 {% if cookiecutter.use_celery %}
 from ..celery import CeleryQueueLenCollector
 {% endif %}
 
 
+def metric_folders(multiproc_path: Path) -> list[Path]:
+    """PROMETHEUS_MULTIPROC_DIR and its subdirectories, one per container other than this one."""
+    return [multiproc_path] + [f for f in multiproc_path.iterdir() if f.is_dir()]
+
+
+class RecursiveFlockMultiProcessCollector(FlockMultiProcessCollector):
+    """FlockMultiProcessCollector that also reads the metrics merged in subdirectories.
+
+    cleanup() of a subdirectory merges the metrics of its dead processes into that subdirectory's merged file, which
+    FlockMultiProcessCollector.collect() doesn't read, so they would disappear from the export.
+    """
+
+    def collect(self, recursively: bool = True) -> ValuesView[Metric]:
+        multiproc_path = Path(self._path)
+        with ExitStack() as exit_stack:
+            merged_files = []
+            for folder in metric_folders(multiproc_path) if recursively else [multiproc_path]:
+                merged_file_path = folder / self.MERGED_METRICS_FILENAME
+                merged_file_path.touch(exist_ok=True)
+                merged_file = exit_stack.enter_context(merged_file_path.open("rb"))
+                # held until the files are closed, so cleanup() can't merge and delete .db files while they're read
+                fcntl.flock(merged_file, fcntl.LOCK_SH)
+                merged_files.append(merged_file)
+
+            pattern = "**/*.db" if recursively else "*.db"
+            current_metrics = self._read_metrics(str(file) for file in multiproc_path.glob(pattern))
+            merged_metrics = []
+            for merged_file in merged_files:
+                merged_data = merged_file.read()
+                try:
+                    # written only by cleanup(); the parent class unpickles them the same way
+                    merged_metrics.append(pickle.loads(merged_data) if merged_data else {})  # noqa: S301
+                except (pickle.PickleError, EOFError):
+                    merged_metrics.append({})
+
+        reduced_metrics = reduce_metrics(current_metrics, *merged_metrics)
+        return self._accumulate_metrics(reduced_metrics, accumulate=True)
+
+
 if multiproc_dir := os.environ.get("PROMETHEUS_MULTIPROC_DIR"):
     registry = prometheus_client.CollectorRegistry()
-    collector = FlockMultiProcessCollector(registry)
+    collector = RecursiveFlockMultiProcessCollector(registry)
 else:
     registry = REGISTRY
 
@@ -28,9 +70,7 @@ def metrics_view(request):
     """Exports metrics as a Django view"""
 
     if multiproc_dir:
-        multiproc_path = Path(multiproc_dir)
-        folders_to_cleanup = [multiproc_path] + [f for f in multiproc_path.iterdir() if f.is_dir()]
-        for folder in folders_to_cleanup:
+        for folder in metric_folders(Path(multiproc_dir)):
             collector.cleanup(folder)
 
         return HttpResponse(
