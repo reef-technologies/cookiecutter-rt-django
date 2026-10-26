@@ -13,6 +13,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Upgrade CA certificates
+        run: sudo apt-get update && sudo apt-get install -y --only-upgrade ca-certificates
       - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26  # v3.7.0
         with:
           fetch-depth: 0
@@ -25,6 +27,8 @@ jobs:
   check_crufted_project:
     runs-on: ubuntu-latest
     steps:
+      - name: Upgrade CA certificates
+        run: sudo apt-get update && sudo apt-get install -y --only-upgrade ca-certificates
       - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26  # v3.7.0
         with:
           fetch-depth: 0
