@@ -9,10 +9,6 @@ updates:
       exclude:
         - "django"
         - "cryptography"
-        - "certifi"
-    open-pull-requests-limit: 0
-  - package-ecosystem: "docker"
-    directory: "/app/envs/prod"
-    schedule:
-      interval: "weekly"
+        - "certifi"  # carries a CA bundle
+    # security updates only; they are not subject to this limit
     open-pull-requests-limit: 0
