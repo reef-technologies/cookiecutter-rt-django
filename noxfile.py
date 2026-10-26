@@ -247,7 +247,7 @@ def rm_root_owned(session, dirpath):
         "--rm",
         "-v",
         f"{dirpath}:/tmpdir/",
-        "alpine:3.18.0",
+        "alpine:3.24",
         "rm",
         "-rf",
         *[f"/tmpdir/{f.name}" for f in children],

@@ -51,12 +51,15 @@ skip = '*.min.js,*.lock'
 ignore-words-list = 'datas'
 
 [tool.uv]
+required-version = ">=0.13.4"
 exclude-newer = "14 days"
-exclude-newer-package = { gitpython = false, certifi = false }
+# certifi and virtualenv (embeds pip, which vendors certifi) carry CA bundles: take their fixes without the cooldown
+exclude-newer-package = { gitpython = false, certifi = false, virtualenv = false }
 constraint-dependencies = [
     "urllib3>=2.7.0",
     "idna>=3.15",
     "gitpython>=3.1.58",
     "pygments>=2.20.0",
     "certifi>=2026.10.19",  # emSign CA removal
+    "virtualenv>=21.14.12",  # embeds a pip with the emSign CA removed
 ]

@@ -8,12 +8,7 @@ updates:
       default-days: 14
       exclude:
         - "gitpython"
-        - "certifi"
-  - package-ecosystem: "docker"
-    directory: "/{{cookiecutter.repostory_name}}/app/envs/prod"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/docker"
-    schedule:
-      interval: "weekly"
+        - "certifi"  # carries a CA bundle
+        - "virtualenv"  # embeds pip, which vendors certifi's CA bundle
+    # security updates only; they are not subject to this limit
+    open-pull-requests-limit: 0
