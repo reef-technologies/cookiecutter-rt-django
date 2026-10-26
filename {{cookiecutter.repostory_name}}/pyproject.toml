@@ -36,7 +36,7 @@ dependencies = [
     "psutil~=7.2.2",
     "prometheus-client @ git+https://github.com/reef-technologies/prometheus_client.git@17d1a283430153458c01a66a09ae6effe66f7aa8",
     "django-prometheus~=2.4.1",
-    "django-business-metrics>=1.0.1,<2",
+    "django-business-metrics>=2.0.0,<3",  # 1.x leaks DB connections; exempt from exclude-newer below
     {% endif %}
     {% if cookiecutter.observability %}
     "opentelemetry-sdk~=1.41.1",
@@ -129,7 +129,7 @@ ignore-words-list = 'datas'
 required-version = ">=0.13.4"
 exclude-newer = "14 days"
 # certifi carries a CA bundle: take its fixes without the cooldown
-exclude-newer-package = { django = false, cryptography = false, certifi = false }
+exclude-newer-package = { django = false, cryptography = false, certifi = false, django-business-metrics = false }
 constraint-dependencies = [
     "urllib3>=2.7.0",
     "idna>=3.15",
