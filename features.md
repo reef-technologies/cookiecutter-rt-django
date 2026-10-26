@@ -31,6 +31,7 @@
 - [django-debug-toolbar](https://django-debug-toolbar.readthedocs.io/en/latest/) (enabled for local environment) for debugging app performance
 - [ipython](https://ipython.org) included for nice interactive django shell
 - [django-extensions](https://django-extensions.readthedocs.io/en/latest/) for drawing graph of models and more
+- On-demand memory profiling of every Python process with [memray](https://bloomberg.github.io/memray/), switched on by one `.env` variable
 
 ## Continuous integration
 

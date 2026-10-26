@@ -128,6 +128,8 @@ services:
       - backend-static:/var/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:${MEDIA_ROOT}
+      # memray captures when MEMORY_PROFILING=1, see README "Memory profiling"
+      - ./profiles:/var/profiles
       {% if cookiecutter.monitoring %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir
@@ -161,10 +163,11 @@ services:
       OTEL_SERVICE_NAME: celery
       {% endif %}
     command: ./celery-entrypoint.sh
-    {% if cookiecutter.monitoring %}
     volumes:
+      - ./profiles:/var/profiles
+      {% if cookiecutter.monitoring %}
       - ./prometheus-metrics/celery-worker:/prometheus-multiproc-dir/celery-worker
-    {% endif %}
+      {% endif %}
     tmpfs: /run
     depends_on:
       - redis
@@ -189,6 +192,7 @@ services:
     command: nice celery -A {{cookiecutter.django_project_name}} beat -l INFO --schedule /tmp/celerybeat-schedule -f /tmp/logs/celery-beat.log
     volumes:
       - ./logs:/tmp/logs
+      - ./profiles:/var/profiles
     depends_on:
       - redis
       {% if cookiecutter.observability %}
@@ -211,6 +215,8 @@ services:
       - FLOWER_TASK_RUNTIME_METRIC_BUCKETS=1,2,3,5,10,20,30,45,60,120,180,240,300,600,inf
       - OTEL_SERVICE_NAME=celery-flower
     command: celery --app={{cookiecutter.django_project_name}} --broker="${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+    volumes:
+      - ./profiles:/var/profiles
     depends_on:
       - celery-worker
     ports:

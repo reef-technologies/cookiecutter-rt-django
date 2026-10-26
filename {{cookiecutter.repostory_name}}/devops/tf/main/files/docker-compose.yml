@@ -39,6 +39,8 @@ services:
       - backend-static:/var/static
       - gunicorn-socket:/var/run/gunicorn
       - ./media:$${MEDIA_ROOT}
+      # memray captures when MEMORY_PROFILING=1, see README "Memory profiling"
+      - ./profiles:/var/profiles
     {% if cookiecutter.monitoring %}
       # Add this mount to each container that should dump Prometheus metrics.
       - ./prometheus-metrics:/prometheus-multiproc-dir

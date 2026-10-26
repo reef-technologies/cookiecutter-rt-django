@@ -29,6 +29,8 @@ SENTRY_DSN={{cookiecutter.sentry_dsn}}
 PROMETHEUS_EXPORT_MIGRATIONS=1
 {% endif %}
 HTTPS_REDIRECT=1
+# on-demand memory profiling with memray, see README "Memory profiling"
+MEMORY_PROFILING=0
 
 {% if cookiecutter.observability %}
 LOKI_URL={{cookiecutter.log_aggregator_url}}

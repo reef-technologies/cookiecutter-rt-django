@@ -36,6 +36,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PATH="/root/src/.venv/bin:$PATH"
 ENV GIT_SHA="${GIT_SHA}"
 ENV OTEL_SERVICE_VERSION="${GIT_SHA}"
+# lets Python find sitecustomize.py (the memory profiling hook) at interpreter start
+ENV PYTHONPATH=/root/src
 
 COPY --from=base-image /root/src/ /root/src/
 CMD ["./entrypoint.sh"]
