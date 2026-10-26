@@ -7,17 +7,21 @@ on:
 
 jobs:
   deploy:
-    env:
-      AWS_ACCESS_KEY_ID: {% raw %} ${{ secrets.DEPLOYMENT_AWS_ACCESS_KEY_ID }} {% endraw %}
-
-      AWS_SECRET_ACCESS_KEY: {% raw %} ${{ secrets.DEPLOYMENT_AWS_SECRET_ACCESS_KEY }} {% endraw %}
-
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: upgrade CA certificates
+        run: sudo apt-get update && sudo apt-get install -y --only-upgrade ca-certificates
+      - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e  # v2.8.0
         with:
           fetch-depth: 0
       - name: deploy to aws
+        env:
+          AWS_ACCESS_KEY_ID: {% raw %} ${{ secrets.DEPLOYMENT_AWS_ACCESS_KEY_ID }} {% endraw %}
+
+          AWS_SECRET_ACCESS_KEY: {% raw %} ${{ secrets.DEPLOYMENT_AWS_SECRET_ACCESS_KEY }} {% endraw %}
+
+          # AWS CLI v2 trusts its own bundled CA list unless pointed at the system store
+          AWS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
         run: |
           set -e
           export ENVIRONMENT=${GITHUB_REF_NAME:7}

@@ -23,10 +23,11 @@ AWS recommends using profiles, when dealing with multiple AWS accounts.
 To choose between environments, rather than switching access and secret keys, we just switch our profiles.
 We can choose our profile name, which make it easier to recognize in which environment we operate.
 To configure AWS environment, you need to have AWS CLI installed.
-It is recommended to use AWS v2, which can be downloaded from:
+It is recommended to use AWS v2, version 2.38.4 or newer, which can be downloaded from:
 <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html>
+AWS CLI v2 verifies TLS against its own bundled CA list, not the system store, and versions up to 2.38.3 still trust the compromised eMudhra / emSign CA. Check with `aws --version`.
 
-*Terraform* You will also need terraform version 1.0.x. It is recommended to use `tfenv` to install terraform with correct version.
+*Terraform* You will also need terraform version 1.16.7 or newer (1.x). It is recommended to use `tfenv` to install terraform with correct version.
 You can download an install it from <https://github.com/tfutils/tfenv>
 
 *direnv* To avoid mistakes when switching environments (or regions), it is recommended to use `direnv` tools, which supports loading environment variables from .envrc file, placed in directory.

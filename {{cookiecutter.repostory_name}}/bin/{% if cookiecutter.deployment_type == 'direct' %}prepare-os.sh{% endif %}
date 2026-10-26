@@ -18,16 +18,22 @@ DOCKER_COMPOSE_INSTALLED=""
 if docker compose version >/dev/null 2>&1; then
   DOCKER_COMPOSE_INSTALLED=1
 fi
-SENTRY_CLI="$(command -v sentry-cli || true)"
-B2_CLI="$(command -v b2 || true)"
 AWS_CLI="$(command -v aws || true)"
 JQ_BIN="$(command -v jq || true)"
+# https://docs.docker.com/engine/install/ubuntu/
+DOCKER_APT_KEY_FINGERPRINT="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
 DOCKER_GROUP_USER="${SUDO_USER:-}"
 if [ -z "${DOCKER_GROUP_USER}" ]; then
   DOCKER_GROUP_USER="$(id -un 1000 2>/dev/null || true)"
 fi
 
-if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${SENTRY_CLI}" ] && [ -x "${B2_CLI}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
+export DEBIAN_FRONTEND=noninteractive
+
+# Up-to-date CA bundle first, so everything below is downloaded with it
+apt-get update
+apt-get install -y ca-certificates
+
+if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
     echo "\e[32mEverything required is already installed\e[0m";
     exit 0;
 fi
@@ -59,24 +65,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-export DEBIAN_FRONTEND=noninteractive
-
-apt-get update
-apt-get install -y apt-transport-https ca-certificates curl python3-pip rng-tools
-
-if [ ! -x "${SENTRY_CLI}" ]; then
-  curl -sL https://sentry.io/get-cli/ | bash
-fi
-
-if [ ! -x "${B2_CLI}" ]; then
-  curl -s --output /usr/local/bin/b2 -L https://github.com/Backblaze/B2_Command_Line_Tool/releases/latest/download/b2-linux
-  chmod a+x /usr/local/bin/b2
-fi
+apt-get install -y apt-transport-https curl gpg python3-pip rng-tools
 
 if [ ! -x "${DOCKER_BIN}" ] || [ -z "${DOCKER_COMPOSE_INSTALLED}" ]; then
     install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    chmod a+r /etc/apt/keyrings/docker.asc
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o docker.asc
+    DOCKER_KEY_FINGERPRINTS="$(gpg --show-keys --with-colons docker.asc | awk -F: '$1 == "pub" { getline; print $10 }')"
+    if [ "${DOCKER_KEY_FINGERPRINTS}" != "${DOCKER_APT_KEY_FINGERPRINT}" ]; then
+        echo "Unexpected Docker apt signing key: ${DOCKER_KEY_FINGERPRINTS}"
+        exit 1
+    fi
+    install -m 0644 docker.asc /etc/apt/keyrings/docker.asc
     cat <<EOF >/etc/apt/sources.list.d/docker.sources
 Types: deb
 URIs: https://download.docker.com/linux/ubuntu
