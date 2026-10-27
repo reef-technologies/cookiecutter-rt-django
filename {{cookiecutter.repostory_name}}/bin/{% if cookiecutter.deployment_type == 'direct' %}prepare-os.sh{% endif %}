@@ -11,21 +11,16 @@ Compress=yes
 EOF
 systemctl restart systemd-journald
 
-sudo ufw allow proto tcp from 172.16.0.0/16 to any port 9100  # nginx getting node-exporter metrics
+ufw allow proto tcp from 172.16.0.0/16 to any port 9100  # nginx getting node-exporter metrics
 
 DOCKER_BIN="$(command -v docker || true)"
 DOCKER_COMPOSE_INSTALLED=""
 if docker compose version >/dev/null 2>&1; then
   DOCKER_COMPOSE_INSTALLED=1
 fi
-AWS_CLI="$(command -v aws || true)"
 JQ_BIN="$(command -v jq || true)"
 # https://docs.docker.com/engine/install/ubuntu/
 DOCKER_APT_KEY_FINGERPRINT="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
-DOCKER_GROUP_USER="${SUDO_USER:-}"
-if [ -z "${DOCKER_GROUP_USER}" ]; then
-  DOCKER_GROUP_USER="$(id -un 1000 2>/dev/null || true)"
-fi
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -33,7 +28,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y ca-certificates
 
-if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${AWS_CLI}" ] && [ -x "${JQ_BIN}" ]; then
+if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${JQ_BIN}" ]; then
     echo "\e[32mEverything required is already installed\e[0m";
     exit 0;
 fi
@@ -41,11 +36,9 @@ fi
 HOST_ARCH="$(uname -m)"
 case "${HOST_ARCH}" in
   x86_64)
-    PLATFORM="x86_64"
     DOCKER_APT_ARCH="amd64"
     ;;
   aarch64)
-    PLATFORM="aarch64"
     DOCKER_APT_ARCH="arm64"
     ;;
   *)
@@ -65,7 +58,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-apt-get install -y apt-transport-https curl gpg python3-pip rng-tools
+apt-get install -y apt-transport-https curl gpg rng-tools
 
 if [ ! -x "${DOCKER_BIN}" ] || [ -z "${DOCKER_COMPOSE_INSTALLED}" ]; then
     install -m 0755 -d /etc/apt/keyrings
@@ -86,6 +79,10 @@ Signed-By: /etc/apt/keyrings/docker.asc
 EOF
     apt-get update
     apt-get -y install docker-ce docker-compose-plugin
+    DOCKER_GROUP_USER="${SUDO_USER:-}"
+    if [ -z "${DOCKER_GROUP_USER}" ]; then
+      DOCKER_GROUP_USER="$(id -un 1000 2>/dev/null || true)"
+    fi
     if [ -n "${DOCKER_GROUP_USER}" ] && [ "${DOCKER_GROUP_USER}" != "root" ]; then
         usermod -aG docker "${DOCKER_GROUP_USER}"
     fi
@@ -102,43 +99,3 @@ else
 fi
 
 service docker restart
-
-if [ ! -x "${AWS_CLI}" ]; then
-  apt-get -y install gpg unzip
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-${PLATFORM}.zip" -o "awscliv2.zip"
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-${PLATFORM}.zip.sig" -o "awscliv2.sig"
-  gpg --import <<EOF
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-mQINBF2Cr7UBEADJZHcgusOJl7ENSyumXh85z0TRV0xJorM2B/JL0kHOyigQluUG
-ZMLhENaG0bYatdrKP+3H91lvK050pXwnO/R7fB/FSTouki4ciIx5OuLlnJZIxSzx
-PqGl0mkxImLNbGWoi6Lto0LYxqHN2iQtzlwTVmq9733zd3XfcXrZ3+LblHAgEt5G
-TfNxEKJ8soPLyWmwDH6HWCnjZ/aIQRBTIQ05uVeEoYxSh6wOai7ss/KveoSNBbYz
-gbdzoqI2Y8cgH2nbfgp3DSasaLZEdCSsIsK1u05CinE7k2qZ7KgKAUIcT/cR/grk
-C6VwsnDU0OUCideXcQ8WeHutqvgZH1JgKDbznoIzeQHJD238GEu+eKhRHcz8/jeG
-94zkcgJOz3KbZGYMiTh277Fvj9zzvZsbMBCedV1BTg3TqgvdX4bdkhf5cH+7NtWO
-lrFj6UwAsGukBTAOxC0l/dnSmZhJ7Z1KmEWilro/gOrjtOxqRQutlIqG22TaqoPG
-fYVN+en3Zwbt97kcgZDwqbuykNt64oZWc4XKCa3mprEGC3IbJTBFqglXmZ7l9ywG
-EEUJYOlb2XrSuPWml39beWdKM8kzr1OjnlOm6+lpTRCBfo0wa9F8YZRhHPAkwKkX
-XDeOGpWRj4ohOx0d2GWkyV5xyN14p2tQOCdOODmz80yUTgRpPVQUtOEhXQARAQAB
-tCFBV1MgQ0xJIFRlYW0gPGF3cy1jbGlAYW1hem9uLmNvbT6JAlQEEwEIAD4WIQT7
-Xbd/1cEYuAURraimMQrMRnJHXAUCXYKvtQIbAwUJB4TOAAULCQgHAgYVCgkICwIE
-FgIDAQIeAQIXgAAKCRCmMQrMRnJHXJIXEAChLUIkg80uPUkGjE3jejvQSA1aWuAM
-yzy6fdpdlRUz6M6nmsUhOExjVIvibEJpzK5mhuSZ4lb0vJ2ZUPgCv4zs2nBd7BGJ
-MxKiWgBReGvTdqZ0SzyYH4PYCJSE732x/Fw9hfnh1dMTXNcrQXzwOmmFNNegG0Ox
-au+VnpcR5Kz3smiTrIwZbRudo1ijhCYPQ7t5CMp9kjC6bObvy1hSIg2xNbMAN/Do
-ikebAl36uA6Y/Uczjj3GxZW4ZWeFirMidKbtqvUz2y0UFszobjiBSqZZHCreC34B
-hw9bFNpuWC/0SrXgohdsc6vK50pDGdV5kM2qo9tMQ/izsAwTh/d/GzZv8H4lV9eO
-tEis+EpR497PaxKKh9tJf0N6Q1YLRHof5xePZtOIlS3gfvsH5hXA3HJ9yIxb8T0H
-QYmVr3aIUes20i6meI3fuV36VFupwfrTKaL7VXnsrK2fq5cRvyJLNzXucg0WAjPF
-RrAGLzY7nP1xeg1a0aeP+pdsqjqlPJom8OCWc1+6DWbg0jsC74WoesAqgBItODMB
-rsal1y/q+bPzpsnWjzHV8+1/EtZmSc8ZUGSJOPkfC7hObnfkl18h+1QtKTjZme4d
-H17gsBJr+opwJw/Zio2LMjQBOqlm3K1A4zFTh7wBC7He6KPQea1p2XAMgtvATtNe
-YLZATHZKTJyiqA==
-=vYOk
------END PGP PUBLIC KEY BLOCK-----
-EOF
-  gpg --verify awscliv2.sig awscliv2.zip
-  unzip awscliv2.zip
-  ./aws/install
-fi
