@@ -1,5 +1,16 @@
 # Agent Guidelines
 
+## Template updates
+
+This project was generated from a cookiecutter template and is kept in sync with it using `cruft`.
+Before working on the first request in a session that changes the repository (questions do not count), run `bin/check-template-update.sh`.
+
+- If it prints nothing, the project is up to date or the check is not possible; continue without mentioning it.
+- If it prints a line, the project is N template commits behind. Before doing anything else, ask the user: "This project is N commits behind the template. Do you want to run `cruft update` first?" Include the open template update PR from the output if there is one, and suggest merging it instead of updating locally.
+- If the user agrees, apply the update (`cruft update`) as a separate change of its own, on its own branch or pull request, never mixed with the requested task. Report any `.rej` files as conflicts to resolve. Then continue with the original request.
+- If the user declines, continue with the request and do not ask again in the same session.
+- If nobody can answer (non-interactive runs, CI, scheduled jobs), do not wait: continue with the task and mention the output of the check in your final summary.
+
 ## User Stories
 
 Before implementing features or changing behavior, read [USER_STORIES.md](USER_STORIES.md) and compare it with:

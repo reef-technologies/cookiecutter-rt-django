@@ -281,6 +281,54 @@ def test_crufted_project(session, cruft_config_name):
             session.run("nox", "-s", "test")
 
 
+@nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
+def test_check_template_update(session):
+    """Check that the generated `bin/check-template-update.sh` reports how far the project lags the template."""
+    template_path = ROOT.absolute()
+
+    def git_output(*args):
+        return subprocess.run(["git", *args], cwd=template_path, check=True, text=True, capture_output=True).stdout
+
+    head = git_output("rev-parse", "HEAD").strip()
+    base = git_output("rev-parse", "HEAD~20").strip()
+    expected_behind = int(
+        git_output(
+            "rev-list",
+            "--count",
+            f"{base}..{head}",
+            "--",
+            "{{cookiecutter.repostory_name}}",
+            "hooks",
+            "cookiecutter.json",
+        )
+    )
+    assert expected_behind > 0, "pick an older base commit, the last 20 commits do not touch the generated project"
+
+    with crufted_project(session, get_cruft_config()) as project_path:
+        cruft_json_path = project_path / ".cruft.json"
+        original_cruft_json = cruft_json_path.read_text()
+
+        def check(**cruft_overrides):
+            if cruft_overrides:
+                cruft_json_path.write_text(json.dumps({**json.loads(original_cruft_json), **cruft_overrides}))
+            else:
+                cruft_json_path.unlink()
+            result = subprocess.run(["bin/check-template-update.sh"], text=True, capture_output=True, check=False)
+            session.log("check-template-update.sh with %s -> %r", cruft_overrides, result.stdout)
+            assert result.returncode == 0, result
+            return result.stdout.strip()
+
+        try:
+            assert check(template=str(template_path), commit=head) == ""
+            behind = check(template=str(template_path), commit=base)
+            assert behind.startswith(f"This project is {expected_behind} commits behind"), behind
+            assert check(template=str(template_path), commit="0" * 40) == ""
+            assert check(template=str(template_path / "does-not-exist"), commit=base) == ""
+            assert check() == ""  # no .cruft.json
+        finally:
+            cruft_json_path.write_text(original_cruft_json)
+
+
 @nox.session(python=PYTHON_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:

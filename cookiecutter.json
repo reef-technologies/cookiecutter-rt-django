@@ -38,7 +38,8 @@
     "ci_use_typechecker": true,
     "ci_use_spellchecker": true,
     "_copy_without_render": [
-      ".github/workflows/cruft-updates.yml"
+      ".github/workflows/cruft-updates.yml",
+      "bin/check-template-update.sh"
     ],
     "_jinja2_env_vars": {
       "trim_blocks": true,
