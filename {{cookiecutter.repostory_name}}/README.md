@@ -2,6 +2,8 @@
 
 {{ cookiecutter.project_short_description }}
 
+What users can do is described in [USER_STORIES.md](USER_STORIES.md).
+
 - - -
 
 # Base requirements
