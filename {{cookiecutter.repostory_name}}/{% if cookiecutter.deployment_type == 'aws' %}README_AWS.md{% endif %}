@@ -140,7 +140,7 @@ The project ships a Grafana Alloy collector as part of `docker-compose.yml`, alo
 
 ### Required secrets in `.env`
 
-In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`, `LOKI_CLIENT`, `LOKI_CLIENT_SERVER_GROUP`), observability uses:
+In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`), observability uses:
 
 - `TEMPO_URL`, `TEMPO_USER`, `TEMPO_PASSWORD` — Tempo uses the **same `.htpasswd` credentials** as Loki (see the top-level project README for how to generate them via `add_loki_target.sh`).
 - `OTEL_SERVICE_NAMESPACE` — defaults to the repository name; usually fine.
