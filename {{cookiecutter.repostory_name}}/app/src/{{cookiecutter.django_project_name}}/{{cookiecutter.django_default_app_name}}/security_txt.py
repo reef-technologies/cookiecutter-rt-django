@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, timedelta
 
 from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse
@@ -10,12 +10,7 @@ SECURITY_TXT_EXPIRES_IN = timedelta(days=180)
 def security_txt(request: HttpRequest) -> HttpResponse:
     if not settings.SECURITY_TXT_CONTACTS:
         raise Http404
-    if settings.SECURITY_TXT_EXPIRES:
-        expires = datetime.fromisoformat(settings.SECURITY_TXT_EXPIRES)
-        if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=UTC)
-    else:
-        expires = now() + SECURITY_TXT_EXPIRES_IN
+    expires = settings.SECURITY_TXT_EXPIRES or now() + SECURITY_TXT_EXPIRES_IN
     lines = [f"Contact: {contact}" for contact in settings.SECURITY_TXT_CONTACTS]
     lines += [
         f"Expires: {expires.astimezone(UTC):%Y-%m-%dT%H:%M:%SZ}",
