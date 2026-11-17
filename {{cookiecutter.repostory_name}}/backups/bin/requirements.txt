@@ -3,3 +3,4 @@ b2sdk==2.10.2
 structlog==25.1.0
 b2==4.5.0
 sentry-sdk==2.53.0
+certifi>=2026.10.19  # emSign CA removal

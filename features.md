@@ -22,7 +22,6 @@
 
 - AWS support:
   terraform to deploy RDS, SQS, ELB etc
-- Vultr: terraform for deploying application on cheap VPS servers
 - Support for transaction-based database connection pooling
 
 ## Configuration

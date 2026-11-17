@@ -13,14 +13,6 @@ if [[ ! -f "${ENV_DIR}/.env" ]]; then
     cp "${ENV_DIR}/.env.template" "${ENV_DIR}/.env"
 fi
 
-{% if cookiecutter.vulnerabilities_scanning %}
-# Create .vuln.env from the template if doesn't exist
-if [[ ! -f "${ENV_DIR}/.vuln.env" ]]; then
-    cp "${ENV_DIR}/.vuln.env.template" "${ENV_DIR}/.vuln.env"
-fi
-ln -sf "${ENV_DIR}/.vuln.env" .vuln.env
-{% endif %}
-
 # Set symlinks
 ln -sf "${ENV_DIR}/.env" .env
 ln -sf "${ENV_DIR}/docker-compose.yml" docker-compose.yml

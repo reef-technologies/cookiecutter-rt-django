@@ -37,7 +37,7 @@ services:
       <<: *logging
 
   db:
-    image: postgres:14.0-alpine
+    image: postgres:14-alpine
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
     restart: unless-stopped
@@ -144,6 +144,7 @@ services:
   {% if cookiecutter.use_celery %}
   celery-worker:
     image: {{cookiecutter.django_project_name}}/app
+    pull_policy: never  # built locally by the `app` service; `docker compose pull` must skip it
     init: true
     healthcheck:
       test: celery -A {{cookiecutter.django_project_name}} status > /dev/null || exit 1
@@ -175,6 +176,7 @@ services:
 
   celery-beat:
     image: {{cookiecutter.django_project_name}}/app
+    pull_policy: never  # built locally by the `app` service; `docker compose pull` must skip it
     init: true
     restart: unless-stopped
     env_file: ./.env
@@ -198,6 +200,7 @@ services:
   {% if cookiecutter.use_flower %}
   celery-flower:
     image: {{cookiecutter.django_project_name}}/app
+    pull_policy: never  # built locally by the `app` service; `docker compose pull` must skip it
     healthcheck:
       test: wget --user "${CELERY_FLOWER_USER}" --password "${CELERY_FLOWER_PASSWORD}" -qO- 127.0.0.1:5555 > /dev/null || exit 1
     init: true
@@ -218,7 +221,7 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.3.0'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.4.0'
     restart: unless-stopped
     healthcheck:
       test: [
@@ -280,9 +283,7 @@ services:
     command:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
-      {% if cookiecutter.vulnerabilities_scanning %}
       - '--collector.textfile.directory=textfile_collectors'
-      {% endif %}
       {% if cookiecutter.monitor_tcpstat %}
       - '--collector.tcpstat'
       {% endif %}
@@ -292,6 +293,7 @@ services:
   cadvisor:
     image: ghcr.io/google/cadvisor:v0.60.5
     container_name: cadvisor
+    privileged: false
     devices:
       - /dev/kmsg:/dev/kmsg
     volumes:
@@ -309,8 +311,10 @@ services:
     container_name: postgres-exporter
     restart: unless-stopped
     environment:
-      # the bundled postgres container does not speak TLS; lib/pq defaults to sslmode=require
-      - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
+      # Host and port come from the environment (.env defaults to the bundled db container).
+      # That container does not speak TLS; lib/pq defaults to sslmode=require.
+      # Hosted databases that require TLS need sslmode=require here instead.
+      - DATA_SOURCE_URI=${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
       # Dedicated read-only role (pg_monitor) when POSTGRES_EXPORTER_USER/PASSWORD are
       # set (created by db/init/01-monitoring.sh on a fresh database, by hand otherwise);
       # falls back to the application user so monitoring works without any role setup.
@@ -330,7 +334,7 @@ services:
 
   {% if cookiecutter.observability %}
   alloy:
-    image: grafana/alloy:v1.15.1
+    image: grafana/alloy:v1.21.1
     restart: unless-stopped
     environment:
       - LOKI_URL=${LOKI_URL}
@@ -352,28 +356,6 @@ services:
       - run
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
-    logging:
-      <<: *logging
-  {% endif %}
-  {% if cookiecutter.vulnerabilities_scanning %}
-  vulnrelay:
-    image: 'ghcr.io/reef-technologies/vulnrelay:latest'
-    container_name: vulnrelay
-    restart: unless-stopped
-    env_file: ./.vuln.env
-    environment:
-      - METRICS_DIR=/app/metrics
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - nodeexporter_collectors:/app/metrics
-    logging:
-      <<: *logging
-  watchtower:
-    image: containrrr/watchtower
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: --interval 7200 vulnrelay
     logging:
       <<: *logging
   {% endif %}

@@ -1,0 +1,101 @@
+#!/bin/sh
+# Copyright 2020, Reef Technologies (reef.pl), All rights reserved.
+set -eux
+
+install -d -m 0755 /etc/systemd/journald.conf.d
+cat >/etc/systemd/journald.conf.d/99-limits.conf <<'EOF'
+[Journal]
+SystemMaxUse=2G
+MaxRetentionSec=1month
+Compress=yes
+EOF
+systemctl restart systemd-journald
+
+ufw allow proto tcp from 172.16.0.0/16 to any port 9100  # nginx getting node-exporter metrics
+
+DOCKER_BIN="$(command -v docker || true)"
+DOCKER_COMPOSE_INSTALLED=""
+if docker compose version >/dev/null 2>&1; then
+  DOCKER_COMPOSE_INSTALLED=1
+fi
+JQ_BIN="$(command -v jq || true)"
+# https://docs.docker.com/engine/install/ubuntu/
+DOCKER_APT_KEY_FINGERPRINT="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Up-to-date CA bundle first, so everything below is downloaded with it
+apt-get update
+apt-get install -y ca-certificates
+
+if [ -x "${DOCKER_BIN}" ] && [ -n "${DOCKER_COMPOSE_INSTALLED}" ] && [ -x "${JQ_BIN}" ]; then
+    echo "\e[32mEverything required is already installed\e[0m";
+    exit 0;
+fi
+
+HOST_ARCH="$(uname -m)"
+case "${HOST_ARCH}" in
+  x86_64)
+    DOCKER_APT_ARCH="amd64"
+    ;;
+  aarch64)
+    DOCKER_APT_ARCH="arm64"
+    ;;
+  *)
+    echo "Unsupported hardware platform: ${HOST_ARCH}"
+    exit 1
+    ;;
+esac
+
+WORK_DIR="$(mktemp -d)"
+if [ ! "${WORK_DIR}" ] || [ ! -d "${WORK_DIR}" ]; then
+  echo "Could not create temp dir"
+  exit 1
+fi
+cd "${WORK_DIR}"
+cleanup() {
+  rm -rf "${WORK_DIR}"
+}
+trap cleanup EXIT
+
+apt-get install -y apt-transport-https curl gpg rng-tools
+
+if [ ! -x "${DOCKER_BIN}" ] || [ -z "${DOCKER_COMPOSE_INSTALLED}" ]; then
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o docker.asc
+    DOCKER_KEY_FINGERPRINTS="$(gpg --show-keys --with-colons docker.asc | awk -F: '$1 == "pub" { getline; print $10 }')"
+    if [ "${DOCKER_KEY_FINGERPRINTS}" != "${DOCKER_APT_KEY_FINGERPRINT}" ]; then
+        echo "Unexpected Docker apt signing key: ${DOCKER_KEY_FINGERPRINTS}"
+        exit 1
+    fi
+    install -m 0644 docker.asc /etc/apt/keyrings/docker.asc
+    cat <<EOF >/etc/apt/sources.list.d/docker.sources
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(lsb_release -cs)
+Components: stable
+Architectures: ${DOCKER_APT_ARCH}
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+    apt-get update
+    apt-get -y install docker-ce docker-compose-plugin
+    DOCKER_GROUP_USER="${SUDO_USER:-}"
+    if [ -z "${DOCKER_GROUP_USER}" ]; then
+      DOCKER_GROUP_USER="$(id -un 1000 2>/dev/null || true)"
+    fi
+    if [ -n "${DOCKER_GROUP_USER}" ] && [ "${DOCKER_GROUP_USER}" != "root" ]; then
+        usermod -aG docker "${DOCKER_GROUP_USER}"
+    fi
+fi
+
+if [ ! -x "${JQ_BIN}" ]; then
+  apt-get -y install jq
+fi
+
+if [ ! -f /etc/docker/daemon.json ]; then
+  echo '{ "registry-mirrors": ["https://mirror.gcr.io"] }' > /etc/docker/daemon.json
+else
+  jq '.["registry-mirrors"] += ["https://mirror.gcr.io"]' /etc/docker/daemon.json > /etc/docker/daemon.tmp && mv /etc/docker/daemon.tmp /etc/docker/daemon.json
+fi
+
+service docker restart

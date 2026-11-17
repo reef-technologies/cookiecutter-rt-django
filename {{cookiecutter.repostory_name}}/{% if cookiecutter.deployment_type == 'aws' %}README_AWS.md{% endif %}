@@ -6,7 +6,7 @@ Files related to AWS deployment has been generated in `devops/` directory.
 
 By convention, projects that are meant to be deployed to AWS have a `deploy-to-aws.sh` script in the root dir and a `devops` directory.
 The script builds the docker image, uploads it and tells AWS to reload the app (causing a new ec2 machine to be spawned).
-In the `devops` directory you will find terraform configuration as well as packer files (for building the AMI).
+In the `devops` directory you will find terraform configuration.
 
 If you want to deploy your app to an AWS environment, you need to do following steps:
 
@@ -23,10 +23,11 @@ AWS recommends using profiles, when dealing with multiple AWS accounts.
 To choose between environments, rather than switching access and secret keys, we just switch our profiles.
 We can choose our profile name, which make it easier to recognize in which environment we operate.
 To configure AWS environment, you need to have AWS CLI installed.
-It is recommended to use AWS v2, which can be downloaded from:
+It is recommended to use AWS v2, version 2.38.4 or newer, which can be downloaded from:
 <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html>
+AWS CLI v2 verifies TLS against its own bundled CA list, not the system store, and versions up to 2.38.3 still trust the compromised eMudhra / emSign CA. Check with `aws --version`.
 
-*Terraform* You will also need terraform version 1.0.x. It is recommended to use `tfenv` to install terraform with correct version.
+*Terraform* You will also need terraform version 1.16.7 or newer (1.x). It is recommended to use `tfenv` to install terraform with correct version.
 You can download an install it from <https://github.com/tfutils/tfenv>
 
 *direnv* To avoid mistakes when switching environments (or regions), it is recommended to use `direnv` tools, which supports loading environment variables from .envrc file, placed in directory.
@@ -116,7 +117,6 @@ terraform apply
 ```
 
 IMPORTANT! the env variables for the apps (`.env` file) and `docker-compose.yml` are defined in terraform files, if you change any, you need to run `terraform apply` AND refresh the ec2 instance.
-The same goes for AMI built by packer.
 
 ## Adding secrets to the projects
 
@@ -140,7 +140,7 @@ The project ships a Grafana Alloy collector as part of `docker-compose.yml`, alo
 
 ### Required secrets in `.env`
 
-In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`, `LOKI_CLIENT`, `LOKI_CLIENT_SERVER_GROUP`), observability uses:
+In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`), observability uses:
 
 - `TEMPO_URL`, `TEMPO_USER`, `TEMPO_PASSWORD` — Tempo uses the **same `.htpasswd` credentials** as Loki (see the top-level project README for how to generate them via `add_loki_target.sh`).
 - `OTEL_SERVICE_NAMESPACE` — defaults to the repository name; usually fine.
@@ -148,11 +148,6 @@ In addition to the Loki block (`LOKI_URL`, `LOKI_USER`, `LOKI_PASSWORD`, `LOKI_C
 - `GIT_SHA` — set automatically by the deploy pipeline. `devops/scripts/build-backend.sh` uses `GIT_SHA` from the build environment or falls back to `git rev-parse --short HEAD`, passes it as `--build-arg GIT_SHA=...`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. Cloud Init reads the value from the pulled image into `.env` so nginx reports the same `service.version`.
 
 {% endif %}
-
-## Vulnerability scanning
-If you set up your project with `vulnerabilities_scanning` enabled, you need to create an additional SSM parameter with the name `/application/{{ cookiecutter.aws_project_name }}/{env}/.vuln.env` containing environment variables required by [vulnrelay](https://github.com/reef-technologies/vulnrelay) prior to deploying the project. Look at the `/envs/prod/.vuln.env.template` file to see the expected file format.
-
-For variable values, please refer to the [instructions in the internal handbook](https://github.com/reef-technologies/internal-handbook/blob/master/vuln_management.md)
 
 ## Deploying apps
 

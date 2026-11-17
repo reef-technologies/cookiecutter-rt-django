@@ -17,6 +17,7 @@ echo "Building Backend: ${APP_NAME}"
 aws ecr get-login-password --region "${APP_REGION}" | docker login --username AWS --password-stdin "${APP_OWNER}".dkr.ecr."${APP_REGION}".amazonaws.com
 
 DOCKER_BUILDKIT=1 docker build \
+  --pull \
   -f app/Dockerfile \
   --progress plain \
   --platform linux/amd64 \

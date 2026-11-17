@@ -5,6 +5,7 @@
 import argparse
 import os
 import smtplib
+import ssl
 import sys
 from collections import namedtuple
 from email import encoders
@@ -38,7 +39,7 @@ class GmailSender(namedtuple("SmtpAuthData", "server port user password")):
 
         s = smtplib.SMTP(self.server, self.port)
         s.ehlo()
-        s.starttls()
+        s.starttls(context=ssl.create_default_context())
         if self.password:
             s.login(self.user, self.password)
         s.sendmail(addr_from, addr_to, msg.as_string())

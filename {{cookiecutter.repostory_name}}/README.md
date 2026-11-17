@@ -2,6 +2,8 @@
 
 {{ cookiecutter.project_short_description }}
 
+What users can do is described in [USER_STORIES.md](USER_STORIES.md).
+
 - - -
 
 # Base requirements
@@ -250,7 +252,7 @@ The following variables describe the deployed service in traces, metrics and log
 - `OTEL_SERVICE_NAMESPACE` — namespace of the project, defaults to the repository name. Shared by every service of one project (app, celery, celery-beat, nginx).
 - `OTEL_DEPLOYMENT_ENVIRONMENT` — `development` / `staging` / `production`. Used for filtering in Grafana.
 - `OTEL_SERVICE_INSTANCE_ID` — optional stable id for a worker. If left empty, every worker generates a fresh random UUID at startup, which is fine for autoscaled instances.
-- `GIT_SHA` — version of the running code, exposed as `service.version`. `deploy.sh` computes it from `git rev-parse --short HEAD`, passes it as the Docker build arg `GIT_SHA`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. For manual builds, export `GIT_SHA` before `docker compose build`; otherwise it defaults to `unknown`.
+- `GIT_SHA` — version of the running code, exposed as `service.version`. {% if cookiecutter.deployment_type == 'aws' %}`devops/scripts/build-backend.sh`{% else %}`deploy.sh`{% endif %} computes it from `git rev-parse --short HEAD`, passes it as the Docker build arg `GIT_SHA`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. For manual builds, export `GIT_SHA` before `docker compose build`; otherwise it defaults to `unknown`.
 
 `OTEL_EXPORTER_OTLP_ENDPOINT` points at the local Alloy collector (`http://alloy:4318` in docker-compose). Do not point the app directly at `tempo.reef.pl` — Alloy handles batching, tail-sampling and auth.
 
@@ -297,10 +299,9 @@ with some_calculation_time.labels('blabla').time():
 ```
 
 {% endif %}
-{% if cookiecutter.deployment_type in ['aws', 'vultr'] %}
+{% if cookiecutter.deployment_type == 'aws' %}
 
 # Cloud deployment
-{% if cookiecutter.deployment_type == 'aws' %}
 
 ## AWS
 
@@ -320,21 +321,6 @@ See `.github/workflows/cd.yml` to find out the secret names.
 
 For more details see [README_AWS.md](README_AWS.md)
 </details>
-{% endif %}
-{% if cookiecutter.deployment_type == 'vultr' %}
-
-## Vultr
-
-<details>
-Initiate the infrastructure with Terraform and cloud-init:
-
-- see Terraform template in `<project>/devops/vultr_tf/core/`
-- see scripts for interacting with Vultr API in `<project>/devops/vultr_scripts/`
-  - note these scripts need `vultr-cli` installed
-
-For more details see [README_vultr.md](README_vultr.md).
-</details>
-{% endif %}
 {% endif %}
 
 # Backups
