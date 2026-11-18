@@ -135,7 +135,7 @@ services:
   {% endif %}
 
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.4.0'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.4.1'
     restart: unless-stopped
     healthcheck:
       test: wget -q --spider http://0.0.0.0:8000/alive/ || exit 1
