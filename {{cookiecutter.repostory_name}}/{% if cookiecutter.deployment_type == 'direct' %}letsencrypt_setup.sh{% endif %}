@@ -16,7 +16,7 @@ docker run -it --rm \
 docker run --entrypoint certbot -it --rm \
       -v "$ABSPATH/letsencrypt/etc:/etc/letsencrypt" \
       -p 80:80\
-      ghcr.io/reef-technologies/nginx-rt:v1.4.0 \
+      ghcr.io/reef-technologies/nginx-rt:v1.4.1 \
       certonly \
       --standalone --preferred-challenges http\
       -d "$NGINX_HOST"
