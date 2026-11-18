@@ -5,7 +5,9 @@ Django settings for {{cookiecutter.django_project_name}} project.
 import inspect
 import logging
 {% if cookiecutter.use_celery %}
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
+{% else %}
+from datetime import UTC, datetime
 {% endif %}
 from functools import wraps
 from typing import Any
@@ -21,6 +23,7 @@ from {{cookiecutter.django_project_name}}.otel import add_otel_context_to_struct
 # from celery.schedules import crontab
 from kombu import Queue
 {% endif %}
+from django.core.exceptions import ImproperlyConfigured
 {% if cookiecutter.use_allauth %}
 from django.urls import reverse_lazy
 {% endif %}
@@ -344,6 +347,20 @@ if env.bool("HTTPS_REDIRECT") and not DEBUG:
     CSRF_COOKIE_SECURE = True
 else:
     SECURE_SSL_REDIRECT = False
+
+
+def _parse_security_txt_expires(value: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        expires = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"SECURITY_TXT_EXPIRES must be an ISO 8601 date, e.g. 2027-10-01, got {value!r}") from exc
+    return expires if expires.tzinfo else expires.replace(tzinfo=UTC)
+
+
+SECURITY_TXT_CONTACTS = env.list("SECURITY_TXT_CONTACTS", default=[])
+SECURITY_TXT_EXPIRES = _parse_security_txt_expires(env("SECURITY_TXT_EXPIRES", default=""))
 
 {% if cookiecutter.use_channels %}
 CHANNELS_BACKEND_URL = env("CHANNELS_BACKEND_URL")
