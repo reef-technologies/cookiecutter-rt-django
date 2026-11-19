@@ -205,7 +205,7 @@ otelcol.processor.tail_sampling "traces" {
 				string_attribute {
 					key    = "http.route"
 					values = [
-						"^/?(alive|metrics|business-metrics|favicon[.]ico)/?$",
+						"^/?(alive|metrics|favicon[.]ico)/?$",
 						"^/?(static|media)(/.*)?$",
 						"^/?(node-exporter-metrics|cadvisor-metrics|application-metrics|nginx-metrics|celery-metrics|backup-metrics)/?$",
 					]
