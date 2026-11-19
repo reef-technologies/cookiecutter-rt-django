@@ -83,7 +83,7 @@ services:
 
   {% if cookiecutter.monitoring %}
   node-exporter:
-    image: ghcr.io/reef-technologies/node-exporter-aws-ec2:latest
+    image: prom/node-exporter:latest
     container_name: node-exporter
     restart: unless-stopped
     network_mode: host
@@ -93,8 +93,11 @@ services:
       - nodeexporter_collectors:/textfile_collectors
     command:
       - '--path.rootfs=/host'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|boot|var/.+)($$|/)'
       - '--collector.textfile.directory=textfile_collectors'
+      {% if cookiecutter.monitor_tcpstat %}
+      - '--collector.tcpstat'
+      {% endif %}
     logging: &exporter_logging
       driver: journald
       options:

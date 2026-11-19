@@ -282,6 +282,28 @@ def test_crufted_project(session, cruft_config_name):
 
 
 @nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
+@nox.parametrize("cruft_config_name", CRUFT_TESTED_CONFIGS)
+def test_node_exporter_compose(session, cruft_config_name):
+    """Check that the AWS and direct deployments configure node-exporter the same way."""
+    import yaml
+
+    with crufted_project(session, get_cruft_config(cruft_config_name, deployment_type="aws")) as project_path:
+        # AWS projects also contain the direct deployment's compose file
+        direct = yaml.safe_load((project_path / "envs/prod/docker-compose.yml").read_text())
+        # the AWS file is a Terraform template; undo its escaping and the "###" that cloud-init strips on the host
+        aws_template = (project_path / "devops/tf/main/files/docker-compose.yml").read_text()
+        aws = yaml.safe_load(aws_template.replace("$${", "${").replace("###", ""))
+
+    direct_service = direct["services"]["node-exporter"]
+    aws_service = aws["services"]["node-exporter"]
+    if direct_service != aws_service:
+        session.error(
+            "node-exporter differs between envs/prod/docker-compose.yml and devops/tf/main/files/docker-compose.yml:\n"
+            f"direct: {json.dumps(direct_service, indent=2)}\naws: {json.dumps(aws_service, indent=2)}"
+        )
+
+
+@nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
 def test_check_template_update(session):
     """Check that the generated `bin/check-template-update.sh` reports how far the project lags the template."""
     template_path = ROOT.absolute()
