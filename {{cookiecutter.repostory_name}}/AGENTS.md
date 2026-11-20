@@ -41,6 +41,7 @@ If this project has users and USER_STORIES.md doesn't exist or is empty, inform 
 
 - Prefer existing patterns used in this repository when designing and implementing new features.
 - Keep documentation claims tied to code that exists in the current tree.
+- Documentation describes what exists now, not its history. When you remove, retire or replace something, delete what the docs say about it; do not add notes that it was retired, removed, renamed or replaced. The commit and the pull request record the change.
 - Before marking a task as done, make sure tests and linters {% if cookiecutter.ci_use_typechecker %} and type checks {% endif %} pass. The general README.md contains instructions for running these checks.
 - Follow the rules described in [engineering-standards.md](engineering-standards.md). Each task should be explicitly checked for correctness in adherence to the engineering standards.
 
