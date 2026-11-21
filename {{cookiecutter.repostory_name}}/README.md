@@ -31,6 +31,7 @@ This sets up "deployment by pushing to git storage on remote", so that:
 
 - `git push origin ...` just pushes code to Github / other storage without any consequences;
 - `git push production master` pushes code to a remote server running the app and triggers a git hook to redeploy the application.
+- if the deploy fails, the push is rejected and the server's `master` stays on the last deployed commit, so the same `git push production master` retries it once the cause is fixed.
 
 ```
 Local .git ------------> Origin .git
@@ -61,27 +62,39 @@ git push production master
 # remote server
 cd ~/repos/{{ cookiecutter.repostory_name }}.git
 
-cat <<'EOT' > hooks/post-receive
+cat <<'EOT' > hooks/pre-receive
 #!/bin/bash
 unset GIT_INDEX_FILE
 export ROOT=/root
 export REPO={{ cookiecutter.repostory_name }}
-while read oldrev newrev ref
+while read -r oldrev newrev ref
 do
     if [[ $ref =~ .*/master$ ]]; then
+        if [[ $newrev =~ ^0+$ ]]; then
+            echo "Refusing to delete the master branch on this server."
+            exit 1
+        fi
         export GIT_DIR="$ROOT/repos/$REPO.git/"
         export GIT_WORK_TREE="$ROOT/domains/$REPO/"
-        git checkout -f master
-        cd $GIT_WORK_TREE
-        ./deploy.sh
+        # master still points at the previous commit here, and git forbids
+        # moving HEAD before the push is accepted, so check out the files only
+        git read-tree --reset -u "$newrev" || exit 1
+        GIT_SHA=$(git rev-parse --short "$newrev")
+        export GIT_SHA
+        cd "$GIT_WORK_TREE" || exit 1
+        # deploy.sh must not consume the list of pushed refs on stdin
+        if ! ./deploy.sh </dev/null; then
+            echo "Deploy failed: master stays at ${oldrev:0:7}. Fix the cause and push again."
+            exit 1
+        fi
     else
         echo "Doing nothing: only the master branch may be deployed on this server."
     fi
 done
 EOT
 
-chmod +x hooks/post-receive
-./hooks/post-receive
+chmod +x hooks/pre-receive
+git --work-tree ~/domains/{{ cookiecutter.repostory_name }} checkout -f master
 cd ~/domains/{{ cookiecutter.repostory_name }}
 sudo bin/prepare-os.sh
 ./setup-prod.sh
