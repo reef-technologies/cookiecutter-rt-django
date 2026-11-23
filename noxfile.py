@@ -351,6 +351,14 @@ def test_check_template_update(session):
             cruft_json_path.write_text(original_cruft_json)
 
 
+@nox.session(python=False, tags=["crufted_project"])
+def test_direct_deployment_hook(session):
+    """Check that failed direct deployments reject Git pushes and can be retried."""
+    session.run(
+        "python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_direct_deployment_hook.py", external=True
+    )
+
+
 @nox.session(python=PYTHON_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:
