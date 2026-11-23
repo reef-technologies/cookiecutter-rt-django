@@ -35,6 +35,12 @@ uv tool install ruff
 More on cruft:
 <https://github.com/cruft/cruft>
 
+## Deployment
+
+Choose `deployment_type=direct` to deploy to your own server by pushing to a Git remote named `production`.
+The generated project's README includes server setup, SSH access, the initial deployment and the deployment hook; see [Setup production environment (git deployment)]({{cookiecutter.repostory_name}}/README.md#setup-production-environment-git-deployment).
+Once setup is complete, `git push production HEAD:master` deploys the currently checked-out commit.
+
 ## Automatic cruft updates
 
 This template ships with a GitHub Actions workflow that will periodically (once a week) monitor changes in the template and automatically create a pull request with updates using `cruft`.

@@ -1,0 +1,25 @@
+#!/bin/bash
+# Install as hooks/update in the server's bare repository (see README.md).
+set -euo pipefail
+
+ref=$1
+newrev=$3
+
+if [[ "$ref" != refs/heads/master ]]; then
+    exit 0
+fi
+
+if [[ "$newrev" =~ ^0+$ ]]; then
+    echo "Refusing to delete the deployment branch master." >&2
+    exit 1
+fi
+
+unset GIT_INDEX_FILE
+export GIT_DIR=/root/repos/{{ cookiecutter.repostory_name }}.git
+export GIT_WORK_TREE=/root/domains/{{ cookiecutter.repostory_name }}
+
+# master still points to the previous version until this hook succeeds.
+# Check out the incoming commit directly so the build and GIT_SHA use it.
+git checkout -f --detach "$newrev"
+cd "$GIT_WORK_TREE"
+./deploy.sh </dev/null

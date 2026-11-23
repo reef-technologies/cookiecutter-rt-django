@@ -25,84 +25,152 @@ uv run manage.py runserver
 
 # Setup production environment (git deployment)
 
-<details>
+Direct deployment uses a Git remote named `production` pointing to a bare repository on the application server.
+Each push to that server's `master` branch runs `./deploy.sh` through an `update` hook.
+The server advances `master` only when deployment succeeds; a deployment failure rejects the branch update and makes `git push` fail.
+`production` is a remote name; you do not need to create a branch with that name.
 
-This sets up "deployment by pushing to git storage on remote", so that:
+- `origin` points to GitHub or your other source repository. Pushing there does not trigger this direct deployment hook.
+- `production` points to the application server. Pushing to its `master` branch deploys the application.
+- Your local branch can be named `main`, `master`, or anything else. `HEAD:master` pushes your currently checked-out commit to the server's `master` branch.
 
-- `git push origin ...` just pushes code to Github / other storage without any consequences;
-- `git push production master` pushes code to a remote server running the app and triggers a git hook to redeploy the application.
+## Prerequisites
 
-```
-Local .git ------------> Origin .git
-                \
-                 ------> Production .git (redeploy on push)
-```
+- An Ubuntu server with Git and `ufw` installed. `bin/prepare-os.sh` installs Docker, the Compose plugin and other host dependencies.
+- SSH access from your computer as `root`. Replace `<server>` below with the server's hostname or IP address. Install your computer's public SSH key in `/root/.ssh/authorized_keys` on the server, and verify that `ssh root@<server>` works.
+- A committed application version in your local repository. Git pushes send committed files only.
+- A hostname and TLS certificates; see [TLS certificates](#tls-certificates) for public and internal deployments. Allow inbound TCP ports 80 and 443 through the host and provider firewalls for a public deployment.
 
-- - -
+The paths and hook below assume the SSH user is `root` and its home directory is `/root`.
+Code is pushed from your computer to the server, so the server does not need a GitHub deploy key or SSH agent forwarding for this workflow.
 
-Use `ssh-keygen` to generate a key pair for the server, then add read-only access to repository in "deployment keys" section (`ssh -A` is easy to use, but not safe).
+## 1. Create the server repository
+
+On the server, logged in as `root`:
 
 ```sh
-# remote server
 mkdir -p ~/repos
 cd ~/repos
 git init --bare --initial-branch=master {{ cookiecutter.repostory_name }}.git
-
 mkdir -p ~/domains/{{ cookiecutter.repostory_name }}
 ```
 
+## 2. Add the remote and upload the initial version
+
+On your computer, from the application repository:
+
 ```sh
-# locally
 git remote add production root@<server>:~/repos/{{ cookiecutter.repostory_name }}.git
-git push production master
+git remote -v
+git push production HEAD:master
 ```
 
+Remotes are local to each clone: every owner or maintainer who deploys must add this remote on their own computer.
+If `production` already exists, inspect its URL with `git remote get-url production`; use `git remote set-url production root@<server>:~/repos/{{ cookiecutter.repostory_name }}.git` if it needs correcting.
+
+This initial push only uploads the code. Install the deployment hook after completing the first deployment below.
+
+## 3. Check out and configure the application
+
+On the server, logged in as `root`:
+
 ```sh
-# remote server
-cd ~/repos/{{ cookiecutter.repostory_name }}.git
-
-cat <<'EOT' > hooks/post-receive
-#!/bin/bash
-unset GIT_INDEX_FILE
-export ROOT=/root
-export REPO={{ cookiecutter.repostory_name }}
-while read oldrev newrev ref
-do
-    if [[ $ref =~ .*/master$ ]]; then
-        export GIT_DIR="$ROOT/repos/$REPO.git/"
-        export GIT_WORK_TREE="$ROOT/domains/$REPO/"
-        git checkout -f master
-        cd $GIT_WORK_TREE
-        ./deploy.sh
-    else
-        echo "Doing nothing: only the master branch may be deployed on this server."
-    fi
-done
-EOT
-
-chmod +x hooks/post-receive
-./hooks/post-receive
-cd ~/domains/{{ cookiecutter.repostory_name }}
-sudo bin/prepare-os.sh
+export GIT_DIR=/root/repos/{{ cookiecutter.repostory_name }}.git
+export GIT_WORK_TREE=/root/domains/{{ cookiecutter.repostory_name }}
+git checkout -f master
+cd "$GIT_WORK_TREE"
+bin/prepare-os.sh
 ./setup-prod.sh
+```
 
-# adjust the `.env` file
+Keep this server shell open for the next step. The exported variables let Git find the bare repository from the application directory.
+Edit `envs/prod/.env` (`.env` is a symlink to it), filling in secrets, database and backup settings and `NGINX_HOST`.
+Configure any credentials required by enabled monitoring and observability services as well.
+These environment files stay on the server and are not committed to Git.
 
-mkdir letsencrypt
+## 4. Run the first deployment
+
+In the same server shell, from the application directory:
+
+```sh
+mkdir -p letsencrypt
 ./letsencrypt_setup.sh  # or ./selfsign_setup.sh; see "TLS certificates" below
 ./deploy.sh
+docker compose ps
 ```
 
-### Deploy another branch
+Check that the application is reachable over HTTPS before enabling deployment on push.
+`deploy.sh` builds the application, pulls service images, backs up the database, stops the app and Celery services for migrations, and starts the services again. Deployments include a period of downtime.
 
-Only `master` branch is used to redeploy an application.
-If one wants to deploy other branch, force may be used to push desired branch to remote's `master`:
+## 5. Enable deployment on push
+
+After the first deployment succeeds, install the hook on the server:
+
+```sh
+cd ~/repos/{{ cookiecutter.repostory_name }}.git
+install -m 0755 /root/domains/{{ cookiecutter.repostory_name }}/bin/deploy-update-hook.sh hooks/update
+if [ -f hooks/post-receive ]; then
+    chmod -x hooks/post-receive
+fi
+```
+
+Git invokes `hooks/update` with the branch name and old/new commit IDs before updating the branch. There is no separate manual invocation step.
+The hook checks out the incoming commit with a detached HEAD, then deploys it. This ensures the build uses the incoming version while `master` still points to the previously accepted version.
+The installation disables any `post-receive` hook to prevent a second deployment after the push.
+The installed hook is a copy outside the checked-out application. After changing `bin/deploy-update-hook.sh`, repeat this installation step on the server.
+
+## Deploy updates
+
+On your computer, check out the committed version you want to deploy, then run:
+
+```sh
+git push production HEAD:master
+```
+
+Watch the push output for the deployment result. `git push production main:master` and `git push production master:master` explicitly select a local branch instead.
+Pushing to another branch on the `production` remote only stores that branch; the hook deploys updates to `master` only.
+The hook rejects attempts to delete `master`.
+Deploy one version at a time and wait for it to finish before starting another push.
+
+### Deploy a different branch or an older commit
+
+For a different local branch whose history includes the deployed version:
+
+```sh
+git push production local-branch-to-deploy:master
+```
+
+If Git rejects it as a non-fast-forward update, first review the currently deployed version with `git fetch production` and `git log -1 production/master`.
+To deliberately replace that version after review:
 
 ```sh
 git push --force-with-lease production local-branch-to-deploy:master
 ```
 
-</details>
+This replaces the server's branch history and deploys the selected version. Database backups and migrations still run; deploying older code does not reverse database migrations.
+
+### Retry a failed deployment
+
+If deployment fails, `git push` reports `hook declined` and the server's `master` remains at its previous commit.
+Inspect the push output and the server's `docker compose ps` / `docker compose logs` output, then fix the cause. If a maintenance or optimization task blocks deployment, wait for it to finish or stop it according to that project's runbook.
+Retry the same command from your computer; the branch update was rejected, so this runs deployment again:
+
+```sh
+git push production HEAD:master
+```
+
+Rejection does not roll back the checked-out files, database migrations or container changes already performed. Inspect the application's state after a partial deployment failure.
+Git acceptance and deployment are not a single transaction: a connection failure or a reference update error after deployment may still require checking the server before retrying.
+
+To rerun deployment of the currently checked-out code independently of a push, log in to the server as `root` and run:
+
+```sh
+export GIT_DIR=/root/repos/{{ cookiecutter.repostory_name }}.git
+export GIT_WORK_TREE=/root/domains/{{ cookiecutter.repostory_name }}
+cd "$GIT_WORK_TREE"
+./deploy.sh
+docker compose ps
+```
 
 # TLS certificates
 
