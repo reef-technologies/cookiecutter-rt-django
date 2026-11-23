@@ -69,13 +69,24 @@ export ROOT=/root
 export REPO={{ cookiecutter.repostory_name }}
 while read -r oldrev newrev ref
 do
-    if [[ $ref =~ .*/master$ ]]; then
+    if [[ $ref == refs/heads/master ]]; then
         if [[ $newrev =~ ^0+$ ]]; then
             echo "Refusing to delete the master branch on this server."
             exit 1
         fi
         export GIT_DIR="$ROOT/repos/$REPO.git/"
         export GIT_WORK_TREE="$ROOT/domains/$REPO/"
+        # git updates master only after this hook exits, so a concurrent push
+        # would deploy on top of this one and then fail to update master
+        exec 9>"$GIT_DIR/deploy.lock"
+        if ! flock -n 9; then
+            echo "Another push is deploying right now. Push again once it finishes."
+            exit 1
+        fi
+        if [[ $(git rev-parse -q --verify refs/heads/master || echo "$oldrev") != "$oldrev" ]]; then
+            echo "master moved while this push was in progress. Pull, then push again."
+            exit 1
+        fi
         # master still points at the previous commit here, and git forbids
         # moving HEAD before the push is accepted, so check out the files only
         git read-tree --reset -u "$newrev" || exit 1
@@ -84,6 +95,8 @@ do
         cd "$GIT_WORK_TREE" || exit 1
         # deploy.sh must not consume the list of pushed refs on stdin
         if ! ./deploy.sh </dev/null; then
+            # git deletes the objects of a rejected push, so the files and the index must not point at them
+            [[ $oldrev =~ ^0+$ ]] || git read-tree --reset -u "$oldrev"
             echo "Deploy failed: master stays at ${oldrev:0:7}. Fix the cause and push again."
             exit 1
         fi
@@ -265,7 +278,7 @@ The following variables describe the deployed service in traces, metrics and log
 - `OTEL_SERVICE_NAMESPACE` — namespace of the project, defaults to the repository name. Shared by every service of one project (app, celery, celery-beat, nginx).
 - `OTEL_DEPLOYMENT_ENVIRONMENT` — `development` / `staging` / `production`. Used for filtering in Grafana.
 - `OTEL_SERVICE_INSTANCE_ID` — optional stable id for a worker. If left empty, every worker generates a fresh random UUID at startup, which is fine for autoscaled instances.
-- `GIT_SHA` — version of the running code, exposed as `service.version`. {% if cookiecutter.deployment_type == 'aws' %}`devops/scripts/build-backend.sh`{% else %}`deploy.sh`{% endif %} computes it from `git rev-parse --short HEAD`, passes it as the Docker build arg `GIT_SHA`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. For manual builds, export `GIT_SHA` before `docker compose build`; otherwise it defaults to `unknown`.
+- `GIT_SHA` — version of the running code, exposed as `service.version`. {% if cookiecutter.deployment_type == 'aws' %}`devops/scripts/build-backend.sh` computes it{% else %}`deploy.sh` uses an exported `GIT_SHA` (the push-to-deploy hook exports the pushed commit) and otherwise computes it{% endif %} from `git rev-parse --short HEAD`, passes it as the Docker build arg `GIT_SHA`, and the application image stores it permanently as `GIT_SHA` and `OTEL_SERVICE_VERSION`. For manual builds, export `GIT_SHA` before `docker compose build`; otherwise it defaults to `unknown`.
 
 `OTEL_EXPORTER_OTLP_ENDPOINT` points at the local Alloy collector (`http://alloy:4318` in docker-compose). Do not point the app directly at `tempo.reef.pl` — Alloy handles batching, tail-sampling and auth.
 
