@@ -17,7 +17,7 @@ resource "aws_db_subnet_group" "self" {
 
 resource "aws_db_parameter_group" "postgres_params" {
   name_prefix   = "${var.name}-${var.env}-"
-  family = "postgres16"
+  family = "postgres18"
 
   parameter {
     name         = "shared_buffers"
@@ -71,7 +71,9 @@ resource "aws_db_instance" "self" {
   max_allocated_storage  = 20
   storage_encrypted      = true
   engine                 = "postgres"
-  engine_version         = "16.8"
+  # major version only: RDS applies minor upgrades itself, a full version would drift
+  engine_version         = "18"
+  allow_major_version_upgrade = true
   instance_class         = var.instance_type
   username               = "master"
   db_name                = "backend"
