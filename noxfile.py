@@ -359,6 +359,34 @@ def test_direct_deployment_hook(session):
     )
 
 
+@nox.session(python=False, tags=["crufted_project"])
+def test_postgres_versions(session):
+    """Check that every PostgreSQL version pin in the template uses the same major."""
+    session.run(
+        "python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_postgres_versions.py", external=True
+    )
+
+
+@nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
+def test_db_upgrade(session):
+    """Upgrade a direct deployment's database from PostgreSQL 14, including recovery from failed upgrades."""
+    tests_dir = str(ROOT.absolute() / "tests")
+    with crufted_project(session, get_cruft_config(deployment_type="direct")) as project_path:
+        session.run(
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-v",
+            "-s",
+            tests_dir,
+            "-p",
+            "test_db_upgrade.py",
+            env={"DB_UPGRADE_TEST_PROJECT": str(project_path)},
+            external=True,
+        )
+
+
 @nox.session(python=PYTHON_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:

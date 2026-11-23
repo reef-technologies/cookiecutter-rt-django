@@ -469,6 +469,46 @@ docker compose run --rm backups ./restore-db.sh b2id://{ID}
 
 </details>
 
+# Upgrading PostgreSQL
+
+The PostgreSQL major of the bundled `db` is set by its image in `envs/*/docker-compose.yml`.
+When the data in `db/data` is from an older major, the one-shot `db-upgrade` service upgrades it in place before `db` starts, with [pgautoupgrade](https://github.com/pgautoupgrade/docker-pgautoupgrade) (`pg_upgrade --link`, then a reindex of all databases).
+The data lives in `db/data/<major>/docker`; data in the pre-18 layout, directly in `db/data`, is moved there first.
+{% if cookiecutter.deployment_type == 'direct' %}
+
+## Production
+
+Schedule the deploy that brings a new major outside peak traffic: the app is down from the pre-upgrade backup until the upgrade has finished.
+In production the upgrade runs only from `deploy.sh`; a plain `docker compose up` refuses to upgrade. `deploy.sh`:
+
+1. stops everything except `db` and backs up the database from the old server (to B2 when configured). If the backup fails, nothing is upgraded and the stopped services start again;
+2. stops `db` and upgrades the data. `docker compose stop` waits for a running upgrade instead of interrupting it;
+3. continues as usual with migrations and starting the app.
+
+If the upgrade fails, or an earlier one was interrupted (a crash, a power loss, `kill -9`), `deploy.sh` recovers by itself with `bin/db-recover.sh`:
+it sets the database files aside in `db/data/.failed-<timestamp>`, starts an empty database on the new major and restores the pre-upgrade backup.
+No data is lost, because the app stayed stopped since that backup. The next successful deploy deletes the set-aside files.
+
+- `bin/db-recover.sh` can be run by hand; it does nothing when there is nothing to recover.
+- Recovery needs as much free disk space as the database takes, plus `DB_UPGRADE_RESERVE_MB` (default 1024). Without it, recovery stops and changes nothing; free some space and deploy again.
+- A restore brings back what `pg_dump` saves. Roles created by hand, not by `db/init`, have to be created again.
+- Most of the downtime on a big database is the reindex. `PGAUTO_REINDEX=no` in `.env` skips it.
+- To go back to the previous major, revert the change, then restore the pre-upgrade backup (`docker compose run --rm backups ./list-backups.sh` lists it) into a fresh `db/data`.
+{% endif %}
+
+## Development
+
+`docker compose up -d` upgrades `db/data` the same way, without a backup. Stop the old database first (`docker compose stop db`): the upgrade refuses to run next to it.
+If the upgrade fails, `bin/db-recover.sh` sets the old files aside in `db/data/.failed-<timestamp>` and starts an empty database; run the migrations again.
+
+Only the plain `postgres` image is supported; images with extra extensions (PostGIS, TimescaleDB) need an upgrade image of their own.
+{% if cookiecutter.deployment_type == 'aws' %}
+
+## AWS
+
+RDS runs the major in `engine_version` and `family` of `devops/tf/main/modules/database/rds.tf`. `terraform apply` upgrades it in the next maintenance window, after taking a snapshot; the database is unavailable during the upgrade.
+{% endif %}
+
 # Tests / CI
 
 First install `nox` as tool for running tests and other checks:

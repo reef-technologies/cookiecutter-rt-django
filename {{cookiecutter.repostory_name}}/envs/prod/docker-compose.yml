@@ -36,6 +36,32 @@ services:
     logging:
       <<: *logging
 
+  db-upgrade:
+    # one-shot, before `db` starts: upgrades data of an older PostgreSQL major in place;
+    # see README.md, "Upgrading PostgreSQL". Keep its major equal to the `db` image's.
+    image: pgautoupgrade/pgautoupgrade:18.7-alpine3.24@sha256:9b2095059823378862ab0fa70e7e4a740922607a4f609efcf0508a97c3032557
+    entrypoint: ["bash", "/opt/db-upgrade/db-upgrade.sh"]
+    command: ["run"]
+    restart: "no"
+    healthcheck:
+      disable: true
+    # an upgrade must not be interrupted: `docker compose stop` waits for it to finish
+    stop_grace_period: 6h
+    env_file: ./.env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGAUTO_REINDEX=${PGAUTO_REINDEX:-yes}
+      # upgrade only after deploy.sh has taken and recorded a backup
+      - DB_UPGRADE_REQUIRE_BACKUP=1
+      - DB_UPGRADE_RESERVE_MB=${DB_UPGRADE_RESERVE_MB:-1024}
+    volumes:
+      - ./db/data:/var/lib/postgresql
+      - ./db/upgrade:/opt/db-upgrade:ro
+    logging:
+      <<: *logging
+
   db:
     image: postgres:18.7-alpine@sha256:0115267ab5a509022df9319c77be365cef335adb71556c75f60f5360ee247e71
     healthcheck:
@@ -54,6 +80,9 @@ services:
       - ./db/data:/var/lib/postgresql
       # first-boot SQL, run only when the data directory is initialised; see db/init/README.md
       - ./db/init:/docker-entrypoint-initdb.d:ro
+    depends_on:
+      db-upgrade:
+        condition: service_completed_successfully
     {% if cookiecutter.monitoring %}
     command:
       - postgres

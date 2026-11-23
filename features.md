@@ -67,6 +67,7 @@
   - [B2](https://www.backblaze.com/b2/cloud-storage.html) cloud storage using a `writeFiles`-only key with and option to store them locally or send them over email
   - zstd compression for efficient storage & excellent speed for both backup and restore
 - Scripted and repeatable procedure for restoring the system from a backup
+- Automatic major PostgreSQL upgrades of the bundled database on deploy, with a backup first and automatic recovery from failed upgrades
 - [Sentry](https://sentry.io) error tracking preconfigured
 - Grafana for metrics, logs and traces (Grafana Loki + Tempo)
   - Prometheus for metrics collection
