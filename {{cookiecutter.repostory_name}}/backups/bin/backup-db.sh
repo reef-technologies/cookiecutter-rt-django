@@ -13,14 +13,16 @@ DUMP_DB_TO_STDOUT=(
 
 if [ -n "${B2_BUCKET}" ]; then
   "${DUMP_DB_TO_STDOUT[@]}" | "${SCRIPT_DIR}"/backup-file-to-b2.sh - "${TARGET_FILENAME}"
+  BACKUP="b2://${B2_BUCKET}/${B2_FOLDER:+${B2_FOLDER}/}${TARGET_FILENAME}"
 else
   mkdir -p "$BACKUP_LOCAL_DIR"
-  TARGET="$BACKUP_LOCAL_DIR/$TARGET_FILENAME"
-  "${DUMP_DB_TO_STDOUT[@]}" > "$TARGET"
+  BACKUP="$BACKUP_LOCAL_DIR/$TARGET_FILENAME"
+  "${DUMP_DB_TO_STDOUT[@]}" > "$BACKUP"
 
   if [ -n "${EMAIL_HOST:-}" ] && [ -n "${EMAIL_TARGET:-}" ]; then
-    "${SCRIPT_DIR}"/backup-db-to-email.sh "${TARGET}"
+    "${SCRIPT_DIR}"/backup-db-to-email.sh "${BACKUP}"
   fi
 fi
 
-echo "$TARGET_FILENAME"
+# the last line of output is the argument restore-db.sh takes to restore this backup
+echo "$BACKUP"
