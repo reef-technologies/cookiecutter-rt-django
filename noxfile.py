@@ -359,6 +359,14 @@ def test_direct_deployment_hook(session):
     )
 
 
+@nox.session(python=False, tags=["crufted_project"])
+def test_postgres_versions(session):
+    """Check that every PostgreSQL version pin in the template uses the same major."""
+    session.run(
+        "python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_postgres_versions.py", external=True
+    )
+
+
 @nox.session(python=PYTHON_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:
