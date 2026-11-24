@@ -367,6 +367,12 @@ def test_postgres_versions(session):
     )
 
 
+@nox.session(python=False, tags=["crufted_project"])
+def test_data_mount(session):
+    """Check how the PostgreSQL upgrade classifies and rearranges the database directory."""
+    session.run("python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_data_mount.py", external=True)
+
+
 @nox.session(python=PYTHON_VERSION)
 def cleanup_crufted_project(session):
     if crufted_project.tmpdir:
