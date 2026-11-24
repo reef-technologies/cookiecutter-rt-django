@@ -74,6 +74,9 @@ resource "aws_db_instance" "self" {
   # major version only: RDS applies minor upgrades itself, a full version would drift
   engine_version         = "18"
   allow_major_version_upgrade = true
+  # A major upgrade replaces the parameter group, and the old group cannot be deleted
+  # while the instance keeps it until the maintenance window.
+  apply_immediately      = true
   instance_class         = var.instance_type
   username               = "master"
   db_name                = "backend"
