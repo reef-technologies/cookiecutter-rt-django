@@ -1,4 +1,4 @@
-FROM postgres:17
+FROM postgres:18.7@sha256:eb63372c1e05c755f55fa30cbd07aecc443676fc6c0fa90b9002d01537841e1a
 WORKDIR /root
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 COPY --from=getsentry/sentry-cli:latest /bin/sentry-cli /bin/

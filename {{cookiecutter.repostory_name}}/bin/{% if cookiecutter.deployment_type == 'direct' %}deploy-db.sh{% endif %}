@@ -1,0 +1,84 @@
+#!/bin/bash
+# Called by deploy.sh: starts `db`, first upgrading it to the configured PostgreSQL major
+# when its data is older, and recovering when an upgrade fails or an earlier one was
+# interrupted. See README.md, "Upgrading PostgreSQL".
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+db_upgrade() {
+    docker compose run --rm --no-deps -T db-upgrade "$@"
+}
+
+# Everything that may use the database stays stopped until it is upgraded or recovered.
+# Stopped by container ID: `docker compose stop` fails on the name of a service removed
+# from docker-compose.yml, whose container runs until `up --remove-orphans` in deploy.sh.
+stopped=
+stop_db_clients() {
+    local db
+    db=$(docker compose ps -q db)
+    stopped=$(docker compose ps -q --status running --status restarting | grep -vxF "$db" || true)
+    if [ -n "$stopped" ]; then
+        # shellcheck disable=SC2086
+        docker stop $stopped >/dev/null
+    fi
+}
+
+# Fails the deploy before the upgrade has changed anything, with the old database and
+# its clients running again.
+abort_upgrade() {
+    echo "ERROR: $1" >&2
+    if [ -n "${2:-}" ]; then
+        echo "$2" >&2
+    fi
+    echo "Nothing was upgraded; starting the old database and the stopped services again." >&2
+    docker start "$old_db" >/dev/null
+    if [ -n "$stopped" ]; then
+        # shellcheck disable=SC2086
+        docker start $stopped >/dev/null
+    fi
+    exit 1
+}
+
+state=0
+db_upgrade check || state=$?
+case "$state" in
+    0) ;;
+    10)
+        old_db=$(docker compose ps -q --status running db)
+        if [ -n "$old_db" ]; then
+            stop_db_clients
+            echo "Backing up the database before the upgrade"
+            # the reference is the last line; `run` may print image build output before it
+            ref=$(docker compose run --rm --no-deps -T backups ./backup-db-ref.sh | tail -n 1) \
+                || abort_upgrade "the pre-upgrade backup failed." \
+                    "To run a backup by hand, use \`docker compose run --rm --no-deps backups ./backup-db.sh\`; without --no-deps, Compose replaces the running db with the new version."
+            # a big database needs more than the default 10 s to shut down, and a killed one cannot be upgraded
+            docker stop -t 600 "$old_db" >/dev/null || abort_upgrade "stopping the old database failed."
+            # recorded for the stopped files: starting the old version again invalidates it
+            db_upgrade mark-backup "$ref" || abort_upgrade "recording the pre-upgrade backup failed."
+        elif db_upgrade has-backup; then
+            echo "Continuing the PostgreSQL upgrade with the pre-upgrade backup recorded by an earlier deploy"
+        else
+            echo "ERROR: a PostgreSQL upgrade is pending, but the db service is not running, so no backup can be taken, and no pre-upgrade backup is recorded for the current database files." >&2
+            echo "Start the old version (check out the previous commit and run \`docker compose up -d db\`), then deploy again." >&2
+            exit 1
+        fi
+        ;;
+    20)
+        stop_db_clients
+        bin/db-recover.sh
+        ;;
+    *) exit 1 ;;
+esac
+
+if ! docker compose up -d db; then
+    # Compose reports only the exit code of db-upgrade; its log says why
+    docker compose logs --no-log-prefix --tail 100 db-upgrade >&2 || true
+    state=0
+    db_upgrade check || state=$?
+    if [ "$state" -ne 20 ]; then
+        exit 1
+    fi
+    bin/db-recover.sh
+fi

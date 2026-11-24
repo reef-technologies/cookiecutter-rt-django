@@ -7,13 +7,17 @@ if [ ! -f ".env" ]; then
     exit 1;
 fi
 
+DEPLOY_STARTED=$(date -u +%Y%m%dT%H%M%SZ)
+
 GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || printf "%s" "unknown")
 export GIT_SHA
 
 docker compose build --pull --build-arg GIT_SHA="$GIT_SHA"
 docker compose pull --ignore-buildable
 
-docker compose up -d db  # in case it hasn't been launched before
+# start db (also on the first deploy), upgrading its PostgreSQL major first when the data
+# is older; see README.md, "Upgrading PostgreSQL"
+bin/deploy-db.sh
 # backup db before any database changes
 docker compose run --rm backups ./backup-db.sh
 
@@ -38,6 +42,9 @@ docker compose up -d --remove-orphans
 # nginx resolves upstream container names once at config load; containers
 # recreated above (e.g. postgres-exporter) get new IPs, so re-resolve
 docker compose exec nginx nginx -s reload || true
+
+# the deploy succeeded: delete database files set aside by an earlier failed upgrade
+docker compose run --rm --no-deps -T db-upgrade cleanup "$DEPLOY_STARTED"
 
 # Reclaim disk space; a failed cleanup never fails the deploy. Builds keep
 # reusing the cache they need, so anything unused for 3 days is stale.
