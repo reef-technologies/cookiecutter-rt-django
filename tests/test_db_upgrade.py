@@ -10,7 +10,6 @@ import subprocess
 import tempfile
 import time
 import unittest
-import uuid
 from pathlib import Path
 
 PROJECT = os.environ.get("DB_UPGRADE_TEST_PROJECT")
@@ -36,6 +35,15 @@ services:
       - ./db/data:/var/lib/postgresql/data
 """
 
+# A service removed from docker-compose.yml whose container still runs, as after a template update.
+RETIRED_COMPOSE = """
+services:
+  retired:
+    image: alpine:3.24
+    command: sleep infinity
+    init: true
+"""
+
 # CI hosts may not run journald, which the production compose file logs to.
 TEST_OVERRIDE = """
 x-logging: &test-logging
@@ -50,7 +58,9 @@ services:
 @unittest.skipUnless(PROJECT, "set DB_UPGRADE_TEST_PROJECT to a generated project")
 class DbUpgradeTests(unittest.TestCase):
     def setUp(self):
-        self.dir = Path(tempfile.mkdtemp(prefix="db_upgrade_"))
+        # Compose names the project after this directory, as on servers: with an explicit name
+        # (`-p`, COMPOSE_PROJECT_NAME), `docker compose stop` accepts services removed from the file.
+        self.dir = Path(tempfile.mkdtemp(prefix="dbupgrade"))
         project = Path(PROJECT)
         for name in ("db", "backups", "bin"):
             shutil.copytree(project / name, self.dir / name, symlinks=True)
@@ -60,8 +70,7 @@ class DbUpgradeTests(unittest.TestCase):
         (self.dir / "old.yml").write_text(OLD_COMPOSE)
         (self.dir / "test.yml").write_text(TEST_OVERRIDE)
         self.env = {
-            **os.environ,
-            "COMPOSE_PROJECT_NAME": f"dbupgrade{uuid.uuid4().hex[:8]}",
+            **{key: value for key, value in os.environ.items() if key != "COMPOSE_PROJECT_NAME"},
             "COMPOSE_FILE": "docker-compose.yml:test.yml",
         }
         self.addCleanup(self.cleanup)
@@ -127,6 +136,22 @@ class DbUpgradeTests(unittest.TestCase):
     def db_upgrade_shell(self, script):
         return self.compose("run", "--rm", "--no-deps", "-T", "--entrypoint", "sh", "db-upgrade", "-c", script).stdout
 
+    def backups_shell(self, script):
+        return self.compose("run", "--rm", "--no-deps", "-T", "--entrypoint", "sh", "backups", "-c", script).stdout
+
+    def target_major(self):
+        return self.db_upgrade_shell("echo $PG_MAJOR").strip()
+
+    def set_aside_dirs(self):
+        return [name for name in self.data_files() if name.startswith(".failed-")]
+
+    def record_backup(self):
+        """What deploy-db.sh does before an upgrade: back up the old server, stop it and record the backup."""
+        ref = self.compose("run", "--rm", "--no-deps", "-T", "backups", "./backup-db-ref.sh").stdout.splitlines()[-1]
+        self.compose("stop", "db", COMPOSE_FILE="old.yml")
+        self.db_upgrade("mark-backup", ref)
+        return ref
+
     def start_old_deployment(self, *extra_sql):
         self.compose("up", "-d", "db", COMPOSE_FILE="old.yml")
         self.wait_for_db("old.yml")
@@ -135,7 +160,7 @@ class DbUpgradeTests(unittest.TestCase):
 
     def assert_upgraded(self, files=None):
         self.wait_for_db(files)
-        major = self.db_upgrade_shell("echo $PG_MAJOR").strip()
+        major = self.target_major()
         self.assertTrue(self.psql("SHOW server_version", files).startswith(f"{major}."))
         self.assertEqual(self.psql("SELECT count(*), max(name) FROM item", files), f"{ROWS}|item 999")
         self.assertIn("PG_VERSION", self.data_files(f"{major}/docker"))
@@ -147,12 +172,12 @@ class DbUpgradeTests(unittest.TestCase):
         self.deploy_db()
         self.assert_upgraded()
         # upgraded in place, not recovered from the backup
-        self.assertFalse([name for name in self.data_files() if name.startswith(".failed-")])
+        self.assertFalse(self.set_aside_dirs())
         # starting again is a no-op
         self.compose("up", "-d", "db")
         self.deploy_db()
         self.assert_upgraded()
-        self.assertEqual(self.db_upgrade("backup-ref", check=False).returncode, 1)
+        self.assertEqual(self.db_upgrade("backup-ref").stdout, "")
 
     def test_dev_upgrade_on_compose_up(self):
         self.start_old_deployment()
@@ -193,10 +218,10 @@ class DbUpgradeTests(unittest.TestCase):
         self.deploy_db()
         self.assert_upgraded()
         self.assertEqual(self.psql("SELECT f FROM fn"), "now")
-        aside = [name for name in self.data_files() if name.startswith(".failed-")]
+        aside = self.set_aside_dirs()
         self.assertEqual(len(aside), 1)
         self.db_upgrade("cleanup", "99991231T000000Z")
-        self.assertFalse([name for name in self.data_files() if name.startswith(".failed-")])
+        self.assertFalse(self.set_aside_dirs())
 
     def test_recovery_refuses_without_disk_space(self):
         self.start_old_deployment(UNUPGRADABLE_SQL)
@@ -206,12 +231,84 @@ class DbUpgradeTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("not enough disk space", result.stderr)
         # nothing was set aside and the backup is still recorded for the next attempt
-        self.assertFalse([name for name in self.data_files() if name.startswith(".failed-")])
+        self.assertFalse(self.set_aside_dirs())
         self.assertTrue(self.db_upgrade("backup-ref").stdout.strip())
         self.assertEqual(self.db_upgrade("check", check=False).returncode, 20)
 
+    def test_plain_up_refuses_stale_backup(self):
+        self.start_old_deployment()
+        self.record_backup()
+        # the old version runs again and gets writes the backup does not have
+        self.compose("up", "-d", "db", COMPOSE_FILE="old.yml")
+        self.wait_for_db("old.yml")
+        self.psql("INSERT INTO item VALUES (1001, 'after the backup')", "old.yml")
+        self.compose("stop", "db", COMPOSE_FILE="old.yml")
+        self.assertNotEqual(self.compose("up", "-d", "db", check=False).returncode, 0)
+        self.assertIn("no pre-upgrade backup is recorded", self.compose("logs", "db-upgrade").stdout)
+        result = self.deploy_db(check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("no pre-upgrade backup is recorded", result.stderr)
+        self.assertEqual(self.db_upgrade_shell("cat /var/lib/postgresql/PG_VERSION").strip(), "14")
+
+    def test_upgrade_continues_after_failure_before_lock(self):
+        self.start_old_deployment()
+        self.record_backup()
+        # pgautoupgrade rejects POSTGRES_PASSWORD together with POSTGRES_PASSWORD_FILE before it changes anything
+        result = self.compose(
+            "run", "--rm", "--no-deps", "-T", "-e", "POSTGRES_PASSWORD_FILE=/etc/hostname", "db-upgrade", check=False
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("without leaving a partial upgrade behind", result.stderr)
+        # the cluster was already moved, so the old version could not start on it
+        self.assertIn("PG_VERSION", self.data_files(f"{self.target_major()}/docker"))
+        self.assertEqual(self.db_upgrade("check", check=False).returncode, 10)
+        self.deploy_db()
+        self.assert_upgraded()
+        self.assertFalse(self.set_aside_dirs())
+
+    def test_failed_restore_is_retried(self):
+        self.start_old_deployment(UNUPGRADABLE_SQL)
+        ref = self.record_backup()
+        self.assertNotEqual(self.compose("up", "-d", "db", check=False).returncode, 0)
+        self.assertEqual(self.db_upgrade("check", check=False).returncode, 20)
+        self.backups_shell(f"mv {ref} {ref}.hidden")
+        self.assertNotEqual(self.run_cmd("bin/db-recover.sh", check=False).returncode, 0)
+        # the fresh database started for the restore is not taken for the recovered one
+        self.assertEqual(self.db_upgrade("check", check=False).returncode, 20)
+        self.db_upgrade("cleanup", "99991231T000000Z")
+        self.assertEqual(len(self.set_aside_dirs()), 1)
+        self.backups_shell(f"mv {ref}.hidden {ref}")
+        self.deploy_db()
+        self.assert_upgraded()
+        self.assertEqual(self.psql("SELECT f FROM fn"), "now")
+        self.assertEqual(len(self.set_aside_dirs()), 1)
+
+    def test_recovery_refuses_without_backup(self):
+        self.start_old_deployment()
+        self.compose("stop", "db", COMPOSE_FILE="old.yml")
+        # an interrupted upgrade, but no backup was recorded
+        self.db_upgrade_shell("touch /var/lib/postgresql/upgrade_in_progress.lock")
+        self.assertEqual(self.db_upgrade("check", check=False).returncode, 20)
+        result = self.db_upgrade("set-aside", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("no pre-upgrade backup is recorded", result.stderr)
+        result = self.run_cmd("bin/db-recover.sh", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("no pre-upgrade backup is recorded", result.stderr)
+        self.assertIn("PG_VERSION", self.data_files())
+        self.assertFalse(self.set_aside_dirs())
+
+    def test_container_of_removed_service_is_stopped(self):
+        (self.dir / "retired.yml").write_text(RETIRED_COMPOSE)
+        self.compose("up", "-d", "retired", COMPOSE_FILE="retired.yml")
+        self.start_old_deployment()
+        self.deploy_db()
+        self.assert_upgraded()
+        retired = f"{self.dir.name}-retired-1"
+        self.assertEqual(self.run_cmd("docker", "inspect", "-f", "{{.State.Running}}", retired).stdout.strip(), "false")
+
     def wait_for_upgrade_start(self):
-        container = f"{self.env['COMPOSE_PROJECT_NAME']}-db-upgrade-1"
+        container = f"{self.dir.name}-db-upgrade-1"
         for _ in range(600):
             logs = self.run_cmd("docker", "logs", container, check=False)
             if "Running pg_upgrade command" in logs.stdout + logs.stderr:
@@ -231,7 +328,7 @@ class DbUpgradeTests(unittest.TestCase):
         self.assertEqual(deploy.wait(timeout=600), 0)
         self.assertEqual(self.run_cmd("docker", "inspect", "-f", "{{.State.ExitCode}}", container).stdout.strip(), "0")
         self.assert_upgraded()
-        self.assertFalse([name for name in self.data_files() if name.startswith(".failed-")])
+        self.assertFalse(self.set_aside_dirs())
 
     def test_interrupted_upgrade_recovers_on_next_deploy(self):
         self.start_old_deployment()

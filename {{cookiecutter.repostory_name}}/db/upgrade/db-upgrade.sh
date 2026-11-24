@@ -7,11 +7,12 @@
 #   run                upgrade if needed; exit 0 when `db` can start
 #   check              report the state: 0 nothing to do, 10 upgrade pending,
 #                      20 recovery needed, 1 blocked (see message)
-#   mark-backup REF    record REF as the pre-upgrade backup of the pending upgrade
-#   backup-ref         print the recorded pre-upgrade backup (exit 1 if none)
-#   clear-backup       forget the recorded pre-upgrade backup
-#   requires-backup    exit 0 if this environment upgrades only with a recorded backup
+#   mark-backup REF    record REF as the pre-upgrade backup of the stopped cluster
+#   has-backup         exit 0 if an upgrade is pending and its pre-upgrade backup is recorded
+#   backup-ref         print the recorded pre-upgrade backup (nothing if none)
+#   requires-backup    print `yes` if this environment upgrades only with a recorded backup, else `no`
 #   set-aside          move all database files to db/data/.failed-<timestamp> (prints the name)
+#   finish-recovery    forget the recorded backup and the set-aside step once recovery succeeded
 #   cleanup STAMP      delete set-aside directories older than STAMP (format of `date -u +%Y%m%dT%H%M%SZ`)
 set -euo pipefail
 
@@ -21,6 +22,9 @@ TARGET_DIR="${PGDATA:?}"
 STATE_DIR="$ROOT/.upgrade"
 BACKUP_MARKER="$STATE_DIR/backup"
 RELOCATION_MARKER="$STATE_DIR/relocating"
+# Exists from set-aside until recovery succeeded, so the fresh cluster started in between
+# never passes for the recovered database.
+RECOVERY_MARKER="$STATE_DIR/recovering"
 # pgautoupgrade leaves these in the cluster directory when an upgrade did not finish
 LEFTOVERS=(upgrade_in_progress.lock old new)
 
@@ -104,6 +108,19 @@ finish_relocation() {
     rm -f "$RELOCATION_MARKER"
 }
 
+# The recovery marker names the set-aside directory and the phase: `moving` while the
+# database files are being moved there, `restoring` once they all are.
+write_recovery_marker() {
+    mkdir -p "$STATE_DIR"
+    printf 'aside=%s\nphase=%s\n' "$1" "$2" > "$RECOVERY_MARKER.tmp"
+    mv "$RECOVERY_MARKER.tmp" "$RECOVERY_MARKER"
+    sync "$RECOVERY_MARKER"
+}
+
+recovery_field() {
+    sed -n "s/^$1=//p" "$RECOVERY_MARKER"
+}
+
 # Sets STATE (fresh, current, relocate, pending, recover) and CLUSTER, CLUSTER_MAJOR.
 # Dies when the state is one we must not act on.
 inspect() {
@@ -111,6 +128,11 @@ inspect() {
     CLUSTER=
     CLUSTER_MAJOR=
     local leftovers clusters count
+    if [ -f "$RECOVERY_MARKER" ]; then
+        log "a recovery did not finish; the old database files are in db/data/$(recovery_field aside)"
+        STATE=recover
+        return
+    fi
     leftovers=$(find_leftovers)
     if [ -n "$leftovers" ]; then
         log "an earlier upgrade did not finish, found: $(echo "$leftovers" | tr '\n' ' ')"
@@ -148,8 +170,16 @@ require_stopped() {
     fi
 }
 
+# pg_control changes whenever a server starts or checkpoints, so its checksum identifies
+# the cluster files exactly as they were when the backup was recorded.
+control_checksum() {
+    sha256sum "$CLUSTER/global/pg_control" | cut -d ' ' -f 1
+}
+
 backup_marker_matches() {
-    [ -f "$BACKUP_MARKER" ] && [ "$(sed -n 's/^from=//p' "$BACKUP_MARKER")" = "$CLUSTER_MAJOR" ]
+    [ -f "$BACKUP_MARKER" ] \
+        && [ "$(sed -n 's/^from=//p' "$BACKUP_MARKER")" = "$CLUSTER_MAJOR" ] \
+        && [ "$(sed -n 's/^control=//p' "$BACKUP_MARKER")" = "$(control_checksum)" ]
 }
 
 cmd_run() {
@@ -169,17 +199,23 @@ cmd_run() {
     esac
     require_stopped
     if [ "${DB_UPGRADE_REQUIRE_BACKUP:-}" = 1 ] && ! backup_marker_matches; then
-        die "PostgreSQL $CLUSTER_MAJOR → $TARGET_MAJOR upgrade pending, but no pre-upgrade backup is recorded. Run ./deploy.sh, which takes one and then upgrades."
+        die "PostgreSQL $CLUSTER_MAJOR → $TARGET_MAJOR upgrade pending, but no pre-upgrade backup is recorded for the current database files. Run ./deploy.sh, which takes one and then upgrades."
     fi
     log "upgrading PostgreSQL $CLUSTER_MAJOR → $TARGET_MAJOR; do not interrupt"
-    relocate "$CLUSTER"
+    # an earlier attempt that failed before pgautoupgrade changed anything has moved it already
+    if [ "$CLUSTER" != "$TARGET_DIR" ]; then
+        relocate "$CLUSTER"
+    fi
     # Ignored signals stay ignored in pgautoupgrade: `docker compose stop` waits for
     # the upgrade (up to stop_grace_period) instead of interrupting it.
     trap '' TERM INT HUP
     local status=0
     PGAUTO_ONESHOT=yes /usr/local/bin/docker-entrypoint.sh postgres || status=$?
-    if [ "$status" -ne 0 ] || [ -n "$(find_leftovers)" ] || [ "$(cat "$TARGET_DIR/PG_VERSION" 2>/dev/null)" != "$TARGET_MAJOR" ]; then
-        die "pgautoupgrade failed (exit $status); run bin/db-recover.sh (deploy.sh runs it automatically)"
+    if [ -n "$(find_leftovers)" ]; then
+        die "pgautoupgrade failed (exit $status) during the upgrade; run bin/db-recover.sh (deploy.sh runs it automatically)"
+    fi
+    if [ "$status" -ne 0 ] || [ "$(cat "$TARGET_DIR/PG_VERSION" 2>/dev/null)" != "$TARGET_MAJOR" ]; then
+        die "pgautoupgrade failed (exit $status) without leaving a partial upgrade behind. Fix the cause shown above and deploy again."
     fi
     rm -f "$BACKUP_MARKER"
     log "upgraded to PostgreSQL $TARGET_MAJOR"
@@ -206,45 +242,73 @@ cmd_mark_backup() {
     local ref=${1:?backup reference required}
     inspect
     [ "$STATE" = pending ] || die "no upgrade pending (state: $STATE)"
+    # a running server keeps changing pg_control
+    require_stopped
     mkdir -p "$STATE_DIR"
-    printf 'from=%s\nref=%s\n' "$CLUSTER_MAJOR" "$ref" > "$BACKUP_MARKER.tmp"
+    printf 'from=%s\ncontrol=%s\nref=%s\n' "$CLUSTER_MAJOR" "$(control_checksum)" "$ref" > "$BACKUP_MARKER.tmp"
     mv "$BACKUP_MARKER.tmp" "$BACKUP_MARKER"
     sync "$BACKUP_MARKER"
 }
 
+cmd_has_backup() {
+    inspect
+    [ "$STATE" = pending ] && backup_marker_matches
+}
+
 cmd_backup_ref() {
-    [ -f "$BACKUP_MARKER" ] || return 1
-    sed -n 's/^ref=//p' "$BACKUP_MARKER"
+    if [ -f "$BACKUP_MARKER" ]; then
+        sed -n 's/^ref=//p' "$BACKUP_MARKER"
+    fi
 }
 
 cmd_set_aside() {
     local entries name size_kb free_kb reserve_kb
     finish_relocation
-    entries=$(all_entries)
-    if [ -z "$entries" ]; then
-        log "nothing to set aside"
-        return 0
+    if [ -f "$RECOVERY_MARKER" ]; then
+        name=$(recovery_field aside)
+        if [ "$(recovery_field phase)" = restoring ]; then
+            # what the mount holds now is the database started for the restore, which is retried into it
+            log "the old database files are already set aside in db/data/$name"
+            echo "$name"
+            return 0
+        fi
+        log "continuing to set the old database files aside in db/data/$name"
+    else
+        if [ "${DB_UPGRADE_REQUIRE_BACKUP:-}" = 1 ] && [ ! -f "$BACKUP_MARKER" ]; then
+            die "no pre-upgrade backup is recorded to restore the database from, refusing to set its files aside"
+        fi
+        entries=$(all_entries)
+        if [ -z "$entries" ]; then
+            log "nothing to set aside"
+            return 0
+        fi
+        # The move itself is free; the restore that follows needs about as much space as the data.
+        # shellcheck disable=SC2086
+        size_kb=$(du -skc $entries | tail -n 1 | cut -f 1)
+        free_kb=$(df -Pk "$ROOT" | awk 'NR == 2 { print $4 }')
+        reserve_kb=$(( ${DB_UPGRADE_RESERVE_MB:-1024} * 1024 ))
+        if [ "$free_kb" -lt $(( size_kb + reserve_kb )) ]; then
+            die "not enough disk space to restore: need $(( (size_kb + reserve_kb) / 1024 )) MB free, have $(( free_kb / 1024 )) MB"
+        fi
+        name=".failed-$(date -u +%Y%m%dT%H%M%SZ)"
+        mkdir "$ROOT/$name"
+        write_recovery_marker "$name" moving
     fi
-    # The move itself is free; the restore that follows needs about as much space as the data.
-    # shellcheck disable=SC2086
-    size_kb=$(du -skc $entries | tail -n 1 | cut -f 1)
-    free_kb=$(df -Pk "$ROOT" | awk 'NR == 2 { print $4 }')
-    reserve_kb=$(( ${DB_UPGRADE_RESERVE_MB:-1024} * 1024 ))
-    if [ "$free_kb" -lt $(( size_kb + reserve_kb )) ]; then
-        die "not enough disk space to restore: need $(( (size_kb + reserve_kb) / 1024 )) MB free, have $(( free_kb / 1024 )) MB"
-    fi
-    name=".failed-$(date -u +%Y%m%dT%H%M%SZ)"
-    mkdir "$ROOT/$name"
-    echo "$entries" | while read -r entry; do
+    all_entries | while read -r entry; do
         mv "$entry" "$ROOT/$name/"
     done
     sync "$ROOT/$name"
+    write_recovery_marker "$name" restoring
     log "set the old database files aside in db/data/$name"
     echo "$name"
 }
 
 cmd_cleanup() {
     local before=${1:?timestamp required} dir stamp
+    if [ -f "$RECOVERY_MARKER" ]; then
+        log "a recovery did not finish, keeping the set-aside database files"
+        return 0
+    fi
     for dir in "$ROOT"/.failed-*; do
         [ -d "$dir" ] || continue
         stamp=${dir##*/.failed-}
@@ -255,16 +319,25 @@ cmd_cleanup() {
     done
 }
 
+cmd_requires_backup() {
+    if [ "${DB_UPGRADE_REQUIRE_BACKUP:-}" = 1 ]; then
+        echo yes
+    else
+        echo no
+    fi
+}
+
 command=${1:-run}
 shift || true
 case "$command" in
     run) cmd_run ;;
     check) cmd_check ;;
     mark-backup) cmd_mark_backup "$@" ;;
+    has-backup) cmd_has_backup ;;
     backup-ref) cmd_backup_ref ;;
-    clear-backup) rm -f "$BACKUP_MARKER" ;;
-    requires-backup) [ "${DB_UPGRADE_REQUIRE_BACKUP:-}" = 1 ] ;;
+    requires-backup) cmd_requires_backup ;;
     set-aside) cmd_set_aside ;;
+    finish-recovery) rm -f "$BACKUP_MARKER" "$RECOVERY_MARKER" ;;
     cleanup) cmd_cleanup "$@" ;;
     *) die "unknown command: $command" ;;
 esac

@@ -64,7 +64,7 @@
 ## Reliability
 
 - Cost-efficient & secure automatic database backups
-  - [B2](https://www.backblaze.com/b2/cloud-storage.html) cloud storage using a `writeFiles`-only key with and option to store them locally or send them over email
+  - [B2](https://www.backblaze.com/b2/cloud-storage.html) cloud storage using a key restricted to the backup bucket, with an option to store them locally or send them over email
   - zstd compression for efficient storage & excellent speed for both backup and restore
 - Scripted and repeatable procedure for restoring the system from a backup
 - Automatic major PostgreSQL upgrades of the bundled database on deploy, with a backup first and automatic recovery from failed upgrades

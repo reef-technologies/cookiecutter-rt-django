@@ -397,6 +397,7 @@ For more details see [README_AWS.md](README_AWS.md)
 <summary>Click to for backup setup & recovery information</summary>
 
 Backups are managed by `backups` container.
+The `docker compose run` commands below pass `--no-deps`, so Compose does not start or recreate `db` first; that fails while a PostgreSQL upgrade is pending or unfinished.
 
 ## Local volume
 
@@ -417,7 +418,7 @@ Local backups may be sent to email manually. Set env vars:
 
 Then run:
 ```sh
-docker compose run --rm -e EMAIL_TARGET=youremail@domain.com backups ./backup-db.sh
+docker compose run --rm --no-deps -e EMAIL_TARGET=youremail@domain.com backups ./backup-db.sh
 ```
 
 ## B2 cloud storage
@@ -447,7 +448,7 @@ Fill in `.env` file:
 ## List all available backups
 
 ```sh
-docker compose run --rm backups ./list-backups.sh
+docker compose run --rm --no-deps backups ./list-backups.sh
 ```
 
 ## Restoring system from backup after a catastrophical failure
@@ -455,10 +456,10 @@ docker compose run --rm backups ./list-backups.sh
 1. Follow the instructions above to set up a new production environment
 2. Restore the database using one of
 ```sh
-docker compose run --rm backups ./restore-db.sh /var/backups/{backup-name}.dump.zstd
+docker compose run --rm --no-deps backups ./restore-db.sh /var/backups/{backup-name}.dump.zstd
 
-docker compose run --rm backups ./restore-db.sh b2://{bucket-name}/{backup-name}.dump.zstd
-docker compose run --rm backups ./restore-db.sh b2id://{ID}
+docker compose run --rm --no-deps backups ./restore-db.sh b2://{bucket-name}/{backup-name}.dump.zstd
+docker compose run --rm --no-deps backups ./restore-db.sh b2id://{ID}
 ```
 3. See if everything works
 4. Make sure everything is filled up in `.env`, error reporting integration, email accounts etc
@@ -481,19 +482,23 @@ The data lives in `db/data/<major>/docker`; data in the pre-18 layout, directly 
 Schedule the deploy that brings a new major outside peak traffic: the app is down from the pre-upgrade backup until the upgrade has finished.
 In production the upgrade runs only from `deploy.sh`; a plain `docker compose up` refuses to upgrade. `deploy.sh`:
 
-1. stops everything except `db` and backs up the database from the old server (to B2 when configured). If the backup fails, nothing is upgraded and the stopped services start again;
-2. stops `db` and upgrades the data. `docker compose stop` waits for a running upgrade instead of interrupting it;
+1. stops everything except `db`, backs up the database from the old server (to B2 when configured) and checks that the backup can be read back. With B2, the application key needs `readFiles`;
+2. stops `db`, waiting up to 10 minutes for a clean shutdown, records the backup for exactly these database files, and upgrades the data. `docker compose stop` waits for a running upgrade instead of interrupting it;
 3. continues as usual with migrations and starting the app.
+
+If a step before the upgrade fails, nothing is upgraded and the old database and the stopped services start again.
+Starting the old server again invalidates the recorded backup, so the next deploy takes a new one. If the upgrade failed before changing the database files and the old server stayed stopped, the next deploy retries it with the recorded backup.
 
 If the upgrade fails, or an earlier one was interrupted (a crash, a power loss, `kill -9`), `deploy.sh` recovers by itself with `bin/db-recover.sh`:
 it sets the database files aside in `db/data/.failed-<timestamp>`, starts an empty database on the new major and restores the pre-upgrade backup.
 No data is lost, because the app stayed stopped since that backup. The next successful deploy deletes the set-aside files.
+If the restore fails, the set-aside files and the recorded backup are kept, and the next deploy restores the backup again into the same fresh database.
 
-- `bin/db-recover.sh` can be run by hand; it does nothing when there is nothing to recover.
+- `bin/db-recover.sh` can be run by hand; it does nothing when there is nothing to recover. It leaves only `db` running; `./deploy.sh` starts the other services.
 - Recovery needs as much free disk space as the database takes, plus `DB_UPGRADE_RESERVE_MB` (default 1024). Without it, recovery stops and changes nothing; free some space and deploy again.
-- A restore brings back what `pg_dump` saves. Roles created by hand, not by `db/init`, have to be created again.
+- A restore brings back what `pg_dump` saves. Roles created by hand, not by `db/init`, have to be created again: the restore fails on objects they own, so create them in the running fresh database and deploy again.
 - Most of the downtime on a big database is the reindex. `PGAUTO_REINDEX=no` in `.env` skips it.
-- To go back to the previous major, revert the change, then restore the pre-upgrade backup (`docker compose run --rm backups ./list-backups.sh` lists it) into a fresh `db/data`.
+- To go back to the previous major, revert the change, then restore the pre-upgrade backup (`docker compose run --rm --no-deps backups ./list-backups.sh` lists it) into a fresh `db/data`.
 {% endif %}
 
 ## Development
@@ -506,7 +511,7 @@ Only the plain `postgres` image is supported; images with extra extensions (Post
 
 ## AWS
 
-RDS runs the major in `engine_version` and `family` of `devops/tf/main/modules/database/rds.tf`. `terraform apply` upgrades it in the next maintenance window, after taking a snapshot; the database is unavailable during the upgrade.
+RDS runs the major in `engine_version` and `family` of `devops/tf/main/modules/database/rds.tf`. `terraform apply` upgrades it right away, after taking a snapshot; the database is unavailable during the upgrade, so apply outside peak traffic. The instance has `apply_immediately`: other changes to it, such as `instance_type`, also take effect during `terraform apply`, not in the maintenance window.
 {% endif %}
 
 # Tests / CI
