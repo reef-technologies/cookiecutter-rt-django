@@ -1,0 +1,133 @@
+#!/bin/bash
+# Reads and moves PostgreSQL cluster directories in the data mount during a major upgrade.
+# bin/upgrade-db.sh runs it as root in a one-off container of the `db` image, whose PG_MAJOR
+# is the major to upgrade to. See README.md, "Upgrading PostgreSQL".
+#
+# Commands:
+#   state     print `fresh` (no cluster), `current`, `pending MAJOR` (a cluster of the older
+#             MAJOR is in place) or `promoting` (the new cluster is in place, the old one is
+#             not set aside yet)
+#   clean     delete the unfinished new cluster and the set-aside old one
+#   promote   put the restored new cluster in place and set the old one aside
+set -euo pipefail
+
+MOUNT="${DATA_MOUNT:-/var/lib/postgresql}"
+TARGET_MAJOR="${PG_MAJOR:?}"
+# where the `db` image of the target major keeps its cluster
+TARGET="$MOUNT/$TARGET_MAJOR/docker"
+# data directory of the temporary server the dump is restored into
+NEW="$MOUNT/.upgrade-new"
+# the previous major's cluster, kept until the next deploy
+OLD="$MOUNT/.upgrade-old"
+
+die() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+# The mount is db/data on the host, which is where the operator looks.
+host_path() {
+    echo "db/data${1#"$MOUNT"}"
+}
+
+# Prints the data directory of each cluster in place other than the target one. Images
+# before 18 keep the cluster directly in the mount, 18+ in <major>/docker.
+old_clusters() {
+    local dir
+    for dir in "$MOUNT" "$MOUNT"/[0-9]*/docker; do
+        if [ -s "$dir/PG_VERSION" ] && [ "$dir" != "$TARGET" ]; then
+            echo "$dir"
+        fi
+    done
+}
+
+require_shut_down() {
+    if [ -e "$1/postmaster.pid" ]; then
+        die "$(host_path "$1")/postmaster.pid exists: a PostgreSQL server is running on these files or was not shut down cleanly."
+    fi
+}
+
+state() {
+    local old major
+    old=$(old_clusters)
+    if [ -s "$TARGET/PG_VERSION" ]; then
+        if [ -n "$old" ]; then
+            echo promoting
+        else
+            echo current
+        fi
+        return
+    fi
+    if [ -z "$old" ]; then
+        # an empty mount with upgrade leftovers is not a new deployment: `db` would start empty
+        if [ -e "$NEW" ] || [ -e "$OLD" ]; then
+            die "db/data holds no PostgreSQL cluster in place, only what an upgrade left in $(host_path "$NEW") or $(host_path "$OLD"). Put the cluster to use back in place, see README.md, \"Upgrading PostgreSQL\"."
+        fi
+        echo fresh
+        return
+    fi
+    if [ "$(echo "$old" | wc -l)" -ne 1 ]; then
+        die "found more than one PostgreSQL cluster and cannot tell which one is in use: $(echo "$old" | tr '\n' ' ')"
+    fi
+    major=$(cat "$old/PG_VERSION")
+    if [ "${major%%.*}" -gt "$TARGET_MAJOR" ]; then
+        die "the cluster in $(host_path "$old") is PostgreSQL $major, newer than the configured $TARGET_MAJOR; downgrades are not supported."
+    fi
+    echo "pending $major"
+}
+
+clean() {
+    local current
+    current=$(state)
+    if [ "$current" = promoting ]; then
+        die "the old cluster is not set aside yet; $(host_path "$OLD") may hold a part of it."
+    fi
+    rm -rf "$NEW" "$OLD"
+}
+
+# A cluster kept directly in the mount shares it with the <major> directories and the
+# dot-directories of an upgrade. PG_VERSION goes last: while it is in place, `state` still
+# reports the cluster, so the next `promote` finishes a move that was interrupted.
+set_flat_cluster_aside() {
+    local entry name
+    for entry in "$MOUNT"/*; do
+        name=${entry##*/}
+        if [ "$name" != PG_VERSION ] && [[ "$name" == *[!0-9]* ]]; then
+            mv "$entry" "$OLD/"
+        fi
+    done
+    mv "$MOUNT/PG_VERSION" "$OLD/"
+}
+
+promote() {
+    local cluster
+    for cluster in $(old_clusters); do
+        require_shut_down "$cluster"
+    done
+    if [ ! -s "$TARGET/PG_VERSION" ]; then
+        if [ "$(cat "$NEW/PG_VERSION" 2>/dev/null)" != "$TARGET_MAJOR" ]; then
+            die "$(host_path "$NEW") holds no PostgreSQL $TARGET_MAJOR cluster to put in place."
+        fi
+        require_shut_down "$NEW"
+        mkdir -p "$TARGET"
+        # One rename puts the whole cluster in place, so `db` never starts on a part of it.
+        # It replaces only an empty directory, such as a refused start of `db` leaves behind.
+        mv -T "$NEW" "$TARGET" || die "$(host_path "$TARGET") is not empty, cannot put the new cluster there."
+    fi
+    mkdir -p "$OLD"
+    for cluster in $(old_clusters); do
+        if [ "$cluster" = "$MOUNT" ]; then
+            set_flat_cluster_aside
+        else
+            mv "$(dirname "$cluster")" "$OLD/"
+        fi
+    done
+    sync
+}
+
+case "${1:-}" in
+    state) state ;;
+    clean) clean ;;
+    promote) promote ;;
+    *) die "usage: $0 state|clean|promote" ;;
+esac

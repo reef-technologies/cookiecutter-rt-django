@@ -1,0 +1,185 @@
+#!/bin/bash
+# Called by deploy.sh before `db` starts. When the database files are from an older
+# PostgreSQL major than the `db` image, moves the database to the new major by dump and
+# restore. The new cluster is built next to the old one and takes its place only when it
+# is complete; a failure before that starts the old database and the stopped services
+# again. See README.md, "Upgrading PostgreSQL".
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# data directory of the temporary server; db/data-mount.sh puts it in place from there
+STAGING_PGDATA=/var/lib/postgresql/.upgrade-new
+# seconds to wait for a server to accept connections, and for one to shut down
+READY_TIMEOUT=300
+STOP_TIMEOUT=600
+
+die() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+# The only access to the files in db/data, which belong to the container's postgres user.
+data_mount() {
+    docker compose run --rm --no-deps -T --entrypoint bash \
+        -v "$PWD/db/data-mount.sh:/data-mount.sh:ro" db /data-mount.sh "$@"
+}
+
+# Lists by label, which also finds containers of services removed from docker-compose.yml;
+# `docker compose stop` fails on those.
+project_containers() {
+    docker ps -q --filter "label=com.docker.compose.project=$project" "$@"
+}
+
+# Over TCP: the server that runs first-boot initialisation listens only on its socket.
+wait_until_ready() {
+    local container=$1 _
+    for _ in $(seq "$READY_TIMEOUT"); do
+        if docker exec "$container" sh -c 'pg_isready -q -h 127.0.0.1 -U "$POSTGRES_USER"' 2>/dev/null; then
+            return 0
+        fi
+        if ! docker top "$container" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+    docker logs --tail 50 "$container" >&2 || true
+    return 1
+}
+
+# pg_dump and pg_restore connect to this address whatever host DATABASE_URL names, so the
+# upgrade reads and writes only the bundled database.
+container_address() {
+    docker exec "$1" hostname -i | cut -d ' ' -f 1
+}
+
+# deploy.sh uses the database right after this script, so `db` has to accept connections.
+start_upgraded_db() {
+    docker compose up -d db
+    wait_until_ready "$(docker compose ps -q db)" \
+        || die "the upgraded database did not start. Deploy again once the cause shown above is fixed."
+}
+
+# Runs when the script stops while an upgrade is under way. db/data decides what to do:
+# as long as the old cluster is the one in place, nothing was upgraded.
+roll_back() {
+    set +e
+    trap '' HUP INT TERM PIPE
+    docker rm -f "$staging" >/dev/null 2>&1
+    case "$(data_mount state)" in
+        pending\ *)
+            data_mount clean
+            # shellcheck disable=SC2086
+            docker start "$old_db" $clients >/dev/null
+            echo "ERROR: the PostgreSQL upgrade failed before the new database replaced the old one. Nothing was upgraded: the old database and the services stopped for the upgrade are running again. Fix the cause shown above and deploy again. Until then pass --no-deps to \`docker compose run\`, see README.md, \"Upgrading PostgreSQL\"." >&2
+            ;;
+        *)
+            echo "ERROR: the PostgreSQL upgrade stopped after the new database was put in place, or db/data could not be read. The old database was not started. Deploy again to finish." >&2
+            ;;
+    esac
+    exit 1
+}
+
+project=$(docker compose config | sed -n 's/^name: //p')
+if [ -z "$project" ]; then
+    die "cannot read the project name from \`docker compose config\`."
+fi
+staging="$project-db-upgrade"
+# a run that was killed leaves the temporary server behind
+docker rm -f "$staging" >/dev/null 2>&1 || true
+
+state=$(data_mount state)
+case "$state" in
+    fresh)
+        exit 0
+        ;;
+    current)
+        # the previous major's files were kept only until this deploy
+        data_mount clean
+        exit 0
+        ;;
+    promoting)
+        echo "Finishing a PostgreSQL upgrade: setting the old database files aside"
+        data_mount promote
+        start_upgraded_db
+        exit 0
+        ;;
+    pending\ *)
+        old_major=${state#pending }
+        ;;
+    *)
+        die "db/data is in an unknown state: $state"
+        ;;
+esac
+
+echo "Upgrading the database from PostgreSQL $old_major by dump and restore; the app is down until it finishes"
+
+old_db=$(project_containers -a --filter label=com.docker.compose.service=db --filter label=com.docker.compose.oneoff=False)
+if [ -z "$old_db" ]; then
+    die "db/data holds PostgreSQL $old_major files, but there is no db container to dump them from. Start the previous version (check out the previous commit and run \`docker compose up -d db\`), then deploy again."
+fi
+docker start "$old_db" >/dev/null
+wait_until_ready "$old_db" \
+    || die "the db container does not serve the PostgreSQL $old_major files in db/data. Start the previous version (check out the previous commit and run \`docker compose up -d db\`), then deploy again."
+
+other_databases=$(
+    docker exec -i "$old_db" sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At' <<'SQL'
+SELECT datname FROM pg_database WHERE NOT datistemplate AND datname NOT IN ('postgres', current_database());
+SQL
+)
+if [ -n "$other_databases" ]; then
+    die "the upgrade moves only the database named in POSTGRES_DB, and this server also holds: ${other_databases//$'\n'/, }. Move them elsewhere or drop them, then deploy again; see README.md, \"Upgrading PostgreSQL\"."
+fi
+
+# room for the new cluster: delete what an earlier upgrade left
+data_mount clean
+
+running=$(project_containers)
+clients=
+for container in $running; do
+    if [ "$container" != "$old_db" ]; then
+        clients="$clients $container"
+    fi
+done
+
+trap roll_back EXIT
+# nothing may write to the database once it is dumped
+if [ -n "$clients" ]; then
+    # shellcheck disable=SC2086
+    docker stop $clients >/dev/null
+fi
+
+echo "Backing up the PostgreSQL $old_major database"
+old_address=$(container_address "$old_db")
+# Without SENTRY_DSN: the Sentry hook of the backup scripts copies their output in a
+# background process, which often has not written the last line when the container exits.
+backup=$(docker compose run --rm --no-deps -T -e SENTRY_DSN= -e PGHOSTADDR="$old_address" backups ./backup-db.sh | tail -n 1)
+case "$backup" in
+    /* | b2://*) ;;
+    *) die "backup-db.sh did not print where it stored the backup; its last line was: $backup" ;;
+esac
+
+docker stop -t "$STOP_TIMEOUT" "$old_db" >/dev/null
+if [ "$(docker wait "$old_db")" != 0 ]; then
+    die "PostgreSQL $old_major did not shut down cleanly."
+fi
+
+echo "Restoring $backup into a new cluster next to the old one"
+docker compose run -d --no-deps --name "$staging" -e PGDATA="$STAGING_PGDATA" db >/dev/null
+wait_until_ready "$staging" || die "the new PostgreSQL did not start."
+staging_address=$(container_address "$staging")
+docker compose run --rm --no-deps -T -e PGHOSTADDR="$staging_address" backups ./restore-db.sh "$backup"
+# pg_restore does not gather the statistics the query planner needs
+docker exec "$staging" sh -c 'vacuumdb -U "$POSTGRES_USER" --all --analyze-only --quiet'
+
+docker stop -t "$STOP_TIMEOUT" "$staging" >/dev/null
+if [ "$(docker wait "$staging")" != 0 ]; then
+    die "the new PostgreSQL did not shut down cleanly."
+fi
+docker rm "$staging" >/dev/null
+
+data_mount promote
+trap - EXIT
+
+start_upgraded_db
+echo "Upgraded the database from PostgreSQL $old_major. Its old files stay in db/data/.upgrade-old until the next deploy."

@@ -107,24 +107,29 @@ def run_readable(session, mode="check"):
     )
 
 
-def run_shellcheck(session, mode="check"):
+def shellcheck_command(root: Path) -> list[str]:
+    """The command that runs shellcheck on files given relative to `root`."""
     arch = platform.machine().lower()
     if arch in {"arm64", "aarch64"}:
         image = "koalaman/shellcheck:0.9.0@sha256:f35e8987b02760d4e76fc99a68ad5c42cc10bb32f3dd2143a3cf92f1e5446a45"
     else:
         image = "koalaman/shellcheck:0.9.0@sha256:a527e2077f11f28c1c1ad1dc784b5bc966baeb3e34ef304a0ffa72699b01ad9c"
 
-    shellcheck_cmd = [
+    return [
         "docker",
         "run",
         "--rm",
         "-v",
-        f"{ROOT.absolute()}:/mnt",
+        f"{root.absolute()}:/mnt",
         "-w",
         "/mnt",
         "-q",
         image,
     ]
+
+
+def run_shellcheck(session, mode="check"):
+    shellcheck_cmd = shellcheck_command(ROOT)
 
     files = list_files(suffix=".sh")
     if not files:
@@ -357,6 +362,42 @@ def test_direct_deployment_hook(session):
     session.run(
         "python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_direct_deployment_hook.py", external=True
     )
+
+
+@nox.session(python=False, tags=["crufted_project"])
+def test_postgres_versions(session):
+    """Check that every PostgreSQL version pin in the template uses the same major."""
+    session.run(
+        "python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_postgres_versions.py", external=True
+    )
+
+
+@nox.session(python=False, tags=["crufted_project"])
+def test_data_mount(session):
+    """Check how the PostgreSQL upgrade classifies and rearranges the database directory."""
+    session.run("python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_data_mount.py", external=True)
+
+
+@nox.session(python=PYTHON_VERSION, tags=["crufted_project"])
+def test_db_upgrade(session):
+    """Upgrade the PostgreSQL of a direct deployment from older majors, including failed and killed upgrades."""
+    tests_dir = str(ROOT.absolute() / "tests")
+    with crufted_project(session, get_cruft_config(deployment_type="direct")) as project_path:
+        # the Jinja in their template file names keeps these scripts out of the `lint` session
+        session.run(*shellcheck_command(project_path), "bin/upgrade-db.sh", "db/data-mount.sh", external=True)
+        session.run(
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-v",
+            "-s",
+            tests_dir,
+            "-p",
+            "test_db_upgrade.py",
+            env={"DB_UPGRADE_TEST_PROJECT": str(project_path)},
+            external=True,
+        )
 
 
 @nox.session(python=PYTHON_VERSION)

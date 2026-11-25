@@ -397,6 +397,7 @@ For more details see [README_AWS.md](README_AWS.md)
 <summary>Click to for backup setup & recovery information</summary>
 
 Backups are managed by `backups` container.
+The `docker compose run` commands below pass `--no-deps`, so Compose leaves `db` as it is; without it Compose recreates `db` whenever `docker-compose.yml` has changed since `db` started.
 
 ## Local volume
 
@@ -417,7 +418,7 @@ Local backups may be sent to email manually. Set env vars:
 
 Then run:
 ```sh
-docker compose run --rm -e EMAIL_TARGET=youremail@domain.com backups ./backup-db.sh
+docker compose run --rm --no-deps -e EMAIL_TARGET=youremail@domain.com backups ./backup-db.sh
 ```
 
 ## B2 cloud storage
@@ -447,7 +448,7 @@ Fill in `.env` file:
 ## List all available backups
 
 ```sh
-docker compose run --rm backups ./list-backups.sh
+docker compose run --rm --no-deps backups ./list-backups.sh
 ```
 
 ## Restoring system from backup after a catastrophical failure
@@ -455,10 +456,10 @@ docker compose run --rm backups ./list-backups.sh
 1. Follow the instructions above to set up a new production environment
 2. Restore the database using one of
 ```sh
-docker compose run --rm backups ./restore-db.sh /var/backups/{backup-name}.dump.zstd
+docker compose run --rm --no-deps backups ./restore-db.sh /var/backups/{backup-name}.dump.zstd
 
-docker compose run --rm backups ./restore-db.sh b2://{bucket-name}/{backup-name}.dump.zstd
-docker compose run --rm backups ./restore-db.sh b2id://{ID}
+docker compose run --rm --no-deps backups ./restore-db.sh b2://{bucket-name}/{backup-name}.dump.zstd
+docker compose run --rm --no-deps backups ./restore-db.sh b2id://{ID}
 ```
 3. See if everything works
 4. Make sure everything is filled up in `.env`, error reporting integration, email accounts etc
@@ -468,6 +469,48 @@ docker compose run --rm backups ./restore-db.sh b2id://{ID}
 `backups` container runs a simple server which [exposes essential metrics about backups](backups/bin/serve_metrics.py).
 
 </details>
+
+# Upgrading PostgreSQL
+
+The PostgreSQL major of the bundled `db` is set by its image in `envs/*/docker-compose.yml`.
+The database files are in `db/data/<major>/docker`; images before 18 kept them directly in `db/data`.
+A `db` image does not start on the files of another major: it stops with an error and leaves them untouched.
+{% if cookiecutter.deployment_type == 'direct' %}
+
+## Production
+
+`deploy.sh` moves the database to the major of the `db` image by dump and restore (`bin/upgrade-db.sh`).
+Schedule the deploy that brings a new major outside peak traffic: the app is down from the dump until the deploy has finished.
+
+1. It stops every service except `db` and backs up the database with `backup-db.sh` (to B2 when configured).
+2. It stops `db` and restores the backup into a new cluster in `db/data/.upgrade-new`, next to the old files.
+3. It moves the new cluster into place and the old files to `db/data/.upgrade-old`, then starts `db`.
+
+The old files are not modified. If the upgrade fails or is interrupted before step 3, the old database and the stopped services start again and the deploy fails; fix the cause and deploy again.
+Until that deploy succeeds, `docker-compose.yml` names the new image while the old database is running: `docker compose up`, and `docker compose run` without `--no-deps`, replace it with a `db` that refuses to start.
+
+Before the upgrade, check that:
+
+- The server has free disk space for a second copy of the database.
+- The PostgreSQL server holds no database other than `POSTGRES_DB`. Only that one is moved, and the upgrade refuses to start when there are others.
+- Every role that owns or is granted something is created by a `db/init` script. Roles are not part of the dump; `db/init` runs again on the new cluster, and the restore fails on objects of a role that is missing there.
+- Nothing depends on `ALTER SYSTEM` settings or on edits of `postgresql.conf` and `pg_hba.conf`. They are not carried over.
+- With B2 backups, the application key has `readFiles`: the restore reads the backup back.
+
+`db/data/.upgrade-old` holds the files of the previous major until the next deploy deletes them.
+To go back to the previous major before that, stop `db`, delete `db/data/<new major>`, move the contents of `db/data/.upgrade-old` back into `db/data`, then revert the commit that changed the `db` image and deploy. Data written since the upgrade is lost.
+Once the files are deleted, restore the backup taken in step 1 instead; `docker compose run --rm --no-deps backups ./list-backups.sh` lists it.
+{% endif %}
+
+## Development
+
+`docker compose up` does not upgrade local data. When `db` stops with an error about the files of an older major, delete them (`sudo rm -rf db/data`), start `db` and run the migrations again.
+{% if cookiecutter.deployment_type == 'aws' %}
+
+## AWS
+
+RDS runs the major in `engine_version` and `family` of `devops/tf/main/modules/database/rds.tf`. `terraform apply` upgrades it right away, after taking a snapshot; the database is unavailable during the upgrade, so apply outside peak traffic. The instance has `apply_immediately`: other changes to it, such as `instance_type`, also take effect during `terraform apply`, not in the maintenance window.
+{% endif %}
 
 # Tests / CI
 

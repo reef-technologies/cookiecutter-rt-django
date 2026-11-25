@@ -10,9 +10,9 @@ if [[ $# -ne 1 ]]; then
 fi
 
 if [[ "$1" == b2://* || "$1" == b2id://* ]]; then
-    uv run b2 cat "$1" | pg_restore -c -d "$DATABASE_URL"
+    uv run b2 cat "$1" | pg_restore -c --if-exists -d "$DATABASE_URL"
 else
-    pg_restore -c -d "$DATABASE_URL" < "$1"
+    pg_restore -c --if-exists -d "$DATABASE_URL" < "$1"
 fi
 
 echo 'restore finished'
